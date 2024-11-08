@@ -1,28 +1,31 @@
-import React, { useContext, useState, useEffect } from 'react';
+import React, { useContext, useState } from 'react';
 import { View, StyleSheet, SafeAreaView, Text, TouchableOpacity } from 'react-native';
 import { AuthContext } from '../../contexts/AuthContext';
 import { useNavigation } from '@react-navigation/native';
 import { getUserProfile } from '../../Firebase/firebaseHelper';
+import { useFocusEffect } from '@react-navigation/native';
 
 const ProfileScreen = () => {
   const navigation = useNavigation();
   const { logout, user } = useContext(AuthContext);
   const [userProfile, setUserProfile] = useState(null);
 
-  useEffect(() => {
-    const fetchUserProfile = async () => {
-      try {
-        const profile = await getUserProfile(user.email);
-        setUserProfile(profile);
-      } catch (error) {
-        console.error('Error fetching user profile:', error);
-      }
-    };
+  useFocusEffect(
+    React.useCallback(() => {
+      const fetchUserProfile = async () => {
+        try {
+          const profile = await getUserProfile(user.email);
+          setUserProfile(profile);
+        } catch (error) {
+          console.error('Error fetching user profile:', error);
+        }
+      };
 
-    if (user?.email) {
-      fetchUserProfile();
-    }
-  }, [user?.email]);
+      if (user?.email) {
+        fetchUserProfile();
+      }
+    }, [user?.email])
+  );
 
   const likesCount = userProfile?.likes?.length || 0;
 

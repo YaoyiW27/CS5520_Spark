@@ -31,6 +31,10 @@ export const AuthProvider = ({ children }) => {
         return unsubscribe;
     }, []);
 
+    useEffect(() => {
+        setUserName(userProfile.userName || 'TextName');
+    }, [userProfile.userName]);
+
     const logout = () => {
         signOut(auth)
             .then(() => {
