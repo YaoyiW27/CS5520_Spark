@@ -12,6 +12,6 @@ const RootNavigator = () => {
       {isLoggedIn ? <AppStackNavigator /> : <AuthStackNavigator />}
     </NavigationContainer>
   );
-}
+};
 
 export default RootNavigator;
