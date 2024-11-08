@@ -1,10 +1,13 @@
-import { NavigationContainer } from '@react-navigation/native';
-import BottomTabNavigator from './src/navigation/bottomTabNavigator';
+import React from 'react';
+import { AuthProvider } from './src/contexts/AuthContext';
+import RootNavigator from './src/navigation/RootNavigator';
 
-export default function App() {
+const App = () => {
   return (
-    <NavigationContainer>
-      <BottomTabNavigator />
-    </NavigationContainer>
+    <AuthProvider>
+      <RootNavigator />
+    </AuthProvider>
   );
-}
+};
+
+export default App;
