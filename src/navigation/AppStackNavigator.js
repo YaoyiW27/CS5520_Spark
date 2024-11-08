@@ -9,14 +9,13 @@ const AppStackNavigator = () => {
   return (
     <AppStack.Navigator
       screenOptions={{
-        headerShown: false, // 根据需要显示或隐藏标题栏
+        headerShown: false,
       }}
     >
       <AppStack.Screen name="Main" component={BottomTabNavigator} />
       <AppStack.Screen name="Settings" component={ProfileScreen} />
-      {/* 可以在这里添加更多的屏幕 */}
     </AppStack.Navigator>
   );
-}
+};
 
 export default AppStackNavigator;
