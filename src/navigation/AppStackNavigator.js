@@ -1,6 +1,10 @@
 import React from 'react';
+import { TouchableOpacity, Text } from 'react-native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import BottomTabNavigator from './bottomTabNavigator'; 
+import { Ionicons } from '@expo/vector-icons';
+import BottomTabNavigator from './bottomTabNavigator';
+import PostScreen from '../screens/Post/PostScreen';
+import CreatePostScreen from '../screens/Post/CreatePostScreen';
 import LikedListScreen from '../screens/Profile/LikedListScreen';
 import EditProfileScreen from '../screens/Profile/EditProfileScreen';
 
@@ -8,21 +12,90 @@ const AppStack = createNativeStackNavigator();
 
 const AppStackNavigator = () => {
   return (
-    <AppStack.Navigator
-      screenOptions={{
-        headerShown: false, 
-      }}
-    >
+    <AppStack.Navigator>
+      <AppStack.Screen 
+        name="Main" 
+        component={BottomTabNavigator}
+        options={{ headerShown: false }}
+      />
 
-      <AppStack.Screen name="Main" component={BottomTabNavigator} />
+      <AppStack.Screen
+        name="Post"
+        component={PostScreen}
+        options={({ navigation }) => ({
+          headerTitleAlign: 'center',
+          headerTitle: 'Post',
+          headerTitleStyle: {
+            color: '#FF69B4',
+            fontSize: 18,
+          },
+          headerRight: () => (
+            <TouchableOpacity
+              onPress={() => navigation.navigate('CreatePost')}
+              style={{ marginRight: 15 }}
+            >
+              <Ionicons name="add-circle" size={28} color="#FF69B4" />
+            </TouchableOpacity>
+          ),
+          headerShadowVisible: false,
+          headerStyle: {
+            backgroundColor: '#fff',
+          },
+        })}
+      />
+
+      <AppStack.Screen 
+        name="CreatePost" 
+        component={CreatePostScreen} 
+        options={({ navigation }) => ({
+          headerTitleAlign: 'center',
+          headerTitle: 'Create Post',
+          headerTitleStyle: {
+            color: '#FF69B4',
+            fontSize: 18,
+          },
+          headerLeft: () => (
+            <TouchableOpacity
+              onPress={() => navigation.goBack()}
+              style={{ marginLeft: 10 }}
+            >
+              <Text style={{ color: '#FF69B4', fontSize: 16 }}>Main</Text>
+            </TouchableOpacity>
+          ),
+          headerRight: () => (
+            <TouchableOpacity
+              style={{
+                marginRight: 15,
+                paddingHorizontal: 15,
+                paddingVertical: 5,
+                backgroundColor: '#f0f0f0',
+                borderRadius: 15,
+              }}
+              onPress={() => {
+                navigation.goBack();
+              }}
+            >
+              <Text style={{ 
+                color: '#666',
+                fontSize: 14,
+                fontWeight: '500'
+              }}>Post</Text>
+            </TouchableOpacity>
+          ),
+          headerShadowVisible: false, 
+          headerStyle: {
+            backgroundColor: '#fff',
+          },
+        })} 
+      />
 
       <AppStack.Screen 
         name="LikedListScreen" 
         component={LikedListScreen} 
         options={{ 
-          headerShown: true,  
+          headerShown: true,
           title: 'Liked By',
-          headerTintColor: '#FF69B4', 
+          headerTintColor: '#FF69B4',
         }} 
       />
 
@@ -30,9 +103,9 @@ const AppStackNavigator = () => {
         name="EditProfileScreen" 
         component={EditProfileScreen} 
         options={{ 
-          headerShown: true,  
+          headerShown: true,
           title: 'Edit Profile',
-          headerTintColor: '#FF69B4', 
+          headerTintColor: '#FF69B4',
         }} 
       />
     </AppStack.Navigator>

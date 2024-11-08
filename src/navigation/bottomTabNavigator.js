@@ -1,4 +1,5 @@
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+import { TouchableOpacity } from 'react-native';
 import SwipeScreen from '../screens/Home/SwipeScreen';
 import MapScreen from '../screens/Discover/MapScreen';
 import PostScreen from '../screens/Post/PostScreen';
@@ -42,11 +43,29 @@ function BottomTabNavigator() {
       <Tab.Screen 
         name="Post" 
         component={PostScreen}
-        options={{
+        options={({ navigation }) => ({
+          headerTitleAlign: 'center',
+          headerTitle: 'Post',
+          headerTitleStyle: {
+            color: '#FF69B4',
+            fontSize: 18,
+          },
+          headerRight: () => (
+            <TouchableOpacity
+              onPress={() => navigation.navigate('CreatePost')}
+              style={{ marginRight: 15 }}
+            >
+              <Ionicons name="add-circle" size={28} color="#FF69B4" />
+            </TouchableOpacity>
+          ),
+          headerShadowVisible: false,
+          headerStyle: {
+            backgroundColor: '#fff',
+          },
           tabBarIcon: ({ color, size }) => (
             <Ionicons name="add-circle" size={size} color={color} />
           ),
-        }}
+        })}
       />
       <Tab.Screen 
         name="Profile" 
