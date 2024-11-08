@@ -15,6 +15,7 @@ import {
   createUserWithEmailAndPassword, 
   signInWithEmailAndPassword 
 } from 'firebase/auth';
+import { createUserProfile } from '../../Firebase/firebaseHelper';
 
 const AuthOptionsScreen = ({ navigation }) => {
   const [isLogin, setIsLogin] = useState(true);
@@ -34,7 +35,22 @@ const AuthOptionsScreen = ({ navigation }) => {
         await signInWithEmailAndPassword(auth, email, password);
       } else {
         // 注册
-        await createUserWithEmailAndPassword(auth, email, password);
+        const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+        // Create initial user profile
+        await createUserProfile(email, {
+          username: '',
+          pronouns: '',
+          birthday: '',
+          occupation: '',
+          city: '',
+          hobbies: '',
+          personalityTags: [],
+          favoriteBooks: [],
+          favoriteMovies: [],
+          favoriteMusic: [],
+          aboutMe: '',
+          likes: []
+        });
       }
     } catch (error) {
       let errorMessage = 'An error occurred';
