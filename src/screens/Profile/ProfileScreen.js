@@ -1,13 +1,30 @@
-import React, { useContext } from 'react';
+import React, { useContext, useState, useEffect } from 'react';
 import { View, StyleSheet, SafeAreaView, Text, TouchableOpacity } from 'react-native';
 import { AuthContext } from '../../contexts/AuthContext';
 import { useNavigation } from '@react-navigation/native';
+import { getUserProfile } from '../../Firebase/firebaseHelper';
 
 const ProfileScreen = () => {
   const navigation = useNavigation();
-  const { logout } = useContext(AuthContext);
-  // Dummy data - replace with real data later
-  const likesCount = 3;
+  const { logout, user } = useContext(AuthContext);
+  const [userProfile, setUserProfile] = useState(null);
+
+  useEffect(() => {
+    const fetchUserProfile = async () => {
+      try {
+        const profile = await getUserProfile(user.email);
+        setUserProfile(profile);
+      } catch (error) {
+        console.error('Error fetching user profile:', error);
+      }
+    };
+
+    if (user?.email) {
+      fetchUserProfile();
+    }
+  }, [user?.email]);
+
+  const likesCount = userProfile?.likes?.length || 0;
 
   return (
     <SafeAreaView style={styles.container}>
@@ -20,7 +37,9 @@ const ProfileScreen = () => {
         </View>
 
         {/* Name Section */}
-        <Text style={styles.nameText}>TextName</Text>
+        <Text style={styles.nameText}>
+          {userProfile?.username || 'Loading...'}
+        </Text>
 
         {/* Likes Section */}
         <TouchableOpacity 

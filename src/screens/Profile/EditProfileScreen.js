@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useContext, useEffect } from 'react';
 import { 
   View, 
   StyleSheet, 
@@ -6,12 +6,20 @@ import {
   Text, 
   TextInput, 
   TouchableOpacity,
-  ScrollView
+  ScrollView,
+  Keyboard,
+  Alert
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
+import { AuthContext } from '../../contexts/AuthContext';
+import { updateUserProfile, getUserProfile } from '../../Firebase/firebaseHelper';
 
 const EditProfileScreen = () => {
   const navigation = useNavigation();
+  const { user } = useContext(AuthContext);
+  const [loading, setLoading] = useState(true);
+  
+  // Initialize state with empty values
   const [name, setName] = useState('');
   const [pronouns, setPronouns] = useState('');
   const [birthday, setBirthday] = useState('');
@@ -24,10 +32,67 @@ const EditProfileScreen = () => {
   const [music, setMusic] = useState('');
   const [aboutMe, setAboutMe] = useState('');
 
-  const handleSave = () => {
-    // TODO: Implement save functionality
-    navigation.goBack();
+  // Fetch and set initial data
+  useEffect(() => {
+    const fetchUserProfile = async () => {
+      try {
+        const profile = await getUserProfile(user.email);
+        if (profile) {
+          setName(profile.username || '');
+          setPronouns(profile.pronouns || '');
+          setBirthday(profile.birthday || '');
+          setOccupation(profile.occupation || '');
+          setCity(profile.city || '');
+          setHobbies(profile.hobbies || '');
+          setTags(profile.personalityTags?.join(', ') || '');
+          setBooks(profile.favoriteBooks?.join(', ') || '');
+          setMovies(profile.favoriteMovies?.join(', ') || '');
+          setMusic(profile.favoriteMusic?.join(', ') || '');
+          setAboutMe(profile.aboutMe || '');
+        }
+      } catch (error) {
+        console.error('Error fetching profile:', error);
+        Alert.alert('Error', 'Failed to load profile data');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchUserProfile();
+  }, [user.email]);
+
+  const handleSave = async () => {
+    try {
+      const updatedProfile = {
+        username: name,
+        pronouns,
+        birthday,
+        occupation,
+        city,
+        hobbies,
+        personalityTags: tags.split(',').map(tag => tag.trim()).filter(tag => tag),
+        favoriteBooks: books.split(',').map(book => book.trim()).filter(book => book),
+        favoriteMovies: movies.split(',').map(movie => movie.trim()).filter(movie => movie),
+        favoriteMusic: music.split(',').map(item => item.trim()).filter(item => item),
+        aboutMe
+      };
+
+      await updateUserProfile(user.email, updatedProfile);
+      Alert.alert('Success', 'Profile updated successfully');
+      navigation.goBack();
+    } catch (error) {
+      console.error(error);
+      Alert.alert('Error', 'Failed to update profile');
+    }
   };
+
+  if (loading) {
+    return (
+      <View style={styles.loadingContainer}>
+        <Text>Loading...</Text>
+      </View>
+    );
+  }
 
   return (
     <SafeAreaView style={styles.container}>
@@ -125,6 +190,8 @@ const EditProfileScreen = () => {
             onChangeText={setAboutMe}
             placeholder="Write something about yourself"
             multiline
+            onEndEditing={() => Keyboard.dismiss()}
+            blurOnSubmit={true}
           />
         </View>
 
@@ -192,6 +259,11 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 16,
     fontWeight: 'bold',
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
 });
 

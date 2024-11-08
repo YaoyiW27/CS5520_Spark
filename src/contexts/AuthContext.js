@@ -7,6 +7,20 @@ export const AuthContext = createContext();
 export const AuthProvider = ({ children }) => {
     const [isLoggedIn, setIsLoggedIn] = useState(false);
     const [user, setUser] = useState(null);
+    const [userName, setUserName] = useState('TextName');
+    const [userProfile, setUserProfile] = useState({
+        userName: '',
+        pronouns: '',
+        birthday: '',
+        occupation: '',
+        city: '',
+        hobbies: '',
+        tags: '',
+        books: '',
+        movies: '',
+        music: '',
+        aboutMe: ''
+    });
 
     useEffect(() => {
         const unsubscribe = onAuthStateChanged(auth, (user) => {
@@ -29,7 +43,7 @@ export const AuthProvider = ({ children }) => {
     };
 
     return (
-        <AuthContext.Provider value={{ isLoggedIn, user, logout }}>
+        <AuthContext.Provider value={{ isLoggedIn, user, logout, userName, setUserName, userProfile, setUserProfile }}>
             {children}
         </AuthContext.Provider>
     );
