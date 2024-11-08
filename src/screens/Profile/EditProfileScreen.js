@@ -98,8 +98,8 @@ const EditProfileScreen = () => {
     <SafeAreaView style={styles.container}>
       <ScrollView contentContainerStyle={styles.content}>
         <View style={styles.photoSection}>
-          <Text style={styles.photoText}>Your Photo</Text>
-          <Text style={styles.photoWallText}>Photo Wall: [P1] [P2] [P3] [P4] [P5] [+]</Text>
+          <Text style={styles.photoText}>Your Profile Details</Text>
+          <Text style={styles.label}>Photo Wall: [P1] [P2] [P3] [P4] [P5] [+]</Text>
         </View>
 
         <View style={styles.inputContainer}>
