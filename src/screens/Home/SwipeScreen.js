@@ -1,11 +1,11 @@
 import React from 'react';
 import { View, StyleSheet, SafeAreaView, Text } from 'react-native';
 
-const HomeScreen = () => {
+const SwipeScreen = () => {
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.content}>
-        <Text>HomeScreen</Text>
+        <Text>SwipeScreen</Text>
       </View>
     </SafeAreaView>
   );
@@ -22,4 +22,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default HomeScreen;
+export default SwipeScreen;
