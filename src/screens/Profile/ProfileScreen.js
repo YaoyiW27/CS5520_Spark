@@ -5,7 +5,7 @@ import { useNavigation } from '@react-navigation/native';
 
 const ProfileScreen = () => {
   const navigation = useNavigation();
-  const { logout } = useContext(AuthContext);
+  const { logout, userName } = useContext(AuthContext);
   // Dummy data - replace with real data later
   const likesCount = 3;
 
@@ -20,7 +20,7 @@ const ProfileScreen = () => {
         </View>
 
         {/* Name Section */}
-        <Text style={styles.nameText}>TextName</Text>
+        <Text style={styles.nameText}>{userName}</Text>
 
         {/* Likes Section */}
         <TouchableOpacity 

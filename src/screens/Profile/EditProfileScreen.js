@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useContext } from 'react';
 import { 
   View, 
   StyleSheet, 
@@ -6,26 +6,44 @@ import {
   Text, 
   TextInput, 
   TouchableOpacity,
-  ScrollView
+  ScrollView,
+  Keyboard
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
+import { AuthContext } from '../../contexts/AuthContext';
 
 const EditProfileScreen = () => {
   const navigation = useNavigation();
-  const [name, setName] = useState('');
-  const [pronouns, setPronouns] = useState('');
-  const [birthday, setBirthday] = useState('');
-  const [occupation, setOccupation] = useState('');
-  const [city, setCity] = useState('');
-  const [hobbies, setHobbies] = useState('');
-  const [tags, setTags] = useState('');
-  const [books, setBooks] = useState('');
-  const [movies, setMovies] = useState('');
-  const [music, setMusic] = useState('');
-  const [aboutMe, setAboutMe] = useState('');
+  const { userProfile, setUserProfile } = useContext(AuthContext);
+  
+  // Initialize state with values from context
+  const [name, setName] = useState(userProfile.userName);
+  const [pronouns, setPronouns] = useState(userProfile.pronouns);
+  const [birthday, setBirthday] = useState(userProfile.birthday);
+  const [occupation, setOccupation] = useState(userProfile.occupation);
+  const [city, setCity] = useState(userProfile.city);
+  const [hobbies, setHobbies] = useState(userProfile.hobbies);
+  const [tags, setTags] = useState(userProfile.tags);
+  const [books, setBooks] = useState(userProfile.books);
+  const [movies, setMovies] = useState(userProfile.movies);
+  const [music, setMusic] = useState(userProfile.music);
+  const [aboutMe, setAboutMe] = useState(userProfile.aboutMe);
 
   const handleSave = () => {
-    // TODO: Implement save functionality
+    // Update all profile fields at once
+    setUserProfile({
+      userName: name,
+      pronouns,
+      birthday,
+      occupation,
+      city,
+      hobbies,
+      tags,
+      books,
+      movies,
+      music,
+      aboutMe
+    });
     navigation.goBack();
   };
 
@@ -125,6 +143,8 @@ const EditProfileScreen = () => {
             onChangeText={setAboutMe}
             placeholder="Write something about yourself"
             multiline
+            onEndEditing={() => Keyboard.dismiss()}
+            blurOnSubmit={true}
           />
         </View>
 
