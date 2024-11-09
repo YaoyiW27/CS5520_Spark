@@ -4,14 +4,19 @@ import { AntDesign } from '@expo/vector-icons';
 import Swiper from 'react-native-deck-swiper';
 import { getAllUsers } from '../../Firebase/firebaseHelper';
 import { AuthContext } from '../../contexts/AuthContext';
+import { useNavigation } from '@react-navigation/native';
 
 const SCREEN_WIDTH = Dimensions.get('window').width;
 
-const Card = ({ user }) => {
-  const [isLiked, setIsLiked] = useState(false);  // 每个卡片独立的状态
+const Card = ({ user, onCardPress }) => {
+  const [isLiked, setIsLiked] = useState(false);
 
   return (
-    <View style={styles.card}>
+    <TouchableOpacity 
+      activeOpacity={0.9}
+      onPress={() => onCardPress(user)}
+      style={styles.card}
+    >
       <View style={styles.photoContainer}>
         <Image
           source={{ uri: `${user.image}?w=800` }}
@@ -25,7 +30,10 @@ const Card = ({ user }) => {
       </View>
       <TouchableOpacity 
         style={styles.likeButton} 
-        onPress={() => setIsLiked(!isLiked)}
+        onPress={(e) => {
+          e.stopPropagation();
+          setIsLiked(!isLiked);
+        }}
         activeOpacity={0.7}
       >
         <AntDesign 
@@ -34,7 +42,7 @@ const Card = ({ user }) => {
           color={isLiked ? '#FF69B4' : '#ddd'} 
         />
       </TouchableOpacity>
-    </View>
+    </TouchableOpacity>
   );
 };
 
@@ -43,23 +51,38 @@ const SwipeScreen = () => {
   const [users, setUsers] = useState([]);
   const swiperRef = useRef(null);
   const { logout, user } = useContext(AuthContext);
+  const navigation = useNavigation();
 
   useEffect(() => {
     const loadUsers = async () => {
       try {
-        const allUsers = await getAllUsers(user.email);
-        setUsers(allUsers);
+        if (user?.email) {
+          const allUsers = await getAllUsers(user.email);
+          setUsers(allUsers);
+        }
       } catch (error) {
         console.error('Error loading users:', error);
       }
     };
 
     loadUsers();
-  }, [user.email]);
+  }, [user?.email]);
+
+  const handleCardPress = (selectedUser) => {
+    console.log('Selected user:', selectedUser);
+    if (selectedUser && selectedUser.id) {
+      navigation.navigate('DisplayProfile', { 
+        userId: selectedUser.id
+      });
+    } else {
+      console.error('Invalid user data:', selectedUser);
+    }
+  };
 
   const renderCard = (user) => {
     if (!user) return null;
-    return <Card user={user} />;
+    console.log('Rendering card for user:', user);
+    return <Card user={user} onCardPress={handleCardPress} />;
   };
 
   return (

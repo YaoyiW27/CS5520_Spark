@@ -1,159 +1,92 @@
 import React, { useState, useEffect } from 'react';
-import { 
-  View, 
-  StyleSheet, 
-  SafeAreaView, 
-  Text, 
-  ScrollView,
-  TouchableOpacity,
-  Alert
-} from 'react-native';
+import { View, Text, Image, StyleSheet, ScrollView, ActivityIndicator } from 'react-native';
 import { getUserProfile } from '../../Firebase/firebaseHelper';
-import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 
 const DisplayProfileScreen = ({ route }) => {
-  const { userEmail } = route.params;
-  const [profile, setProfile] = useState(null);
-  const [isLiked, setIsLiked] = useState(false);
+  const [userProfile, setUserProfile] = useState(null);
   const [loading, setLoading] = useState(true);
+  const { userId } = route.params;
 
   useEffect(() => {
-    const fetchProfile = async () => {
+    const loadUserProfile = async () => {
       try {
-        const userData = await getUserProfile(userEmail);
-        setProfile(userData);
+        console.log('Fetching profile for userId:', userId);
+        const profile = await getUserProfile(userId);
+        console.log('Received profile:', profile);
+
+        if (profile) {
+          const safeProfile = {
+            username: profile.username || 'No Name',
+            profilePhoto: profile.profilePhoto || 'default_photo_url',
+            city: profile.city || 'No Location',
+            aboutMe: profile.aboutMe || '',
+            hobbies: profile.hobbies || '',
+            personalityTags: Array.isArray(profile.personalityTags) ? profile.personalityTags : [],
+            favoriteBooks: Array.isArray(profile.favoriteBooks) ? profile.favoriteBooks : [],
+            favoriteMovies: Array.isArray(profile.favoriteMovies) ? profile.favoriteMovies : [],
+            favoriteMusic: Array.isArray(profile.favoriteMusic) ? profile.favoriteMusic : [],
+          };
+          console.log('Safe profile:', safeProfile);
+          setUserProfile(safeProfile);
+        }
       } catch (error) {
-        console.error('Error fetching profile:', error);
-        Alert.alert('Error', 'Failed to load profile data');
+        console.error('Error loading user profile:', error);
       } finally {
         setLoading(false);
       }
     };
 
-    fetchProfile();
-  }, [userEmail]);
+    loadUserProfile();
+  }, [userId]);
 
-  const calculateAge = (birthday) => {
-    if (!birthday) return '';
-    const birthDate = new Date(birthday);
-    const today = new Date();
-    let age = today.getFullYear() - birthDate.getFullYear();
-    const monthDiff = today.getMonth() - birthDate.getMonth();
-    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
-      age--;
-    }
-    return age;
+  const renderSection = (title, content, isArray = false) => {
+    if (!content) return null;
+    if (isArray && (!Array.isArray(content) || content.length === 0)) return null;
+    
+    return (
+      <View style={styles.section}>
+        <Text style={styles.sectionTitle}>{title}</Text>
+        <Text style={styles.sectionText}>
+          {isArray ? content.join(', ') : content}
+        </Text>
+      </View>
+    );
   };
 
-  const handleLike = () => {
-    setIsLiked(!isLiked);
-    // TODO: Implement like functionality with backend
-  };
-
-  if (loading || !profile) {
+  if (loading) {
     return (
       <View style={styles.loadingContainer}>
-        <Text>Loading...</Text>
+        <ActivityIndicator size="large" color="#0000ff" />
+      </View>
+    );
+  }
+
+  if (!userProfile) {
+    return (
+      <View style={styles.container}>
+        <Text>No profile found</Text>
       </View>
     );
   }
 
   return (
-    <SafeAreaView style={styles.container}>
-      <ScrollView contentContainerStyle={styles.content}>
-        {/* Like Button */}
-        <TouchableOpacity 
-          style={styles.likeButton} 
-          onPress={handleLike}
-        >
-          <Icon 
-            name={isLiked ? "heart" : "heart-outline"} 
-            size={30} 
-            color={isLiked ? "#FF0000" : "#000000"}
-          />
-        </TouchableOpacity>
+    <ScrollView style={styles.container}>
+      <View style={styles.header}>
+        <Image
+          source={{ uri: userProfile.profilePhoto }}
+          style={styles.profilePhoto}
+        />
+        <Text style={styles.name}>{userProfile.username}</Text>
+        <Text style={styles.location}>{userProfile.city}</Text>
+      </View>
 
-        {/* Profile Photo Placeholder */}
-        <View style={styles.photoSection}>
-          <View style={styles.photoPlaceholder}>
-            <Text style={styles.plusIcon}>+</Text>
-          </View>
-        </View>
-
-        {/* Basic Info */}
-        <View style={styles.basicInfo}>
-          <Text style={styles.username}>{profile.username}</Text>
-          <Text style={styles.subInfo}>
-            {calculateAge(profile.birthday)}{profile.city ? `, ${profile.city}` : ''}
-          </Text>
-        </View>
-
-        {/* Photo Wall */}
-        <View style={styles.photoWallSection}>
-          <Text style={styles.sectionTitle}>Photo Wall</Text>
-          <Text style={styles.photoWallText}>Photo Wall: [P1] [P2] [P3] [P4] [P5] [+]</Text>
-        </View>
-
-        {/* Profile Details */}
-        <View style={styles.detailsContainer}>
-          {profile.pronouns && (
-            <View style={styles.detailSection}>
-              <Text style={styles.label}>Pronouns</Text>
-              <Text style={styles.value}>{profile.pronouns}</Text>
-            </View>
-          )}
-
-          {profile.occupation && (
-            <View style={styles.detailSection}>
-              <Text style={styles.label}>Occupation</Text>
-              <Text style={styles.value}>{profile.occupation}</Text>
-            </View>
-          )}
-
-          {profile.hobbies && (
-            <View style={styles.detailSection}>
-              <Text style={styles.label}>Hobbies & Interests</Text>
-              <Text style={styles.value}>{profile.hobbies}</Text>
-            </View>
-          )}
-
-          {profile.personalityTags?.length > 0 && (
-            <View style={styles.detailSection}>
-              <Text style={styles.label}>Personality Tags</Text>
-              <Text style={styles.value}>{profile.personalityTags.join(', ')}</Text>
-            </View>
-          )}
-
-          {profile.favoriteBooks?.length > 0 && (
-            <View style={styles.detailSection}>
-              <Text style={styles.label}>Favorite Books</Text>
-              <Text style={styles.value}>{profile.favoriteBooks.join(', ')}</Text>
-            </View>
-          )}
-
-          {profile.favoriteMovies?.length > 0 && (
-            <View style={styles.detailSection}>
-              <Text style={styles.label}>Favorite Movies/Actors</Text>
-              <Text style={styles.value}>{profile.favoriteMovies.join(', ')}</Text>
-            </View>
-          )}
-
-          {profile.favoriteMusic?.length > 0 && (
-            <View style={styles.detailSection}>
-              <Text style={styles.label}>Favorite Music</Text>
-              <Text style={styles.value}>{profile.favoriteMusic.join(', ')}</Text>
-            </View>
-          )}
-
-          {profile.aboutMe && (
-            <View style={styles.detailSection}>
-              <Text style={styles.label}>About Me</Text>
-              <Text style={styles.value}>{profile.aboutMe}</Text>
-            </View>
-          )}
-        </View>
-      </ScrollView>
-    </SafeAreaView>
+      {renderSection('About Me', userProfile.aboutMe)}
+      {renderSection('Hobbies', userProfile.hobbies)}
+      {renderSection('Personality', userProfile.personalityTags, true)}
+      {renderSection('Favorite Books', userProfile.favoriteBooks, true)}
+      {renderSection('Favorite Movies', userProfile.favoriteMovies, true)}
+      {renderSection('Favorite Music', userProfile.favoriteMusic, true)}
+    </ScrollView>
   );
 };
 
@@ -162,77 +95,44 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#fff',
   },
-  content: {
-    padding: 16,
-  },
   loadingContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
   },
-  likeButton: {
-    position: 'absolute',
-    right: 16,
-    top: 16,
-    zIndex: 1,
-  },
-  photoSection: {
+  header: {
     alignItems: 'center',
-    marginBottom: 20,
+    padding: 20,
   },
-  photoPlaceholder: {
+  profilePhoto: {
     width: 120,
     height: 120,
     borderRadius: 60,
-    backgroundColor: '#F0F0F0',
-    justifyContent: 'center',
-    alignItems: 'center',
+    marginBottom: 10,
   },
-  plusIcon: {
-    fontSize: 40,
-    color: '#999',
-  },
-  basicInfo: {
-    alignItems: 'center',
-    marginBottom: 20,
-  },
-  username: {
+  name: {
     fontSize: 24,
     fontWeight: 'bold',
-    marginBottom: 4,
+    marginBottom: 5,
   },
-  subInfo: {
+  location: {
     fontSize: 16,
     color: '#666',
   },
-  photoWallSection: {
-    marginBottom: 20,
+  section: {
+    padding: 20,
+    borderBottomWidth: 1,
+    borderBottomColor: '#eee',
   },
   sectionTitle: {
     fontSize: 18,
     fontWeight: 'bold',
-    marginBottom: 8,
+    marginBottom: 10,
   },
-  photoWallText: {
+  sectionText: {
     fontSize: 16,
-    color: '#999',
-  },
-  detailsContainer: {
-    marginTop: 20,
-  },
-  detailSection: {
-    marginBottom: 16,
-  },
-  label: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: '#333',
-    marginBottom: 4,
-  },
-  value: {
-    fontSize: 16,
-    color: '#666',
-    lineHeight: 22,
+    color: '#444',
+    lineHeight: 24,
   },
 });
 

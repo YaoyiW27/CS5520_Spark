@@ -41,13 +41,31 @@ export const createUserProfile = async (email, userData) => {
 };
 
 // Get user profile
-export const getUserProfile = async (email) => {
+export const getUserProfile = async (userId) => {
     try {
-        const userRef = doc(db, 'Users', email);
+        const userRef = doc(db, 'Users', userId);
         const docSnap = await getDoc(userRef);
         
         if (docSnap.exists()) {
-            return docSnap.data();
+            const userData = docSnap.data();
+            // 确保返回的数据包含所有必要的字段，并且数组字段有默认值
+            return {
+                email: userId,
+                username: userData.username || '',
+                profilePhoto: userData.profilePhoto || '',
+                photowall: userData.photowall || [],
+                pronouns: userData.pronouns || '',
+                age: userData.age || '',
+                occupation: userData.occupation || '',
+                city: userData.city || '',
+                hobbies: userData.hobbies || '',
+                personalityTags: userData.personalityTags || [],
+                favoriteBooks: userData.favoriteBooks || [],
+                favoriteMovies: userData.favoriteMovies || [],
+                favoriteMusic: userData.favoriteMusic || [],
+                aboutMe: userData.aboutMe || '',
+                likes: userData.likes || [],
+            };
         } else {
             console.log('No such document!');
             return null;
@@ -93,18 +111,20 @@ export const getAllUsers = async (currentUserEmail) => {
         querySnapshot.forEach((doc) => {
             // 不包含当前用户
             if (doc.id !== currentUserEmail) {
+                const userData = doc.data();
                 users.push({
-                    id: doc.id,
-                    name: doc.data().username,  // 匹配现有的卡片显示格式
-                    age: doc.data().birthday,   // 使用生日字段
-                    city: doc.data().city,
-                    country: doc.data().country,
-                    image: doc.data().profilePhoto
+                    id: doc.id,  // 确保这是邮箱
+                    name: userData.username || 'No Name',
+                    age: userData.age || '',
+                    city: userData.city || 'No Location',
+                    country: userData.country || 'No Country',
+                    image: userData.profilePhoto || '',
                 });
             }
         });
         
-        return users.sort(() => Math.random() - 0.5);  // 随机排序
+        console.log('Fetched users:', users);  // 添加调试日志
+        return users.sort(() => Math.random() - 0.5);
     } catch (error) {
         console.error('Error getting all users:', error);
         throw error;
