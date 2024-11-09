@@ -1,8 +1,17 @@
-import React, { createContext, useState, useEffect } from 'react';
+import React, { createContext, useState, useEffect, useContext } from 'react';
 import { auth } from '../Firebase/firebaseSetup';
 import { onAuthStateChanged, signOut } from 'firebase/auth';
 
 export const AuthContext = createContext();
+
+// Add this hook
+export const useAuth = () => {
+    const context = useContext(AuthContext);
+    if (!context) {
+      throw new Error('useAuth must be used within an AuthProvider');
+    }
+    return context;
+  };
 
 export const AuthProvider = ({ children }) => {
     const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -43,7 +52,15 @@ export const AuthProvider = ({ children }) => {
     };
 
     return (
-        <AuthContext.Provider value={{ isLoggedIn, user, logout, userName, setUserName, userProfile, setUserProfile }}>
+        <AuthContext.Provider value={{ 
+            isLoggedIn, 
+            user, 
+            logout, 
+            userName, 
+            setUserName, 
+            userProfile, 
+            setUserProfile 
+        }}>
             {children}
         </AuthContext.Provider>
     );
