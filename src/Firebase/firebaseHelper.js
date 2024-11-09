@@ -3,8 +3,13 @@ import {
     doc, 
     setDoc, 
     getDoc, 
-    updateDoc 
+    updateDoc, 
+    collection, 
+    getDocs 
 } from 'firebase/firestore';
+
+// 设置默认头像 URL 常量
+const DEFAULT_PROFILE_PHOTO = 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=400';
 
 // Create new user profile
 export const createUserProfile = async (email, userData) => {
@@ -13,12 +18,13 @@ export const createUserProfile = async (email, userData) => {
         await setDoc(userRef, {
             email,
             username: userData.username || '',
-            profilePhoto: '',  // 暂时为空
-            photowall: [],     // 暂时为空数组
+            profilePhoto: DEFAULT_PROFILE_PHOTO,  // 使用默认头像
+            photowall: [],     
             pronouns: userData.pronouns || '',
-            birthday: userData.birthday || '',
+            age: userData.age || '',
             occupation: userData.occupation || '',
             city: userData.city || '',
+            country: userData.country || '',
             hobbies: userData.hobbies || '',
             personalityTags: userData.personalityTags || [],
             favoriteBooks: userData.favoriteBooks || [],
@@ -60,9 +66,10 @@ export const updateUserProfile = async (email, updateData) => {
         const docSnap = await getDoc(userRef);
         
         if (!docSnap.exists()) {
-            // If document doesn't exist, create it
+            // If document doesn't exist, create it with default photo
             await setDoc(userRef, {
                 email,
+                profilePhoto: DEFAULT_PROFILE_PHOTO,  // 确保新创建的文档也有默认头像
                 ...updateData
             });
         } else {
@@ -75,3 +82,32 @@ export const updateUserProfile = async (email, updateData) => {
         throw error;
     }
 };
+
+// 获取所有用户
+export const getAllUsers = async (currentUserEmail) => {
+    try {
+        const usersRef = collection(db, 'Users');
+        const querySnapshot = await getDocs(usersRef);
+        const users = [];
+        
+        querySnapshot.forEach((doc) => {
+            // 不包含当前用户
+            if (doc.id !== currentUserEmail) {
+                users.push({
+                    id: doc.id,
+                    name: doc.data().username,  // 匹配现有的卡片显示格式
+                    age: doc.data().birthday,   // 使用生日字段
+                    city: doc.data().city,
+                    country: doc.data().country,
+                    image: doc.data().profilePhoto
+                });
+            }
+        });
+        
+        return users.sort(() => Math.random() - 0.5);  // 随机排序
+    } catch (error) {
+        console.error('Error getting all users:', error);
+        throw error;
+    }
+};
+

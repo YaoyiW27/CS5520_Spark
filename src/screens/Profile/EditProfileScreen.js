@@ -22,9 +22,10 @@ const EditProfileScreen = () => {
   // Initialize state with empty values
   const [name, setName] = useState('');
   const [pronouns, setPronouns] = useState('');
-  const [birthday, setBirthday] = useState('');
+  const [age, setAge] = useState('');
   const [occupation, setOccupation] = useState('');
   const [city, setCity] = useState('');
+  const [country, setCountry] = useState('');
   const [hobbies, setHobbies] = useState('');
   const [tags, setTags] = useState('');
   const [books, setBooks] = useState('');
@@ -40,9 +41,10 @@ const EditProfileScreen = () => {
         if (profile) {
           setName(profile.username || '');
           setPronouns(profile.pronouns || '');
-          setBirthday(profile.birthday || '');
+          setAge(profile.age || '');
           setOccupation(profile.occupation || '');
           setCity(profile.city || '');
+          setCountry(profile.country || '');
           setHobbies(profile.hobbies || '');
           setTags(profile.personalityTags?.join(', ') || '');
           setBooks(profile.favoriteBooks?.join(', ') || '');
@@ -66,9 +68,10 @@ const EditProfileScreen = () => {
       const updatedProfile = {
         username: name,
         pronouns,
-        birthday,
+        age,
         occupation,
         city,
+        country,
         hobbies,
         personalityTags: tags.split(',').map(tag => tag.trim()).filter(tag => tag),
         favoriteBooks: books.split(',').map(book => book.trim()).filter(book => book),
@@ -119,12 +122,12 @@ const EditProfileScreen = () => {
             placeholder="Enter your pronouns"
           />
 
-          <Text style={styles.label}>Birthday</Text>
+          <Text style={styles.label}>Age</Text>
           <TextInput
             style={styles.input}
-            value={birthday}
-            onChangeText={setBirthday}
-            placeholder="yyyy-mm-dd"
+            value={age}
+            onChangeText={setAge}
+            placeholder="Enter your age"
           />
 
           <Text style={styles.label}>Occupation</Text>
@@ -141,6 +144,14 @@ const EditProfileScreen = () => {
             value={city}
             onChangeText={setCity}
             placeholder="Enter your city"
+          />
+
+          <Text style={styles.label}>Country</Text>
+          <TextInput
+            style={styles.input}
+            value={country}
+            onChangeText={setCountry}
+            placeholder="Enter your country"
           />
 
           <Text style={styles.label}>Hobbies & Interests</Text>

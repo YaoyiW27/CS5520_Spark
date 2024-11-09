@@ -1,32 +1,11 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useContext, useEffect } from 'react';
 import { View, StyleSheet, SafeAreaView, Text, TouchableOpacity, Dimensions, Image } from 'react-native';
 import { AntDesign } from '@expo/vector-icons';
 import Swiper from 'react-native-deck-swiper';
+import { getAllUsers } from '../../Firebase/firebaseHelper';
+import { AuthContext } from '../../contexts/AuthContext';
 
 const SCREEN_WIDTH = Dimensions.get('window').width;
-
-// 模拟用户数据
-const DUMMY_USERS = [
-  { 
-    id: 1, 
-    name: 'Victoria', 
-    age: 23, 
-    city: 'California', 
-    country: 'USA',
-    image: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330'
-  },
-  { 
-    id: 2, 
-    name: 'Emma', 
-    age: 25, 
-    city: 'New York', 
-    country: 'USA',
-    image: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80'
-  },
-  { id: 3, name: 'Sophia', age: 22, city: 'Miami', country: 'USA', image: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e' },
-  { id: 4, name: 'Oliver', age: 28, city: 'Boston', country: 'USA', image: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e' },
-  { id: 5, name: 'James', age: 26, city: 'Seattle', country: 'USA', image: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e' },
-];
 
 const Card = ({ user }) => {
   const [isLiked, setIsLiked] = useState(false);  // 每个卡片独立的状态
@@ -61,7 +40,22 @@ const Card = ({ user }) => {
 
 const SwipeScreen = () => {
   const [currentIndex, setCurrentIndex] = useState(0);
+  const [users, setUsers] = useState([]);
   const swiperRef = useRef(null);
+  const { logout, user } = useContext(AuthContext);
+
+  useEffect(() => {
+    const loadUsers = async () => {
+      try {
+        const allUsers = await getAllUsers(user.email);
+        setUsers(allUsers);
+      } catch (error) {
+        console.error('Error loading users:', error);
+      }
+    };
+
+    loadUsers();
+  }, [user.email]);
 
   const renderCard = (user) => {
     if (!user) return null;
@@ -72,7 +66,7 @@ const SwipeScreen = () => {
     <SafeAreaView style={styles.container}>
       <Swiper
         ref={swiperRef}
-        cards={DUMMY_USERS}
+        cards={users}
         renderCard={renderCard}
         cardIndex={currentIndex}
         backgroundColor={'#fff'}
