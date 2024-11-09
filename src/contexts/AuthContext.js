@@ -11,9 +11,10 @@ export const AuthProvider = ({ children }) => {
     const [userProfile, setUserProfile] = useState({
         userName: '',
         pronouns: '',
-        birthday: '',
+        age: '',
         occupation: '',
         city: '',
+        country: '',
         hobbies: '',
         tags: '',
         books: '',

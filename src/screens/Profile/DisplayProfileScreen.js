@@ -18,13 +18,15 @@ const DisplayProfileScreen = ({ route }) => {
           const safeProfile = {
             username: profile.username || 'No Name',
             profilePhoto: profile.profilePhoto || 'default_photo_url',
-            city: profile.city || 'No Location',
-            aboutMe: profile.aboutMe || '',
+            city: profile.city || '',
+            country: profile.country || '',
+            occupation: profile.occupation || '',
             hobbies: profile.hobbies || '',
             personalityTags: Array.isArray(profile.personalityTags) ? profile.personalityTags : [],
             favoriteBooks: Array.isArray(profile.favoriteBooks) ? profile.favoriteBooks : [],
             favoriteMovies: Array.isArray(profile.favoriteMovies) ? profile.favoriteMovies : [],
             favoriteMusic: Array.isArray(profile.favoriteMusic) ? profile.favoriteMusic : [],
+            aboutMe: profile.aboutMe || '',
           };
           console.log('Safe profile:', safeProfile);
           setUserProfile(safeProfile);
@@ -77,15 +79,16 @@ const DisplayProfileScreen = ({ route }) => {
           style={styles.profilePhoto}
         />
         <Text style={styles.name}>{userProfile.username}</Text>
-        <Text style={styles.location}>{userProfile.city}</Text>
+        <Text style={styles.location}>{userProfile.city}, {userProfile.country}</Text>
       </View>
 
-      {renderSection('About Me', userProfile.aboutMe)}
+      {renderSection('Occupation', userProfile.occupation)}
       {renderSection('Hobbies', userProfile.hobbies)}
       {renderSection('Personality', userProfile.personalityTags, true)}
       {renderSection('Favorite Books', userProfile.favoriteBooks, true)}
       {renderSection('Favorite Movies', userProfile.favoriteMovies, true)}
       {renderSection('Favorite Music', userProfile.favoriteMusic, true)}
+      {renderSection('About Me', userProfile.aboutMe)}
     </ScrollView>
   );
 };

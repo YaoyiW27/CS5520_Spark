@@ -58,6 +58,7 @@ export const getUserProfile = async (userId) => {
                 age: userData.age || '',
                 occupation: userData.occupation || '',
                 city: userData.city || '',
+                country: userData.country || '',
                 hobbies: userData.hobbies || '',
                 personalityTags: userData.personalityTags || [],
                 favoriteBooks: userData.favoriteBooks || [],
@@ -116,8 +117,8 @@ export const getAllUsers = async (currentUserEmail) => {
                     id: doc.id,  // 确保这是邮箱
                     name: userData.username || 'No Name',
                     age: userData.age || '',
-                    city: userData.city || 'No Location',
-                    country: userData.country || 'No Country',
+                    city: userData.city || '',
+                    country: userData.country || '',
                     image: userData.profilePhoto || '',
                 });
             }
