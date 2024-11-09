@@ -20,9 +20,10 @@ export const AuthProvider = ({ children }) => {
     const [userProfile, setUserProfile] = useState({
         userName: '',
         pronouns: '',
-        birthday: '',
+        age: '',
         occupation: '',
         city: '',
+        country: '',
         hobbies: '',
         tags: '',
         books: '',
@@ -39,6 +40,10 @@ export const AuthProvider = ({ children }) => {
 
         return unsubscribe;
     }, []);
+
+    useEffect(() => {
+        setUserName(userProfile.userName || 'TextName');
+    }, [userProfile.userName]);
 
     const logout = () => {
         signOut(auth)

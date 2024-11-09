@@ -7,6 +7,7 @@ import PostScreen from '../screens/Post/PostScreen';
 import CreatePostScreen from '../screens/Post/CreatePostScreen';
 import LikedListScreen from '../screens/Profile/LikedListScreen';
 import EditProfileScreen from '../screens/Profile/EditProfileScreen';
+import DisplayProfileScreen from '../screens/Profile/DisplayProfileScreen';
 
 const AppStack = createNativeStackNavigator();
 
@@ -16,6 +17,12 @@ const AppStackNavigator = () => {
       <AppStack.Screen 
         name="Main" 
         component={BottomTabNavigator}
+        options={{ headerShown: false }}
+      />
+
+      <AppStack.Screen
+        name="DisplayProfile"
+        component={DisplayProfileScreen}
         options={{ headerShown: false }}
       />
 
@@ -94,7 +101,7 @@ const AppStackNavigator = () => {
         component={LikedListScreen} 
         options={{ 
           headerShown: true,
-          title: 'Liked By',
+          title: 'Your Liked Users',
           headerTintColor: '#FF69B4',
         }} 
       />

@@ -40,9 +40,10 @@ const AuthOptionsScreen = ({ navigation }) => {
         await createUserProfile(email, {
           username: '',
           pronouns: '',
-          birthday: '',
+          age: '',
           occupation: '',
           city: '',
+          country: '',
           hobbies: '',
           personalityTags: [],
           favoriteBooks: [],
