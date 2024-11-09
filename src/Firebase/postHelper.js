@@ -11,10 +11,10 @@ import {
     arrayRemove,
     query,
     orderBy,
-    serverTimestamp
+    serverTimestamp,
+    Timestamp
 } from 'firebase/firestore';
 import { ref, uploadBytesResumable, getDownloadURL, deleteObject } from 'firebase/storage';
-import { getAuth } from 'firebase/auth';
 
 const uriToBlob = async (uri) => {
     try {
@@ -213,7 +213,7 @@ export const addComment = async (postId, userId, commentContent) => {
             username: userData.username || 'Unknown User',
             userAvatar: userData.profilePhoto || null,
             content: commentContent,
-            createdAt: serverTimestamp()
+            createdAt: Timestamp.now() 
         };
 
         await updateDoc(postRef, {

@@ -24,26 +24,34 @@ import {
   deletePost 
 } from '../../Firebase/postHelper';
 
-const Comment = ({ comment }) => (
-  <View style={styles.commentContainer}>
-    <View style={styles.commentHeader}>
-      <View style={styles.commentUserInfo}>
-        {comment.userAvatar ? (
-          <Image source={{ uri: comment.userAvatar }} style={styles.commentAvatar} />
-        ) : (
-          <View style={[styles.commentAvatar, styles.avatarPlaceholder]}>
-            <Ionicons name="person" size={16} color="#666" />
-          </View>
-        )}
-        <View>
-          <Text style={styles.commentUsername}>{comment.username}</Text>
-          <Text style={styles.commentTime}>{comment.time}</Text>
-        </View>
-      </View>
-    </View>
-    <Text style={styles.commentText}>{comment.text}</Text>
-  </View>
-);
+const formatTime = (timestamp) => {
+  if (!timestamp || !timestamp.toDate) return '';
+  
+  const now = new Date();
+  const postTime = timestamp.toDate();
+  const diffMs = now - postTime;
+  const diffMins = Math.floor(diffMs / (1000 * 60));
+  const diffHours = Math.floor(diffMins / 60);
+  const diffDays = Math.floor(diffHours / 24);
+
+  if (diffMins < 1) return 'Just now';
+  if (diffMins < 60) return `${diffMins} min ago`;
+  if (diffHours < 24) return `${diffHours} hours ago`;
+  return `${diffDays} days ago`;
+};
+
+const formatCommentTime = (timestamp) => {
+  if (!timestamp || !timestamp.seconds) return 'Just now';
+  const date = new Date(timestamp.seconds * 1000);
+  return date.toLocaleString([], {
+    year: 'numeric',
+    month: 'numeric',
+    day: 'numeric',
+    hour: 'numeric',
+    minute: '2-digit',
+    hour12: true
+  });
+};
 
 const PostCard = ({ post, onLike, onComment, onDelete, currentUserId }) => {
   const [showComments, setShowComments] = useState(false);
@@ -52,9 +60,8 @@ const PostCard = ({ post, onLike, onComment, onDelete, currentUserId }) => {
 
   const handleSubmitComment = () => {
     if (commentText.trim()) {
-      onComment(commentText);
+      onComment(post.id, commentText);
       setCommentText('');
-      // Keep the comment section open after submitting
       setShowCommentInput(false);
       setShowComments(true);
     }
@@ -102,7 +109,7 @@ const PostCard = ({ post, onLike, onComment, onDelete, currentUserId }) => {
       
       <View style={styles.footer}>
         <View style={styles.actions}>
-          <TouchableOpacity style={styles.actionButton} onPress={onLike}>
+          <TouchableOpacity style={styles.actionButton} onPress={() => onLike(post.id)}>
             <Ionicons 
               name={post.isLiked ? "heart" : "heart-outline"} 
               size={24} 
@@ -177,10 +184,7 @@ const PostCard = ({ post, onLike, onComment, onDelete, currentUserId }) => {
                     <View style={styles.commentUserInfo}>
                       <Text style={styles.commentUsername}>{comment.username}</Text>
                       <Text style={styles.commentTime}>
-                        {comment.createdAt ? 
-                          new Date(comment.createdAt.seconds * 1000).toLocaleString() : 
-                          'Just now'
-                        }
+                        {formatCommentTime(comment.createdAt)}
                       </Text>
                     </View>
                   </View>
@@ -201,15 +205,11 @@ const PostScreen = () => {
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  // Fetch posts when component mounts or when returning to screen
   useEffect(() => {
     fetchPosts();
-
-    // Add listener for when screen comes into focus
     const unsubscribe = navigation.addListener('focus', () => {
       fetchPosts();
     });
-
     return unsubscribe;
   }, []);
 
@@ -217,7 +217,6 @@ const PostScreen = () => {
     try {
       setLoading(true);
       const allPosts = await getAllPosts();
-      // Format posts data
       const formattedPosts = allPosts.map(post => ({
         ...post,
         isLiked: post.likedBy?.includes(user.email) || false,
@@ -259,10 +258,7 @@ const PostScreen = () => {
         if (post.id === postId) {
           return {
             ...post,
-            comments: [...(post.comments || []), {
-              ...newComment,
-              time: 'Just now'
-            }]
+            comments: [...(post.comments || []), newComment]
           };
         }
         return post;
@@ -283,23 +279,6 @@ const PostScreen = () => {
     }
   };
 
-  // Helper function to format timestamp
-  const formatTime = (timestamp) => {
-    if (!timestamp) return '';
-    
-    const now = new Date();
-    const postTime = timestamp.toDate();
-    const diffMs = now - postTime;
-    const diffMins = Math.floor(diffMs / (1000 * 60));
-    const diffHours = Math.floor(diffMins / 60);
-    const diffDays = Math.floor(diffHours / 24);
-
-    if (diffMins < 1) return 'Just now';
-    if (diffMins < 60) return `${diffMins} min ago`;
-    if (diffHours < 24) return `${diffHours} hours ago`;
-    return `${diffDays} days ago`;
-  };
-
   if (loading) {
     return (
       <View style={styles.loadingContainer}>
@@ -316,9 +295,9 @@ const PostScreen = () => {
         renderItem={({ item }) => (
           <PostCard 
             post={item}
-            onLike={() => handleLike(item.id)}
-            onComment={(text) => handleComment(item.id, text)}
-            onDelete={() => handleDelete(item.id)}
+            onLike={handleLike}
+            onComment={handleComment}
+            onDelete={handleDelete}
             currentUserId={user.email}
           />
         )}
@@ -423,49 +402,10 @@ const styles = StyleSheet.create({
     color: '#666',
     fontSize: 14,
   },
-  moreButton: {
-    padding: 5,
-  },
   commentsSection: {
     backgroundColor: '#f9f9f9',
     maxHeight: 300,
   },
-  commentsList: {
-    padding: 15,
-    maxHeight: 250,
-  },
-  commentInput: {
-    padding: 15,
-    backgroundColor: '#fff',
-    borderTopWidth: 1,
-    borderTopColor: '#f0f0f0',
-  },
-  inputContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#fff',
-    borderRadius: 20,
-    paddingHorizontal: 15,
-    paddingVertical: 8,
-    borderWidth: 1,
-    borderColor: '#f0f0f0',
-  },
-  input: {
-    flex: 1,
-    fontSize: 14,
-    maxHeight: 100,
-    padding: 0,
-  },
-  sendButton: {
-    padding: 5,
-  },
-  sendButtonDisabled: {
-    opacity: 0.5,
-  },
-  deleteButton: {
-    padding: 10,
-  },
-  // New comment styles
   commentInputContainer: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -522,6 +462,9 @@ const styles = StyleSheet.create({
     fontSize: 14,
     marginLeft: 40,
     color: '#333',
+  },
+  deleteButton: {
+    padding: 10,
   }
 });
 
