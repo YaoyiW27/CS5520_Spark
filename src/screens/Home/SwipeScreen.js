@@ -50,7 +50,7 @@ const SwipeScreen = () => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [users, setUsers] = useState([]);
   const swiperRef = useRef(null);
-  const { logout, user } = useContext(AuthContext);
+  const {  user } = useContext(AuthContext);
   const navigation = useNavigation();
 
   useEffect(() => {

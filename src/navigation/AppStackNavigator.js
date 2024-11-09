@@ -101,7 +101,7 @@ const AppStackNavigator = () => {
         component={LikedListScreen} 
         options={{ 
           headerShown: true,
-          title: 'Liked By',
+          title: 'Your Liked Users',
           headerTintColor: '#FF69B4',
         }} 
       />

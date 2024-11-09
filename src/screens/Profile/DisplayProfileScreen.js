@@ -1,11 +1,15 @@
-import React, { useState, useEffect } from 'react';
-import { View, Text, Image, StyleSheet, ScrollView, ActivityIndicator } from 'react-native';
-import { getUserProfile } from '../../Firebase/firebaseHelper';
+import React, { useState, useEffect, useContext } from 'react';
+import { View, Text, Image, StyleSheet, ScrollView, TouchableOpacity, Alert } from 'react-native';
+import { getUserProfile, updateUserProfile } from '../../Firebase/firebaseHelper';
+import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
+import { AuthContext } from '../../contexts/AuthContext';
 
 const DisplayProfileScreen = ({ route }) => {
   const [userProfile, setUserProfile] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [isLiked, setIsLiked] = useState(false);
   const { userId } = route.params;
+  const { user } = useContext(AuthContext);
 
   useEffect(() => {
     const loadUserProfile = async () => {
@@ -41,6 +45,39 @@ const DisplayProfileScreen = ({ route }) => {
     loadUserProfile();
   }, [userId]);
 
+  useEffect(() => {
+    const checkIfLiked = async () => {
+      if (user) {
+        const currentUserProfile = await getUserProfile(user.email);
+        setIsLiked(currentUserProfile?.likes?.includes(userId) || false);
+      }
+    };
+    checkIfLiked();
+  }, [user, userId]);
+
+  const handleLike = async () => {
+    try {
+      const newLikedState = !isLiked;
+      setIsLiked(newLikedState);
+      
+      const currentUserProfile = await getUserProfile(user.email);
+      const currentLikes = currentUserProfile?.likes || [];
+      
+      let newLikes;
+      if (newLikedState) {
+        newLikes = [...new Set([...currentLikes, userId])];
+      } else {
+        newLikes = currentLikes.filter(id => id !== userId);
+      }
+
+      await updateUserProfile(user.email, { likes: newLikes });
+    } catch (error) {
+      console.error('Error updating likes:', error);
+      setIsLiked(!isLiked);
+      Alert.alert('Error', 'Failed to update like status');
+    }
+  };
+
   const renderSection = (title, content, isArray = false) => {
     if (!content) return null;
     if (isArray && (!Array.isArray(content) || content.length === 0)) return null;
@@ -55,13 +92,13 @@ const DisplayProfileScreen = ({ route }) => {
     );
   };
 
-  if (loading) {
-    return (
-      <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#0000ff" />
-      </View>
-    );
-  }
+//   if (loading) {
+//     return (
+//       <View style={styles.loadingContainer}>
+//         <ActivityIndicator size="large" color="#0000ff" />
+//       </View>
+//     );
+//   }
 
   if (!userProfile) {
     return (
@@ -74,10 +111,24 @@ const DisplayProfileScreen = ({ route }) => {
   return (
     <ScrollView style={styles.container}>
       <View style={styles.header}>
-        <Image
-          source={{ uri: userProfile.profilePhoto }}
-          style={styles.profilePhoto}
-        />
+        <View style={styles.topSection}>
+          <View style={styles.photoContainer}>
+            <Image
+              source={{ uri: userProfile.profilePhoto }}
+              style={styles.profilePhoto}
+            />
+          </View>
+          <TouchableOpacity 
+            style={styles.likeButton}
+            onPress={handleLike}
+          >
+            <Icon 
+              name={isLiked ? "heart" : "heart-outline"} 
+              size={40} 
+              color={isLiked ? "#FF0000" : "#000000"}
+            />
+          </TouchableOpacity>
+        </View>
         <Text style={styles.name}>{userProfile.username}</Text>
         <Text style={styles.location}>{userProfile.city}, {userProfile.country}</Text>
       </View>
@@ -106,6 +157,14 @@ const styles = StyleSheet.create({
   header: {
     alignItems: 'center',
     padding: 20,
+  },
+  topSection: {
+    width: '100%',
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'flex-start',
+    position: 'relative',
+    marginBottom: 10,
   },
   profilePhoto: {
     width: 120,
@@ -136,6 +195,15 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#444',
     lineHeight: 24,
+  },
+  photoContainer: {
+    alignItems: 'center',
+  },
+  likeButton: {
+    position: 'absolute',
+    right: 0,
+    top: '80%',
+    padding: 10,
   },
 });
 
