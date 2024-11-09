@@ -1,6 +1,5 @@
 import React, { useState, useRef, useContext, useEffect } from 'react';
 import { View, StyleSheet, SafeAreaView, Text, TouchableOpacity, Dimensions, Image } from 'react-native';
-import { AntDesign } from '@expo/vector-icons';
 import Swiper from 'react-native-deck-swiper';
 import { getAllUsers } from '../../Firebase/firebaseHelper';
 import { AuthContext } from '../../contexts/AuthContext';
@@ -9,8 +8,6 @@ import { useNavigation } from '@react-navigation/native';
 const SCREEN_WIDTH = Dimensions.get('window').width;
 
 const Card = ({ user, onCardPress }) => {
-  const [isLiked, setIsLiked] = useState(false);
-
   return (
     <TouchableOpacity 
       activeOpacity={0.9}
@@ -28,20 +25,6 @@ const Card = ({ user, onCardPress }) => {
         <Text style={styles.username}>{user.name}, {user.age}</Text>
         <Text style={styles.location}>{user.city}, {user.country}</Text>
       </View>
-      <TouchableOpacity 
-        style={styles.likeButton} 
-        onPress={(e) => {
-          e.stopPropagation();
-          setIsLiked(!isLiked);
-        }}
-        activeOpacity={0.7}
-      >
-        <AntDesign 
-          name="heart" 
-          size={30} 
-          color={isLiked ? '#FF69B4' : '#ddd'} 
-        />
-      </TouchableOpacity>
     </TouchableOpacity>
   );
 };
@@ -50,7 +33,7 @@ const SwipeScreen = () => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [users, setUsers] = useState([]);
   const swiperRef = useRef(null);
-  const {  user } = useContext(AuthContext);
+  const { user } = useContext(AuthContext);
   const navigation = useNavigation();
 
   useEffect(() => {
@@ -149,9 +132,11 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#fff',
+    width: SCREEN_WIDTH,
+    height: SCREEN_WIDTH * 0.6,
   },
   card: {
-    height: SCREEN_WIDTH * 1.5,
+    height: SCREEN_WIDTH * 1.3,
     width: SCREEN_WIDTH * 0.9,
     backgroundColor: '#fff',
     borderRadius: 20,
@@ -190,16 +175,6 @@ const styles = StyleSheet.create({
   location: {
     fontSize: 16,
     color: '#666',
-  },
-  likeButton: {
-    position: 'absolute',
-    bottom: 16,
-    right: 16,
-    padding: 16,
-    zIndex: 1000,
-    backgroundColor: 'transparent',
-    elevation: 6,
-    pointerEvents: 'auto',
   },
 });
 
