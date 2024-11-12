@@ -201,19 +201,34 @@ const PostCard = ({ post, onLike, onComment, onDelete, currentUserId }) => {
 
 const PostScreen = () => {
   const navigation = useNavigation();
-  const { user } = useAuth();
+  const { user, isLoggedIn } = useAuth(); // Get both user and isLoggedIn from AuthContext
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
 
+  // Check authentication status and redirect if not logged in
   useEffect(() => {
-    fetchPosts();
-    const unsubscribe = navigation.addListener('focus', () => {
-      fetchPosts();
-    });
-    return unsubscribe;
-  }, []);
+    if (!isLoggedIn || !user) {
+      navigation.replace('Login'); // Redirect to login screen if user is not authenticated
+      return;
+    }
+  }, [isLoggedIn, user]);
 
+  // Handle posts fetching when screen is focused or mounted
+  useEffect(() => {
+    // Only fetch posts if user is authenticated
+    if (user) {
+      fetchPosts();
+      const unsubscribe = navigation.addListener('focus', () => {
+        fetchPosts();
+      });
+      return unsubscribe;
+    }
+  }, [user]);
+
+  // Fetch all posts and format them with user-specific data
   const fetchPosts = async () => {
+    if (!user) return; // Guard clause to prevent fetching without user
+
     try {
       setLoading(true);
       const allPosts = await getAllPosts();
@@ -232,7 +247,10 @@ const PostScreen = () => {
     }
   };
 
+  // Handle like toggle for posts
   const handleLike = async (postId) => {
+    if (!user) return; // Guard clause to prevent liking without user
+
     try {
       const isLiked = await toggleLike(postId, user.email);
       setPosts(posts.map(post => {
@@ -251,7 +269,10 @@ const PostScreen = () => {
     }
   };
 
+  // Handle comment creation for posts
   const handleComment = async (postId, commentText) => {
+    if (!user) return; // Guard clause to prevent commenting without user
+
     try {
       const newComment = await addComment(postId, user.email, commentText);
       setPosts(posts.map(post => {
@@ -269,7 +290,10 @@ const PostScreen = () => {
     }
   };
 
+  // Handle post deletion
   const handleDelete = async (postId) => {
+    if (!user) return; // Guard clause to prevent deletion without user
+
     try {
       await deletePost(postId, user.email);
       setPosts(posts.filter(post => post.id !== postId));
@@ -279,6 +303,7 @@ const PostScreen = () => {
     }
   };
 
+  // Show loading indicator while fetching posts
   if (loading) {
     return (
       <View style={styles.loadingContainer}>
@@ -287,6 +312,7 @@ const PostScreen = () => {
     );
   }
 
+  // Render post list
   return (
     <SafeAreaView style={styles.container}>
       <FlatList
@@ -298,7 +324,7 @@ const PostScreen = () => {
             onLike={handleLike}
             onComment={handleComment}
             onDelete={handleDelete}
-            currentUserId={user.email}
+            currentUserId={user?.email} // Add optional chaining for safety
           />
         )}
         showsVerticalScrollIndicator={false}
