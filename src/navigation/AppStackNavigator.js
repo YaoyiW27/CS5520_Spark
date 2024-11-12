@@ -23,7 +23,15 @@ const AppStackNavigator = () => {
       <AppStack.Screen
         name="DisplayProfile"
         component={DisplayProfileScreen}
-        options={{ headerShown: false }}
+        options={() => ({
+          headerShown: true,
+          headerTitle: "Profile Details",
+          headerTitleStyle: {
+            color: '#FF69B4',
+            fontSize: 18,
+          },
+          headerTintColor: '#FF69B4',
+        })}
       />
 
       <AppStack.Screen
@@ -101,7 +109,7 @@ const AppStackNavigator = () => {
         component={LikedListScreen} 
         options={{ 
           headerShown: true,
-          title: 'Your Liked Users',
+          title: 'Liked List',
           headerTintColor: '#FF69B4',
         }} 
       />
