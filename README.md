@@ -90,15 +90,15 @@ to be added
 If time allows, we will add chat pages and functions.
 
 ## Screenshots 
-![screen1](./src/screenshots/screen1.jpg)
-![screen2](./src/screenshots/screen2.jpg)
-![screen3](./src/screenshots/screen3.jpg)
-![screen4](./src/screenshots/screen4.jpg)
-![screen5](./src/screenshots/screen5.jpg)
-![screen6](./src/screenshots/screen6.jpg)
-![screen7](./src/screenshots/screen7.jpg)
-![screen8](./src/screenshots/screen8.jpg)
-![screen9](./src/screenshots/screen9.jpg)
+<img src="./src/screenshots/screen1.jpg" width="300" />
+<img src="./src/screenshots/screen2.jpg" width="300" />
+<img src="./src/screenshots/screen3.jpg" width="300" />
+<img src="./src/screenshots/screen4.jpg" width="300" />
+<img src="./src/screenshots/screen5.jpg" width="300" />
+<img src="./src/screenshots/screen6.jpg" width="300" />
+<img src="./src/screenshots/screen7.jpg" width="300" />
+<img src="./src/screenshots/screen8.jpg" width="300" />
+<img src="./src/screenshots/screen9.jpg" width="300" />
 
 ## Version Control and Collaboration
 All team members have equal access to the project repository, created branches for different features, and can push their changes to the main branch after review. Each member is responsible for creating separate branches for individual features or bug fixes, following the GitHub Flow workflow. Regular commits and pulls are made to ensure that the main branch stays up-to-date and conflicts are minimized.
