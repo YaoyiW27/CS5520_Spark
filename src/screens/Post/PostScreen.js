@@ -18,7 +18,7 @@ import { useNavigation } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../../contexts/AuthContext'; 
 import { 
-  getAllPosts, 
+  getLikedAndOwnPosts,
   toggleLike, 
   addComment, 
   deletePost 
@@ -40,19 +40,6 @@ const formatTime = (timestamp) => {
   return `${diffDays} days ago`;
 };
 
-const formatCommentTime = (timestamp) => {
-  if (!timestamp || !timestamp.seconds) return 'Just now';
-  const date = new Date(timestamp.seconds * 1000);
-  return date.toLocaleString([], {
-    year: 'numeric',
-    month: 'numeric',
-    day: 'numeric',
-    hour: 'numeric',
-    minute: '2-digit',
-    hour12: true
-  });
-};
-
 const PostCard = ({ post, onLike, onComment, onDelete, currentUserId }) => {
   const [showComments, setShowComments] = useState(false);
   const [commentText, setCommentText] = useState('');
@@ -66,7 +53,7 @@ const PostCard = ({ post, onLike, onComment, onDelete, currentUserId }) => {
       setShowComments(true);
     }
   };
-  
+
   return (
     <View style={styles.card}>
       <View style={styles.header}>
@@ -81,11 +68,18 @@ const PostCard = ({ post, onLike, onComment, onDelete, currentUserId }) => {
             )}
           </TouchableOpacity>
           <View style={styles.userTextInfo}>
-            <Text style={styles.username}>{post.username}</Text>
+            <View style={styles.usernameContainer}>
+              <Text style={styles.username}>{post.username}</Text>
+              {post.isOwnPost && (
+                <View style={styles.ownPostBadge}>
+                  <Text style={styles.ownPostText}>Me</Text>
+                </View>
+              )}
+            </View>
             <Text style={styles.time}>{post.time}</Text>
           </View>
         </View>
-        {currentUserId === post.userId && (
+        {post.isOwnPost && (
           <TouchableOpacity 
             style={styles.deleteButton} 
             onPress={() => onDelete(post.id)}
@@ -94,7 +88,7 @@ const PostCard = ({ post, onLike, onComment, onDelete, currentUserId }) => {
           </TouchableOpacity>
         )}
       </View>
-      
+
       <Text style={styles.content}>{post.content}</Text>
       
       {post.media && post.media.length > 0 && (
@@ -109,7 +103,10 @@ const PostCard = ({ post, onLike, onComment, onDelete, currentUserId }) => {
       
       <View style={styles.footer}>
         <View style={styles.actions}>
-          <TouchableOpacity style={styles.actionButton} onPress={() => onLike(post.id)}>
+          <TouchableOpacity 
+            style={styles.actionButton} 
+            onPress={() => onLike(post.id)}
+          >
             <Ionicons 
               name={post.isLiked ? "heart" : "heart-outline"} 
               size={24} 
@@ -184,7 +181,7 @@ const PostCard = ({ post, onLike, onComment, onDelete, currentUserId }) => {
                     <View style={styles.commentUserInfo}>
                       <Text style={styles.commentUsername}>{comment.username}</Text>
                       <Text style={styles.commentTime}>
-                        {formatCommentTime(comment.createdAt)}
+                        {formatTime(comment.createdAt)}
                       </Text>
                     </View>
                   </View>
@@ -201,38 +198,25 @@ const PostCard = ({ post, onLike, onComment, onDelete, currentUserId }) => {
 
 const PostScreen = () => {
   const navigation = useNavigation();
-  const { user, isLoggedIn } = useAuth(); // Get both user and isLoggedIn from AuthContext
+  const { user, isLoggedIn } = useAuth();
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
 
-  // Check authentication status and redirect if not logged in
   useEffect(() => {
     if (!isLoggedIn || !user) {
-      navigation.replace('Login'); // Redirect to login screen if user is not authenticated
+      navigation.replace('Login');
       return;
     }
   }, [isLoggedIn, user]);
 
-  // Handle posts fetching when screen is focused or mounted
-  useEffect(() => {
-    // Only fetch posts if user is authenticated
-    if (user) {
-      fetchPosts();
-      const unsubscribe = navigation.addListener('focus', () => {
-        fetchPosts();
-      });
-      return unsubscribe;
-    }
-  }, [user]);
-
-  // Fetch all posts and format them with user-specific data
   const fetchPosts = async () => {
-    if (!user) return; // Guard clause to prevent fetching without user
+    if (!user?.email) return;
 
     try {
       setLoading(true);
-      const allPosts = await getAllPosts();
-      const formattedPosts = allPosts.map(post => ({
+      const fetchedPosts = await getLikedAndOwnPosts(user.email);
+      const formattedPosts = fetchedPosts.map(post => ({
         ...post,
         isLiked: post.likedBy?.includes(user.email) || false,
         likes: post.likesCount || 0,
@@ -247,10 +231,21 @@ const PostScreen = () => {
     }
   };
 
-  // Handle like toggle for posts
-  const handleLike = async (postId) => {
-    if (!user) return; // Guard clause to prevent liking without user
+  const handleRefresh = async () => {
+    setRefreshing(true);
+    await fetchPosts();
+    setRefreshing(false);
+  };
 
+  useEffect(() => {
+    if (user?.email) {
+      fetchPosts();
+      const unsubscribe = navigation.addListener('focus', fetchPosts);
+      return unsubscribe;
+    }
+  }, [user?.email]);
+
+  const handleLike = async (postId) => {
     try {
       const isLiked = await toggleLike(postId, user.email);
       setPosts(posts.map(post => {
@@ -269,10 +264,7 @@ const PostScreen = () => {
     }
   };
 
-  // Handle comment creation for posts
   const handleComment = async (postId, commentText) => {
-    if (!user) return; // Guard clause to prevent commenting without user
-
     try {
       const newComment = await addComment(postId, user.email, commentText);
       setPosts(posts.map(post => {
@@ -290,10 +282,7 @@ const PostScreen = () => {
     }
   };
 
-  // Handle post deletion
   const handleDelete = async (postId) => {
-    if (!user) return; // Guard clause to prevent deletion without user
-
     try {
       await deletePost(postId, user.email);
       setPosts(posts.filter(post => post.id !== postId));
@@ -303,7 +292,6 @@ const PostScreen = () => {
     }
   };
 
-  // Show loading indicator while fetching posts
   if (loading) {
     return (
       <View style={styles.loadingContainer}>
@@ -312,7 +300,6 @@ const PostScreen = () => {
     );
   }
 
-  // Render post list
   return (
     <SafeAreaView style={styles.container}>
       <FlatList
@@ -324,13 +311,20 @@ const PostScreen = () => {
             onLike={handleLike}
             onComment={handleComment}
             onDelete={handleDelete}
-            currentUserId={user?.email} // Add optional chaining for safety
+            currentUserId={user?.email}
           />
         )}
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.listContainer}
-        refreshing={loading}
-        onRefresh={fetchPosts}
+        refreshing={refreshing}
+        onRefresh={handleRefresh}
+        ListEmptyComponent={
+          <View style={styles.emptyContainer}>
+            <Text style={styles.emptyText}>
+              No posts yet. Like some users to see their posts!
+            </Text>
+          </View>
+        }
       />
     </SafeAreaView>
   );
@@ -345,6 +339,19 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
+  },
+  emptyContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+    marginTop: 50,
+  },
+  emptyText: {
+    fontSize: 16,
+    color: '#666',
+    textAlign: 'center',
+    lineHeight: 24,
   },
   listContainer: {
     paddingBottom: 20,
@@ -367,6 +374,22 @@ const styles = StyleSheet.create({
   },
   userTextInfo: {
     marginLeft: 10,
+  },
+  usernameContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  ownPostBadge: {
+    backgroundColor: '#FF69B4',
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 12,
+  },
+  ownPostText: {
+    color: '#fff',
+    fontSize: 12,
+    fontWeight: 'bold',
   },
   avatar: {
     width: 40,
@@ -395,7 +418,7 @@ const styles = StyleSheet.create({
   },
   content: {
     paddingHorizontal: 15,
-    paddingVertical: 10,  
+    paddingVertical: 10,
     fontSize: 15,
     color: '#333',
     lineHeight: 20,
