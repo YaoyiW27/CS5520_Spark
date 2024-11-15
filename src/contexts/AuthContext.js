@@ -130,7 +130,7 @@ export const AuthProvider = ({ children }) => {
     if (loading) {
         return (
             <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-                <ActivityIndicator size="large" color="#FF69B4" />
+                <ActivityIndicator size={40} color="#FF69B4" />
             </View>
         );
     }

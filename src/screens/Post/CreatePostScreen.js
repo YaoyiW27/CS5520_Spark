@@ -11,7 +11,6 @@ import {
   Platform,
   ScrollView,
   Alert,
-  ActivityIndicator
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';

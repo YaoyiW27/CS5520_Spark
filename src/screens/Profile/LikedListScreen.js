@@ -53,7 +53,7 @@ const LikedListScreen = ({ navigation }) => {
     if (loading) {
         return (
             <View style={styles.loadingContainer}>
-                <ActivityIndicator size="large" color="#0000ff" />
+                <ActivityIndicator size={40} color="#0000ff" />
             </View>
         );
     }

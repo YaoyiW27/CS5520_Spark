@@ -92,13 +92,6 @@ const DisplayProfileScreen = ({ route }) => {
     );
   };
 
-//   if (loading) {
-//     return (
-//       <View style={styles.loadingContainer}>
-//         <ActivityIndicator size="large" color="#0000ff" />
-//       </View>
-//     );
-//   }
 
   if (!userProfile) {
     return (
