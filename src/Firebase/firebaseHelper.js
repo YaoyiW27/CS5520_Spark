@@ -7,6 +7,8 @@ import {
     collection, 
     getDocs 
 } from 'firebase/firestore';
+import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
+import { storage } from './firebaseSetup';
 
 // 设置默认头像 URL 常量
 const DEFAULT_PROFILE_PHOTO = 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=400';
@@ -85,10 +87,9 @@ export const updateUserProfile = async (email, updateData) => {
         const docSnap = await getDoc(userRef);
         
         if (!docSnap.exists()) {
-            // If document doesn't exist, create it with default photo
+            // If document doesn't exist, create it
             await setDoc(userRef, {
                 email,
-                profilePhoto: DEFAULT_PROFILE_PHOTO,  // 确保新创建的文档也有默认头像
                 ...updateData
             });
         } else {
@@ -128,6 +129,31 @@ export const getAllUsers = async (currentUserEmail) => {
         return users.sort(() => Math.random() - 0.5);
     } catch (error) {
         console.error('Error getting all users:', error);
+        throw error;
+    }
+};
+
+export const updateUserProfilePhoto = async (email, photoUri) => {
+    try {
+        // Create a reference to the user's profile photo
+        const storageRef = ref(storage, `profile_photos/${email}/profile.jpg`);
+        
+        // Convert URI to blob
+        const response = await fetch(photoUri);
+        const blob = await response.blob();
+        
+        // Upload photo to Firebase Storage
+        await uploadBytes(storageRef, blob);
+        
+        // Get the download URL
+        const photoURL = await getDownloadURL(storageRef);
+        
+        // Update user profile with new photo URL using profilePhoto field
+        await updateUserProfile(email, { profilePhoto: photoURL });
+        
+        return photoURL;
+    } catch (error) {
+        console.error('Error updating profile photo:', error);
         throw error;
     }
 };
