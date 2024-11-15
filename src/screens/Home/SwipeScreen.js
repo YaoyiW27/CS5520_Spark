@@ -1,33 +1,11 @@
 import React, { useState, useRef, useContext, useEffect } from 'react';
-import { View, StyleSheet, SafeAreaView, Text, TouchableOpacity, Dimensions, Image } from 'react-native';
+import { View, StyleSheet, SafeAreaView, Text, TouchableOpacity, Dimensions, Image, Platform } from 'react-native';
 import Swiper from 'react-native-deck-swiper';
 import { getAllUsers } from '../../Firebase/firebaseHelper';
 import { AuthContext } from '../../contexts/AuthContext';
 import { useNavigation } from '@react-navigation/native';
 
 const SCREEN_WIDTH = Dimensions.get('window').width;
-
-const Card = ({ user, onCardPress }) => {
-  return (
-    <TouchableOpacity 
-      activeOpacity={0.9}
-      onPress={() => onCardPress(user)}
-      style={styles.card}
-    >
-      <View style={styles.photoContainer}>
-        <Image
-          source={{ uri: `${user.image}?w=800` }}
-          style={styles.photo}
-          resizeMode="cover"
-        />
-      </View>
-      <View style={styles.userInfo}>
-        <Text style={styles.username}>{user.name}, {user.age}</Text>
-        <Text style={styles.location}>{user.city}, {user.country}</Text>
-      </View>
-    </TouchableOpacity>
-  );
-};
 
 const SwipeScreen = () => {
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -64,8 +42,27 @@ const SwipeScreen = () => {
 
   const renderCard = (user) => {
     if (!user) return null;
-    console.log('Rendering card for user:', user);
-    return <Card user={user} onCardPress={handleCardPress} />;
+    return (
+      <TouchableOpacity 
+        activeOpacity={0.9}
+        onPress={() => handleCardPress(user)}
+        style={styles.card}
+      >
+        <View style={styles.photoContainer}>
+          <Image
+            source={{ uri: user.image }}
+            style={styles.photo}
+            resizeMode="cover"
+          />
+        </View>
+        <View style={styles.userInfo}>
+          <Text style={styles.username}>{user.name}, {user.age || 'N/A'}</Text>
+          <Text style={styles.location}>
+            {[user.city, user.country].filter(Boolean).join(', ') || 'Location not specified'}
+          </Text>
+        </View>
+      </TouchableOpacity>
+    );
   };
 
   return (
@@ -75,18 +72,24 @@ const SwipeScreen = () => {
         cards={users}
         renderCard={renderCard}
         cardIndex={currentIndex}
-        backgroundColor={'#fff'}
+        backgroundColor={'transparent'}
         stackSize={3}
-        stackSeparation={15}
+        stackScale={1}
+        stackSeparation={14}
+        animateCardOpacity
+        infinite={false}
+        showSecondCard={true}
+        verticalSwipe={false}
+        horizontalSwipe={true}
         disableTopSwipe
         disableBottomSwipe
-        useViewOverflow={false}
-        onSwipedLeft={(cardIndex) => {
-          setCurrentIndex(cardIndex + 1);
-        }}
-        onSwipedRight={(cardIndex) => {
-          setCurrentIndex(cardIndex + 1);
-        }}
+        outputRotationRange={["-10deg", "0deg", "10deg"]}
+        cardVerticalMargin={0}
+        cardHorizontalMargin={0}
+        useViewOverflow={Platform.OS === 'ios'}
+        swipeAnimationDuration={350}
+        goBackToPreviousCardOnSwipeLeft={false}
+        goBackToPreviousCardOnSwipeRight={false}
         overlayLabels={{
           left: {
             title: 'NOPE',
@@ -94,14 +97,20 @@ const SwipeScreen = () => {
               label: {
                 backgroundColor: '#FF0000',
                 color: '#fff',
-                fontSize: 24
+                fontSize: 25,
+                fontWeight: 'bold',
+                borderRadius: 12,
+                padding: 12,
+                borderWidth: 1.5,
+                borderColor: '#FF0000',
               },
               wrapper: {
                 flexDirection: 'column',
                 alignItems: 'flex-end',
                 justifyContent: 'flex-start',
                 marginTop: 30,
-                marginLeft: -30
+                marginLeft: -30,
+                paddingRight: 20,
               }
             }
           },
@@ -111,17 +120,39 @@ const SwipeScreen = () => {
               label: {
                 backgroundColor: '#4DED30',
                 color: '#fff',
-                fontSize: 24
+                fontSize: 25,
+                fontWeight: 'bold',
+                borderRadius: 12,
+                padding: 12,
+                borderWidth: 1.5,
+                borderColor: '#4DED30',
               },
               wrapper: {
                 flexDirection: 'column',
                 alignItems: 'flex-start',
                 justifyContent: 'flex-start',
                 marginTop: 30,
-                marginLeft: 30
+                marginLeft: 30,
+                paddingLeft: 20,
               }
             }
           }
+        }}
+        overlayOpacityRangeX={[0.15, 0.3]}
+        overlayOpacityRangeY={[0.15, 0.3]}
+        overlayOpacityReverse={true}
+        animateOverlayLabelsOpacity
+        containerStyle={{
+          flex: 1,
+        }}
+        cardStyle={{
+          top: -14,
+        }}
+        onSwipedLeft={(cardIndex) => {
+          setCurrentIndex(cardIndex + 1);
+        }}
+        onSwipedRight={(cardIndex) => {
+          setCurrentIndex(cardIndex + 1);
         }}
       />
     </SafeAreaView>
@@ -131,13 +162,11 @@ const SwipeScreen = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
-    width: SCREEN_WIDTH,
-    height: SCREEN_WIDTH * 0.6,
+    backgroundColor: '#f5f5f5',
   },
   card: {
-    height: SCREEN_WIDTH * 1.3,
-    width: SCREEN_WIDTH * 0.9,
+    height: SCREEN_WIDTH * 1.5,
+    width: SCREEN_WIDTH * 0.85,
     backgroundColor: '#fff',
     borderRadius: 20,
     shadowColor: '#000',
@@ -150,22 +179,23 @@ const styles = StyleSheet.create({
     elevation: 5,
     alignSelf: 'center',
     position: 'relative',
+    marginTop: 20,
   },
   photoContainer: {
-    flex: 3,
+    flex: 4,
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
     overflow: 'hidden',
-    zIndex: 1,
   },
   photo: {
     width: '100%',
     height: '100%',
   },
   userInfo: {
+    flex: 1,
     padding: 16,
+    justifyContent: 'center',
     alignItems: 'center',
-    zIndex: 1,
   },
   username: {
     fontSize: 24,
