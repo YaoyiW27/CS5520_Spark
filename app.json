@@ -1,7 +1,7 @@
 {
   "expo": {
-    "name": "CS5520_spark",
-    "slug": "CS5520_spark",
+    "name": "CS5520_Spark",
+    "slug": "CS5520_Spark",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
@@ -12,9 +12,7 @@
       "resizeMode": "contain",
       "backgroundColor": "#ffffff"
     },
-    "assetBundlePatterns": [
-      "**/*"
-    ],
+   
     "ios": {
       "supportsTablet": true
     },

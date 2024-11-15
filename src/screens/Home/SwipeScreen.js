@@ -165,8 +165,8 @@ const styles = StyleSheet.create({
     backgroundColor: '#f5f5f5',
   },
   card: {
-    height: SCREEN_WIDTH * 1.5,
-    width: SCREEN_WIDTH * 0.85,
+    height: SCREEN_WIDTH * 1.25,
+    width: SCREEN_WIDTH * 0.8,
     backgroundColor: '#fff',
     borderRadius: 20,
     shadowColor: '#000',
@@ -182,7 +182,7 @@ const styles = StyleSheet.create({
     marginTop: 20,
   },
   photoContainer: {
-    flex: 4,
+    flex: 3.5,
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
     overflow: 'hidden',
@@ -193,17 +193,17 @@ const styles = StyleSheet.create({
   },
   userInfo: {
     flex: 1,
-    padding: 16,
+    padding: 12,
     justifyContent: 'center',
     alignItems: 'center',
   },
   username: {
-    fontSize: 24,
+    fontSize: 22,
     fontWeight: 'bold',
-    marginBottom: 8,
+    marginBottom: 6,
   },
   location: {
-    fontSize: 16,
+    fontSize: 14,
     color: '#666',
   },
 });
