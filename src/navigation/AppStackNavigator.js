@@ -8,6 +8,7 @@ import CreatePostScreen from '../screens/Post/CreatePostScreen';
 import LikedListScreen from '../screens/Profile/LikedListScreen';
 import EditProfileScreen from '../screens/Profile/EditProfileScreen';
 import DisplayProfileScreen from '../screens/Profile/DisplayProfileScreen';
+import FilterScreen from '../screens/Discover/FilterScreen';
 
 const AppStack = createNativeStackNavigator();
 
@@ -32,6 +33,20 @@ const AppStackNavigator = () => {
           },
           headerTintColor: '#FF69B4',
         })}
+      />
+
+      <AppStack.Screen 
+        name="FilterScreen" 
+        component={FilterScreen} 
+        options={{ 
+          headerShown: true,
+          title: 'Filters',
+          headerTitleStyle: {
+            color: '#FF69B4',
+            fontSize: 18,
+          },
+          headerTintColor: '#FF69B4',
+        }} 
       />
 
       <AppStack.Screen

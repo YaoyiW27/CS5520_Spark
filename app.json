@@ -29,6 +29,12 @@
         {
           "photosPermission": "The app needs access to your photos to let you share them."
         }
+      ],
+      [
+        "expo-location",
+        {
+          "locationAlwaysAndWhenInUsePermission": "Allow $(PRODUCT_NAME) to use your location."
+        }
       ]
     ]
   }

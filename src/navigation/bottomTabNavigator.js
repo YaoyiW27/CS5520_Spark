@@ -19,32 +19,48 @@ function BottomTabNavigator() {
           backgroundColor: 'white',
           borderTopWidth: 1,
           borderTopColor: '#f0f0f0',
-        }
+        },
+        headerStyle: {
+          backgroundColor: '#fff',
+        },
+        headerTitleAlign: 'center',
+        headerShadowVisible: false,
       }}
     >
       <Tab.Screen 
         name="Home" 
         component={SwipeScreen}
         options={{
+          headerTitle: 'Home',
+          headerTitleStyle: {
+            color: '#FF69B4',
+            fontSize: 18,
+          },
           tabBarIcon: ({ color, size }) => (
             <Ionicons name="home" size={size} color={color} />
           ),
+          tabBarAccessibilityLabel: 'Home Tab',
         }}
       />
       <Tab.Screen 
         name="Discover" 
         component={MapScreen}
         options={{
+          headerTitle: 'Discover',
+          headerTitleStyle: {
+            color: '#FF69B4',
+            fontSize: 18,
+          },
           tabBarIcon: ({ color, size }) => (
             <Ionicons name="compass" size={size} color={color} />
           ),
+          tabBarAccessibilityLabel: 'Discover Tab',
         }}
       />
       <Tab.Screen 
         name="Post" 
         component={PostScreen}
         options={({ navigation }) => ({
-          headerTitleAlign: 'center',
           headerTitle: 'Post',
           headerTitleStyle: {
             color: '#FF69B4',
@@ -58,22 +74,25 @@ function BottomTabNavigator() {
               <Ionicons name="add-circle" size={28} color="#FF69B4" />
             </TouchableOpacity>
           ),
-          headerShadowVisible: false,
-          headerStyle: {
-            backgroundColor: '#fff',
-          },
           tabBarIcon: ({ color, size }) => (
-            <Ionicons name="add-circle" size={size} color={color} />
+            <Ionicons name="add-circle-outline" size={size} color={color} />
           ),
+          tabBarAccessibilityLabel: 'Post Tab',
         })}
       />
       <Tab.Screen 
         name="Profile" 
         component={ProfileScreen}
         options={{
+          headerTitle: 'Profile',
+          headerTitleStyle: {
+            color: '#FF69B4',
+            fontSize: 18,
+          },
           tabBarIcon: ({ color, size }) => (
             <Ionicons name="person" size={size} color={color} />
           ),
+          tabBarAccessibilityLabel: 'Profile Tab',
         }}
       />
     </Tab.Navigator>
