@@ -16,17 +16,6 @@ import {
 } from 'firebase/firestore';
 import { ref, uploadBytesResumable, getDownloadURL, deleteObject } from 'firebase/storage';
 
-const uriToBlob = async (uri) => {
-    try {
-        const response = await fetch(uri);
-        const blob = await response.blob();
-        return blob;
-    } catch (error) {
-        console.error('Error converting URI to blob:', error);
-        throw error;
-    }
-};
-
 export const createPost = async (userId, content, mediaFile = null, onProgress) => {
     if (!userId) {
         throw new Error('User ID is required');
@@ -127,43 +116,6 @@ export const createPost = async (userId, content, mediaFile = null, onProgress) 
     }
 };
 
-
-export const getAllPosts = async () => {
-    try {
-        const postsQuery = query(
-            collection(db, 'Posts'),
-            orderBy('createdAt', 'desc')
-        );
-        
-        const querySnapshot = await getDocs(postsQuery);
-        const posts = [];
-        
-        for (const docSnapshot of querySnapshot.docs) {
-            try {
-                const post = docSnapshot.data();
-                const userRef = doc(db, 'Users', post.userId);
-                const userSnap = await getDoc(userRef);
-                const userData = userSnap.exists() ? userSnap.data() : {};
-                
-                posts.push({
-                    id: docSnapshot.id,
-                    ...post,
-                    username: userData.username || 'Unknown User',
-                    userAvatar: userData.profilePhoto || null
-                });
-            } catch (error) {
-                console.error('Error processing post:', error);
-                continue;
-            }
-        }
-        
-        return posts;
-    } catch (error) {
-        console.error('Error getting posts:', error);
-        throw error;
-    }
-};
-
 // Toggle like
 export const toggleLike = async (postId, userId) => {
     try {
@@ -227,31 +179,6 @@ export const addComment = async (postId, userId, commentContent) => {
     }
 };
 
-// Get a single post by ID
-export const getPostById = async (postId) => {
-    try {
-        const postDoc = await getDoc(doc(db, 'Posts', postId));
-        if (!postDoc.exists()) {
-            throw new Error('Post not found');
-        }
-
-        const postData = postDoc.data();
-        // Get author information
-        const userDoc = await getDoc(doc(db, 'Users', postData.userId));
-        const userData = userDoc.data();
-
-        return {
-            id: postDoc.id,
-            ...postData,
-            username: userData.username,
-            userAvatar: userData.profilePhoto
-        };
-    } catch (error) {
-        console.error('Error getting post:', error);
-        throw error;
-    }
-};
-
 // Delete post
 export const deletePost = async (postId, userId) => {
     try {
@@ -289,6 +216,61 @@ export const deletePost = async (postId, userId) => {
         return true;
     } catch (error) {
         console.error('Error deleting post:', error);
+        throw error;
+    }
+};
+
+// Get both liked users' posts and current user's posts
+export const getLikedAndOwnPosts = async (currentUserEmail) => {
+    try {
+        // 1. Get current user's profile to get liked users
+        const userRef = doc(db, 'Users', currentUserEmail);
+        const userSnap = await getDoc(userRef);
+        
+        if (!userSnap.exists()) {
+            throw new Error('User not found');
+        }
+
+        const userData = userSnap.data();
+        const likedUsers = userData.likes || [];
+
+        // 2. Create query to get all posts sorted by creation time
+        const postsQuery = query(
+            collection(db, 'Posts'),
+            orderBy('createdAt', 'desc')
+        );
+        
+        const querySnapshot = await getDocs(postsQuery);
+        const posts = [];
+        
+        // 3. Filter and process posts
+        for (const docSnapshot of querySnapshot.docs) {
+            try {
+                const post = docSnapshot.data();
+                
+                // Include post if it's from a liked user or the current user
+                if (likedUsers.includes(post.userId) || post.userId === currentUserEmail) {
+                    const postUserRef = doc(db, 'Users', post.userId);
+                    const postUserSnap = await getDoc(postUserRef);
+                    const postUserData = postUserSnap.exists() ? postUserSnap.data() : {};
+                    
+                    posts.push({
+                        id: docSnapshot.id,
+                        ...post,
+                        username: postUserData.username || 'Unknown User',
+                        userAvatar: postUserData.profilePhoto || null,
+                        isOwnPost: post.userId === currentUserEmail
+                    });
+                }
+            } catch (error) {
+                console.error('Error processing post:', error);
+                continue;
+            }
+        }
+        
+        return posts;
+    } catch (error) {
+        console.error('Error getting posts:', error);
         throw error;
     }
 };
