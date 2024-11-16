@@ -82,7 +82,8 @@ const EditProfileScreen = () => {
         favoriteBooks: books.split(',').map(book => book.trim()).filter(book => book),
         favoriteMovies: movies.split(',').map(movie => movie.trim()).filter(movie => movie),
         favoriteMusic: music.split(',').map(item => item.trim()).filter(item => item),
-        aboutMe
+        aboutMe,
+        photowall: photoWall
       };
 
       await updateUserProfile(user.email, updatedProfile);
@@ -128,6 +129,26 @@ const EditProfileScreen = () => {
     }
   };
 
+  const handleDeletePhoto = (photoUrl, index) => {
+    Alert.alert(
+      "Delete Photo",
+      "Are you sure you want to delete this photo?",
+      [
+        {
+          text: "Cancel",
+          style: "cancel"
+        },
+        {
+          text: "Delete",
+          onPress: () => {
+            const newPhotoWall = photoWall.filter((_, i) => i !== index);
+            setPhotoWall(newPhotoWall);
+          }
+        }
+      ]
+    );
+  };
+
   if (loading) {
     return (
       <View style={styles.loadingContainer}>
@@ -151,11 +172,18 @@ const EditProfileScreen = () => {
 
           <View style={styles.photoWallContainer}>
             {photoWall.map((photo, index) => (
-              <Image
-                key={index}
-                source={{ uri: photo }}
-                style={styles.photoWallImage}
-              />
+              <View key={index} style={styles.photoWrapper}>
+                <Image
+                  source={{ uri: photo }}
+                  style={styles.photoWallImage}
+                />
+                <TouchableOpacity 
+                  style={styles.deleteButton}
+                  onPress={() => handleDeletePhoto(photo, index)}
+                >
+                  <Text style={styles.deleteButtonText}>×</Text>
+                </TouchableOpacity>
+              </View>
             ))}
             {photoWall.length < 3 && (
               <TouchableOpacity
@@ -379,6 +407,27 @@ const styles = StyleSheet.create({
     color: '#666',
     textAlign: 'center',
     marginBottom: 8,
+  },
+  photoWrapper: {
+    position: 'relative',
+  },
+  deleteButton: {
+    position: 'absolute',
+    top: -10,
+    right: -10,
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    backgroundColor: '#FF0000',
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 1,
+  },
+  deleteButtonText: {
+    color: '#FFFFFF',
+    fontSize: 18,
+    fontWeight: 'bold',
+    lineHeight: 20,
   },
 });
 

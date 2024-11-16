@@ -7,7 +7,7 @@ import {
     collection, 
     getDocs 
 } from 'firebase/firestore';
-import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
+import { ref, uploadBytes, getDownloadURL, deleteObject } from 'firebase/storage';
 import { storage } from './firebaseSetup';
 
 // set default profile photo
@@ -83,18 +83,38 @@ export const getUserProfile = async (userId) => {
 export const updateUserProfile = async (email, updateData) => {
     try {
         const userRef = doc(db, 'Users', email);
-        // Check if document exists
         const docSnap = await getDoc(userRef);
         
-        if (!docSnap.exists()) {
-            // If document doesn't exist, create it
+        if (docSnap.exists()) {
+            const currentData = docSnap.data();
+            
+            // 如果有 photowall 数据，检查是否需要删除照片
+            if (updateData.photowall && currentData.photowall) {
+                const photosToDelete = currentData.photowall.filter(
+                    photo => !updateData.photowall.includes(photo)
+                );
+                
+                // 删除不再使用的照片
+                for (const photoUrl of photosToDelete) {
+                    try {
+                        // 从 URL 中提取存储路径
+                        const photoPath = decodeURIComponent(photoUrl.split('/o/')[1].split('?')[0]);
+                        const photoRef = ref(storage, photoPath);
+                        await deleteObject(photoRef);
+                        console.log('Deleted photo:', photoUrl);
+                    } catch (error) {
+                        console.error('Error deleting photo:', error);
+                    }
+                }
+            }
+            
+            // 更新用户数据
+            await updateDoc(userRef, updateData);
+        } else {
             await setDoc(userRef, {
                 email,
                 ...updateData
             });
-        } else {
-            // If document exists, update it
-            await updateDoc(userRef, updateData);
         }
         return true;
     } catch (error) {
