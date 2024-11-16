@@ -5,199 +5,221 @@ import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { AuthContext } from '../../contexts/AuthContext';
 
 const DisplayProfileScreen = ({ route }) => {
-  const [userProfile, setUserProfile] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [isLiked, setIsLiked] = useState(false);
-  const { userId } = route.params;
-  const { user } = useContext(AuthContext);
+    const { userId } = route.params;
+    const [userProfile, setUserProfile] = useState(null);
+    const { user } = useContext(AuthContext);
+    const [isLiked, setIsLiked] = useState(false);
 
-  useEffect(() => {
-    const loadUserProfile = async () => {
-      try {
-        console.log('Fetching profile for userId:', userId);
-        const profile = await getUserProfile(userId);
-        console.log('Received profile:', profile);
+    useEffect(() => {
+        const loadProfile = async () => {
+            try {
+                const profile = await getUserProfile(userId);
+                console.log('Loaded profile:', profile);
+                setUserProfile(profile);
+                
+                // Check if current user has liked this profile
+                if (user) {
+                    const currentUserProfile = await getUserProfile(user.email);
+                    setIsLiked(currentUserProfile?.likes?.includes(userId) || false);
+                }
+            } catch (error) {
+                console.error('Error loading profile:', error);
+                Alert.alert('Error', 'Failed to load profile');
+            }
+        };
 
-        if (profile) {
-          const safeProfile = {
-            username: profile.username || 'No Name',
-            profilePhoto: profile.profilePhoto || 'default_photo_url',
-            city: profile.city || '',
-            country: profile.country || '',
-            occupation: profile.occupation || '',
-            hobbies: profile.hobbies || '',
-            personalityTags: Array.isArray(profile.personalityTags) ? profile.personalityTags : [],
-            favoriteBooks: Array.isArray(profile.favoriteBooks) ? profile.favoriteBooks : [],
-            favoriteMovies: Array.isArray(profile.favoriteMovies) ? profile.favoriteMovies : [],
-            favoriteMusic: Array.isArray(profile.favoriteMusic) ? profile.favoriteMusic : [],
-            aboutMe: profile.aboutMe || '',
-          };
-          console.log('Safe profile:', safeProfile);
-          setUserProfile(safeProfile);
+        loadProfile();
+    }, [userId, user]);
+
+    const handleLike = async () => {
+        try {
+            const currentUserProfile = await getUserProfile(user.email);
+            const likes = currentUserProfile?.likes || [];
+            
+            let updatedLikes;
+            if (isLiked) {
+                updatedLikes = likes.filter(id => id !== userId);
+            } else {
+                updatedLikes = [...likes, userId];
+            }
+            
+            await updateUserProfile(user.email, { likes: updatedLikes });
+            setIsLiked(!isLiked);
+            
+        } catch (error) {
+            console.error('Error updating like:', error);
+            Alert.alert('Error', 'Failed to update like');
         }
-      } catch (error) {
-        console.error('Error loading user profile:', error);
-      } finally {
-        setLoading(false);
-      }
     };
 
-    loadUserProfile();
-  }, [userId]);
-
-  useEffect(() => {
-    const checkIfLiked = async () => {
-      if (user) {
-        const currentUserProfile = await getUserProfile(user.email);
-        setIsLiked(currentUserProfile?.likes?.includes(userId) || false);
-      }
-    };
-    checkIfLiked();
-  }, [user, userId]);
-
-  const handleLike = async () => {
-    try {
-      const newLikedState = !isLiked;
-      setIsLiked(newLikedState);
-      
-      const currentUserProfile = await getUserProfile(user.email);
-      const currentLikes = currentUserProfile?.likes || [];
-      
-      let newLikes;
-      if (newLikedState) {
-        newLikes = [...new Set([...currentLikes, userId])];
-      } else {
-        newLikes = currentLikes.filter(id => id !== userId);
-      }
-
-      await updateUserProfile(user.email, { likes: newLikes });
-    } catch (error) {
-      console.error('Error updating likes:', error);
-      setIsLiked(!isLiked);
-      Alert.alert('Error', 'Failed to update like status');
-    }
-  };
-
-  const renderSection = (title, content, isArray = false) => {
-    if (!content) return null;
-    if (isArray && (!Array.isArray(content) || content.length === 0)) return null;
-    
     return (
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>{title}</Text>
-        <Text style={styles.sectionText}>
-          {isArray ? content.join(', ') : content}
-        </Text>
-      </View>
+        <ScrollView style={styles.container}>
+            <View style={styles.header}>
+                <Image
+                    source={{ uri: userProfile?.profilePhoto }}
+                    style={styles.profilePhoto}
+                />
+                <Text style={styles.username}>{userProfile?.username}</Text>
+                {user && user.email !== userId && (
+                    <TouchableOpacity onPress={handleLike} style={styles.likeButton}>
+                        <Icon
+                            name={isLiked ? 'heart' : 'heart-outline'}
+                            size={24}
+                            color={isLiked ? '#FF69B4' : '#000'}
+                        />
+                    </TouchableOpacity>
+                )}
+            </View>
+
+            {/* Photo Wall Section */}
+            <View style={styles.photoWallSection}>
+                <Text style={styles.sectionTitle}>Photo Wall</Text>
+                <View style={styles.photoWallContainer}>
+                    {userProfile?.photowall && userProfile.photowall.length > 0 ? (
+                        userProfile.photowall.map((photo, index) => (
+                            <Image
+                                key={index}
+                                source={{ uri: photo }}
+                                style={styles.photoWallImage}
+                            />
+                        ))
+                    ) : (
+                        <Text style={styles.noPhotosText}>No photos in photo wall</Text>
+                    )}
+                </View>
+            </View>
+
+            <View style={styles.infoContainer}>
+                {userProfile?.pronouns && (
+                    <View style={styles.infoItem}>
+                        <Text style={styles.label}>Pronouns:</Text>
+                        <Text style={styles.value}>{userProfile.pronouns}</Text>
+                    </View>
+                )}
+
+                {userProfile?.occupation && (
+                    <View style={styles.infoItem}>
+                        <Text style={styles.label}>Occupation:</Text>
+                        <Text style={styles.value}>{userProfile.occupation}</Text>
+                    </View>
+                )}
+
+                {userProfile?.city && userProfile?.country && (
+                    <View style={styles.infoItem}>
+                        <Text style={styles.label}>Location:</Text>
+                        <Text style={styles.value}>{`${userProfile.city}, ${userProfile.country}`}</Text>
+                    </View>
+                )}
+
+                {userProfile?.hobbies && (
+                    <View style={styles.infoItem}>
+                        <Text style={styles.label}>Hobbies & Interests:</Text>
+                        <Text style={styles.value}>{userProfile.hobbies}</Text>
+                    </View>
+                )}
+
+                {userProfile?.personalityTags && userProfile.personalityTags.length > 0 && (
+                    <View style={styles.infoItem}>
+                        <Text style={styles.label}>Personality Tags:</Text>
+                        <Text style={styles.value}>{userProfile.personalityTags.join(', ')}</Text>
+                    </View>
+                )}
+
+                {userProfile?.favoriteBooks && userProfile.favoriteBooks.length > 0 && (
+                    <View style={styles.infoItem}>
+                        <Text style={styles.label}>Favorite Books:</Text>
+                        <Text style={styles.value}>{userProfile.favoriteBooks.join(', ')}</Text>
+                    </View>
+                )}
+
+                {userProfile?.favoriteMovies && userProfile.favoriteMovies.length > 0 && (
+                    <View style={styles.infoItem}>
+                        <Text style={styles.label}>Favorite Movies/Actors:</Text>
+                        <Text style={styles.value}>{userProfile.favoriteMovies.join(', ')}</Text>
+                    </View>
+                )}
+
+                {userProfile?.favoriteMusic && userProfile.favoriteMusic.length > 0 && (
+                    <View style={styles.infoItem}>
+                        <Text style={styles.label}>Favorite Music:</Text>
+                        <Text style={styles.value}>{userProfile.favoriteMusic.join(', ')}</Text>
+                    </View>
+                )}
+
+                {userProfile?.aboutMe && (
+                    <View style={styles.infoItem}>
+                        <Text style={styles.label}>About Me:</Text>
+                        <Text style={styles.value}>{userProfile.aboutMe}</Text>
+                    </View>
+                )}
+            </View>
+        </ScrollView>
     );
-  };
-
-
-  if (!userProfile) {
-    return (
-      <View style={styles.container}>
-        <Text>No profile found</Text>
-      </View>
-    );
-  }
-
-  return (
-    <ScrollView style={styles.container}>
-      <View style={styles.header}>
-        <View style={styles.topSection}>
-          <View style={styles.photoContainer}>
-            <Image
-              source={{ uri: userProfile.profilePhoto }}
-              style={styles.profilePhoto}
-            />
-          </View>
-          <TouchableOpacity 
-            style={styles.likeButton}
-            onPress={handleLike}
-          >
-            <Icon 
-              name={isLiked ? "heart" : "heart-outline"} 
-              size={40} 
-              color={isLiked ? "#FF0000" : "#000000"}
-            />
-          </TouchableOpacity>
-        </View>
-        <Text style={styles.name}>{userProfile.username}</Text>
-        <Text style={styles.location}>{userProfile.city}, {userProfile.country}</Text>
-      </View>
-
-      {renderSection('Occupation', userProfile.occupation)}
-      {renderSection('Hobbies', userProfile.hobbies)}
-      {renderSection('Personality', userProfile.personalityTags, true)}
-      {renderSection('Favorite Books', userProfile.favoriteBooks, true)}
-      {renderSection('Favorite Movies', userProfile.favoriteMovies, true)}
-      {renderSection('Favorite Music', userProfile.favoriteMusic, true)}
-      {renderSection('About Me', userProfile.aboutMe)}
-    </ScrollView>
-  );
 };
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#fff',
-  },
-  loadingContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  header: {
-    alignItems: 'center',
-    padding: 20,
-  },
-  topSection: {
-    width: '100%',
-    flexDirection: 'row',
-    justifyContent: 'center',
-    alignItems: 'flex-start',
-    position: 'relative',
-    marginBottom: 10,
-  },
-  profilePhoto: {
-    width: 120,
-    height: 120,
-    borderRadius: 60,
-    marginBottom: 10,
-  },
-  name: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    marginBottom: 5,
-  },
-  location: {
-    fontSize: 16,
-    color: '#666',
-  },
-  section: {
-    padding: 20,
-    borderBottomWidth: 1,
-    borderBottomColor: '#eee',
-  },
-  sectionTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    marginBottom: 10,
-  },
-  sectionText: {
-    fontSize: 16,
-    color: '#444',
-    lineHeight: 24,
-  },
-  photoContainer: {
-    alignItems: 'center',
-  },
-  likeButton: {
-    position: 'absolute',
-    right: 0,
-    top: '80%',
-    padding: 10,
-  },
+    container: {
+        flex: 1,
+        backgroundColor: '#fff',
+    },
+    header: {
+        alignItems: 'center',
+        padding: 20,
+    },
+    profilePhoto: {
+        width: 120,
+        height: 120,
+        borderRadius: 60,
+        marginBottom: 10,
+    },
+    username: {
+        fontSize: 24,
+        fontWeight: 'bold',
+    },
+    likeButton: {
+        marginTop: 10,
+    },
+    infoContainer: {
+        padding: 20,
+    },
+    infoItem: {
+        marginBottom: 15,
+    },
+    label: {
+        fontSize: 16,
+        fontWeight: 'bold',
+        color: '#333',
+        marginBottom: 5,
+    },
+    value: {
+        fontSize: 16,
+        color: '#666',
+    },
+    // Photo Wall Styles
+    photoWallSection: {
+        padding: 15,
+    },
+    sectionTitle: {
+        fontSize: 18,
+        fontWeight: 'bold',
+        marginBottom: 10,
+    },
+    photoWallContainer: {
+        flexDirection: 'row',
+        justifyContent: 'center',
+        alignItems: 'center',
+        flexWrap: 'wrap',
+        gap: 10,
+    },
+    photoWallImage: {
+        width: 100,
+        height: 100,
+        borderRadius: 8,
+    },
+    noPhotosText: {
+        color: '#666',
+        fontStyle: 'italic',
+    },
 });
 
 export default DisplayProfileScreen;
