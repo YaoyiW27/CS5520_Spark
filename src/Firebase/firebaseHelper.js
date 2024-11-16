@@ -7,8 +7,10 @@ import {
     collection, 
     getDocs 
 } from 'firebase/firestore';
+import { ref, uploadBytes, getDownloadURL, deleteObject } from 'firebase/storage';
+import { storage } from './firebaseSetup';
 
-// 设置默认头像 URL 常量
+// set default profile photo
 const DEFAULT_PROFILE_PHOTO = 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=400';
 
 // Create new user profile
@@ -18,7 +20,7 @@ export const createUserProfile = async (email, userData) => {
         await setDoc(userRef, {
             email,
             username: userData.username || '',
-            profilePhoto: DEFAULT_PROFILE_PHOTO,  // 使用默认头像
+            profilePhoto: DEFAULT_PROFILE_PHOTO,  // use default avatar
             photowall: [],     
             pronouns: userData.pronouns || '',
             age: userData.age || '',
@@ -48,7 +50,7 @@ export const getUserProfile = async (userId) => {
         
         if (docSnap.exists()) {
             const userData = docSnap.data();
-            // 确保返回的数据包含所有必要的字段，并且数组字段有默认值
+            // ensure the returned data includes all necessary fields and array fields have default values
             return {
                 email: userId,
                 username: userData.username || '',
@@ -81,19 +83,38 @@ export const getUserProfile = async (userId) => {
 export const updateUserProfile = async (email, updateData) => {
     try {
         const userRef = doc(db, 'Users', email);
-        // Check if document exists
         const docSnap = await getDoc(userRef);
         
-        if (!docSnap.exists()) {
-            // If document doesn't exist, create it with default photo
+        if (docSnap.exists()) {
+            const currentData = docSnap.data();
+            
+            // 如果有 photowall 数据，检查是否需要删除照片
+            if (updateData.photowall && currentData.photowall) {
+                const photosToDelete = currentData.photowall.filter(
+                    photo => !updateData.photowall.includes(photo)
+                );
+                
+                // 删除不再使用的照片
+                for (const photoUrl of photosToDelete) {
+                    try {
+                        // 从 URL 中提取存储路径
+                        const photoPath = decodeURIComponent(photoUrl.split('/o/')[1].split('?')[0]);
+                        const photoRef = ref(storage, photoPath);
+                        await deleteObject(photoRef);
+                        console.log('Deleted photo:', photoUrl);
+                    } catch (error) {
+                        console.error('Error deleting photo:', error);
+                    }
+                }
+            }
+            
+            // 更新用户数据
+            await updateDoc(userRef, updateData);
+        } else {
             await setDoc(userRef, {
                 email,
-                profilePhoto: DEFAULT_PROFILE_PHOTO,  // 确保新创建的文档也有默认头像
                 ...updateData
             });
-        } else {
-            // If document exists, update it
-            await updateDoc(userRef, updateData);
         }
         return true;
     } catch (error) {
@@ -124,10 +145,77 @@ export const getAllUsers = async (currentUserEmail) => {
             }
         });
         
-        console.log('Fetched users:', users);  // 添加调试日志
+        console.log('Fetched users:', users);  
         return users.sort(() => Math.random() - 0.5);
     } catch (error) {
         console.error('Error getting all users:', error);
+        throw error;
+    }
+};
+
+export const updateUserProfilePhoto = async (email, photoUri) => {
+    try {
+        // Create a reference to the user's profile photo
+        const storageRef = ref(storage, `profile_photos/${email}/profile.jpg`);
+        
+        // Convert URI to blob
+        const response = await fetch(photoUri);
+        const blob = await response.blob();
+        
+        // Upload photo to Firebase Storage
+        await uploadBytes(storageRef, blob);
+        
+        // Get the download URL
+        const photoURL = await getDownloadURL(storageRef);
+        
+        // Update user profile with new photo URL using profilePhoto field
+        await updateUserProfile(email, { profilePhoto: photoURL });
+        
+        return photoURL;
+    } catch (error) {
+        console.error('Error updating profile photo:', error);
+        throw error;
+    }
+};
+
+export const updatePhotoWall = async (email, photoUri) => {
+    try {
+        // Create a unique filename using timestamp
+        const timestamp = Date.now();
+        const storageRef = ref(storage, `photo_wall/${email}/${timestamp}.jpg`);
+        
+        // Convert URI to blob
+        const response = await fetch(photoUri);
+        const blob = await response.blob();
+        
+        // Upload photo to Firebase Storage
+        await uploadBytes(storageRef, blob);
+        
+        // Get the download URL
+        const photoURL = await getDownloadURL(storageRef);
+        
+        // Get current user profile
+        const userRef = doc(db, 'Users', email);
+        const docSnap = await getDoc(userRef);
+        
+        if (docSnap.exists()) {
+            const userData = docSnap.data();
+            const currentPhotoWall = userData.photowall || [];
+            
+            // Check if maximum photos limit reached
+            if (currentPhotoWall.length >= 3) {
+                throw new Error('Maximum 3 photos allowed in photo wall');
+            }
+            
+            // Add new photo URL to photowall array
+            await updateDoc(userRef, {
+                photowall: [...currentPhotoWall, photoURL]
+            });
+        }
+        
+        return photoURL;
+    } catch (error) {
+        console.error('Error updating photo wall:', error);
         throw error;
     }
 };

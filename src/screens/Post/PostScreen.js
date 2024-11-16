@@ -295,7 +295,7 @@ const PostScreen = () => {
   if (loading) {
     return (
       <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#FF69B4" />
+        <ActivityIndicator size={40} color="#FF69B4" />
       </View>
     );
   }

@@ -11,7 +11,6 @@ import {
   Platform,
   ScrollView,
   Alert,
-  ActivityIndicator
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
@@ -47,10 +46,11 @@ const CreatePostScreen = () => {
         }
 
         const result = await ImagePicker.launchImageLibraryAsync({
-            mediaTypes: ImagePicker.MediaTypeOptions.Images,
+            mediaTypes: 'images',
             allowsEditing: true,
             aspect: [4, 3],
-            quality: 0.5, 
+            quality: 0.2, 
+            compress: 0.5,
         });
 
         console.log('Image picker result:', result);
@@ -85,7 +85,8 @@ const CreatePostScreen = () => {
             mediaTypes: ImagePicker.MediaTypeOptions.Videos,
             allowsEditing: true,
             aspect: [16, 9],
-            quality: 1,
+            quality: 0.2,
+            compress: 0.5,
         });
 
         if (!result.canceled && result.assets[0].uri) {

@@ -8,11 +8,13 @@ import {
   TouchableOpacity,
   ScrollView,
   Keyboard,
-  Alert
+  Alert,
+  Image
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { AuthContext } from '../../contexts/AuthContext';
-import { updateUserProfile, getUserProfile } from '../../Firebase/firebaseHelper';
+import { updateUserProfile, getUserProfile, updatePhotoWall } from '../../Firebase/firebaseHelper';
+import * as ImagePicker from 'expo-image-picker';
 
 const EditProfileScreen = () => {
   const navigation = useNavigation();
@@ -32,6 +34,8 @@ const EditProfileScreen = () => {
   const [movies, setMovies] = useState('');
   const [music, setMusic] = useState('');
   const [aboutMe, setAboutMe] = useState('');
+  const [photoWall, setPhotoWall] = useState([]);
+  const [uploading, setUploading] = useState(false);
 
   // Fetch and set initial data
   useEffect(() => {
@@ -51,6 +55,7 @@ const EditProfileScreen = () => {
           setMovies(profile.favoriteMovies?.join(', ') || '');
           setMusic(profile.favoriteMusic?.join(', ') || '');
           setAboutMe(profile.aboutMe || '');
+          setPhotoWall(profile.photowall || []);
         }
       } catch (error) {
         console.error('Error fetching profile:', error);
@@ -77,7 +82,8 @@ const EditProfileScreen = () => {
         favoriteBooks: books.split(',').map(book => book.trim()).filter(book => book),
         favoriteMovies: movies.split(',').map(movie => movie.trim()).filter(movie => movie),
         favoriteMusic: music.split(',').map(item => item.trim()).filter(item => item),
-        aboutMe
+        aboutMe,
+        photowall: photoWall
       };
 
       await updateUserProfile(user.email, updatedProfile);
@@ -87,6 +93,60 @@ const EditProfileScreen = () => {
       console.error(error);
       Alert.alert('Error', 'Failed to update profile');
     }
+  };
+
+  const handlePhotoWallUpload = async () => {
+    try {
+      if (photoWall.length >= 3) {
+        Alert.alert('Limit Reached', 'Maximum 3 photos allowed in photo wall');
+        return;
+      }
+
+      const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+      if (status !== 'granted') {
+        Alert.alert('Permission needed', 'Please grant permission to access your photos.');
+        return;
+      }
+
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: 'images',
+        allowsEditing: true,
+        aspect: [4, 3],
+        quality: 0.2,
+        compress: 0.5,
+      });
+
+      if (!result.canceled && result.assets[0].uri) {
+        setUploading(true);
+        const photoURL = await updatePhotoWall(user.email, result.assets[0].uri);
+        setPhotoWall([...photoWall, photoURL]);
+        setUploading(false);
+      }
+    } catch (error) {
+      console.error('Error uploading photo:', error);
+      Alert.alert('Error', 'Failed to upload photo');
+      setUploading(false);
+    }
+  };
+
+  const handleDeletePhoto = (photoUrl, index) => {
+    Alert.alert(
+      "Delete Photo",
+      "Are you sure you want to delete this photo?",
+      [
+        {
+          text: "Cancel",
+          style: "cancel"
+        },
+        {
+          text: "Delete",
+          onPress: () => {
+            const newPhotoWall = photoWall.filter((_, i) => i !== index);
+            setPhotoWall(newPhotoWall);
+          }
+        }
+      ]
+    );
   };
 
   if (loading) {
@@ -102,7 +162,41 @@ const EditProfileScreen = () => {
       <ScrollView contentContainerStyle={styles.content}>
         <View style={styles.photoSection}>
           <Text style={styles.photoText}>Your Profile Details</Text>
-          <Text style={styles.label}>Photo Wall: [P1] [P2] [P3] [P4] [P5] [+]</Text>
+          
+          <View style={styles.photoWallHeader}>
+            <Text style={styles.photoWallTitle}>Photo Wall</Text>
+            <Text style={styles.photoWallDescription}>
+              Add up to 3 photos to showcase your interests and lifestyle
+            </Text>
+          </View>
+
+          <View style={styles.photoWallContainer}>
+            {photoWall.map((photo, index) => (
+              <View key={index} style={styles.photoWrapper}>
+                <Image
+                  source={{ uri: photo }}
+                  style={styles.photoWallImage}
+                />
+                <TouchableOpacity 
+                  style={styles.deleteButton}
+                  onPress={() => handleDeletePhoto(photo, index)}
+                >
+                  <Text style={styles.deleteButtonText}>×</Text>
+                </TouchableOpacity>
+              </View>
+            ))}
+            {photoWall.length < 3 && (
+              <TouchableOpacity
+                style={styles.addPhotoButton}
+                onPress={handlePhotoWallUpload}
+                disabled={uploading}
+              >
+                <Text style={styles.addPhotoButtonText}>
+                  {uploading ? 'Uploading...' : '+'}
+                </Text>
+              </TouchableOpacity>
+            )}
+          </View>
         </View>
 
         <View style={styles.inputContainer}>
@@ -234,9 +328,31 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     marginBottom: 8,
   },
-  photoWallText: {
-    fontSize: 16,
-    color: '#999',
+  photoWallContainer: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginTop: 10,
+    gap: 10,
+  },
+  photoWallImage: {
+    width: 100,
+    height: 100,
+    borderRadius: 8,
+  },
+  addPhotoButton: {
+    width: 100,
+    height: 100,
+    borderRadius: 8,
+    borderWidth: 2,
+    borderColor: '#FF69B4',
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#fff',
+  },
+  addPhotoButtonText: {
+    fontSize: 30,
+    color: '#FF69B4',
   },
   inputContainer: {
     marginBottom: 20,
@@ -275,6 +391,43 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
+  },
+  photoWallHeader: {
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  photoWallTitle: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#333',
+    marginBottom: 4,
+  },
+  photoWallDescription: {
+    fontSize: 14,
+    color: '#666',
+    textAlign: 'center',
+    marginBottom: 8,
+  },
+  photoWrapper: {
+    position: 'relative',
+  },
+  deleteButton: {
+    position: 'absolute',
+    top: -10,
+    right: -10,
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    backgroundColor: '#FF0000',
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 1,
+  },
+  deleteButtonText: {
+    color: '#FFFFFF',
+    fontSize: 18,
+    fontWeight: 'bold',
+    lineHeight: 20,
   },
 });
 
