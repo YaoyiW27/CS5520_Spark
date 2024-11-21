@@ -142,6 +142,17 @@ const AppStackNavigator = () => {
       <AppStack.Screen
       name="NotificationScreen"
       component={NotificationScreen}
+      options={({ navigation }) => ({
+        title: 'Notifications',
+        headerRight: () => (
+          <TouchableOpacity 
+            onPress={() => navigation.setParams({ showModal: true })}
+            style={{ marginRight: 15 }}
+          >
+            <Ionicons name="add" size={24} color="black" />
+          </TouchableOpacity>
+          ),
+        })}
       />
     </AppStack.Navigator>
   );

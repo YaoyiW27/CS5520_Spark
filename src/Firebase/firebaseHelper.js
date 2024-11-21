@@ -6,7 +6,11 @@ import {
     updateDoc, 
     collection, 
     getDocs,
-    Timestamp 
+    Timestamp,
+    addDoc,
+    query,
+    where,
+    deleteDoc
 } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL, deleteObject } from 'firebase/storage';
 import { storage } from './firebaseSetup';
@@ -292,3 +296,66 @@ function calculateDistance(lat1, lon1, lat2, lon2) {
 function degreesToRadians(degrees) {
     return degrees * (Math.PI/180);
 }
+
+// 添加新的提醒到 Firestore
+export const addReminder = async (userEmail, reminderData) => {
+    try {
+        const remindersRef = collection(db, 'reminders');
+        const docRef = await addDoc(remindersRef, {
+            userEmail,
+            description: reminderData.description,
+            date: reminderData.date,
+            status: reminderData.status,
+            createdAt: new Date().toISOString()
+        });
+        return docRef.id;
+    } catch (error) {
+        console.error('Error adding reminder:', error);
+        throw error;
+    }
+};
+
+// 获取用户的所有提醒
+export const getUserReminders = async (userEmail) => {
+    try {
+        const remindersRef = collection(db, 'reminders');
+        const q = query(remindersRef, where('userEmail', '==', userEmail));
+        const querySnapshot = await getDocs(q);
+        
+        const reminders = [];
+        querySnapshot.forEach((doc) => {
+            reminders.push({
+                id: doc.id,
+                ...doc.data(),
+                date: new Date(doc.data().date)
+            });
+        });
+        
+        return reminders;
+    } catch (error) {
+        console.error('Error getting reminders:', error);
+        throw error;
+    }
+};
+
+// 删除提醒
+export const deleteReminder = async (reminderId) => {
+    try {
+        const reminderRef = doc(db, 'reminders', reminderId);
+        await deleteDoc(reminderRef);
+    } catch (error) {
+        console.error('Error deleting reminder:', error);
+        throw error;
+    }
+};
+
+// 更新提醒状态
+export const updateReminderStatus = async (reminderId, status) => {
+    try {
+        const reminderRef = doc(db, 'reminders', reminderId);
+        await updateDoc(reminderRef, { status });
+    } catch (error) {
+        console.error('Error updating reminder status:', error);
+        throw error;
+    }
+};
