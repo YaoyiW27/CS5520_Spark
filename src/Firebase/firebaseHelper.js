@@ -222,13 +222,14 @@ export const updatePhotoWall = async (email, photoUri) => {
 
 
 // update user location
-export const updateUserLocation = async (email, location) => {
+export const updateUserLocation = async (email, locationData) => {
     try {
         const userRef = doc(db, 'Users', email);
         await updateDoc(userRef, {
             location: {
-                latitude: location.latitude,
-                longitude: location.longitude,
+                latitude: locationData.latitude,
+                longitude: locationData.longitude,
+                isVirtual: locationData.isVirtual || false,
                 lastUpdated: Timestamp.now()
             }
         });
@@ -265,7 +266,8 @@ export const getNearbyUsers = async (currentLocation, maxDistance = 10) => {
                         gender: userData.gender || 'other',
                         location: {
                             latitude: userData.location.latitude,
-                            longitude: userData.location.longitude
+                            longitude: userData.location.longitude,
+                            isVirtual: userData.location.isVirtual || false 
                         },
                         distance: Math.round(distance * 10) / 10
                     });
@@ -273,7 +275,8 @@ export const getNearbyUsers = async (currentLocation, maxDistance = 10) => {
             }
         });
 
-        return nearbyUsers;
+        // sort nearby users by distance
+        return nearbyUsers.sort((a, b) => a.distance - b.distance);
     } catch (error) {
         console.error('Error getting nearby users:', error);
         throw error;

@@ -7,6 +7,7 @@ import {
   Image,
   Alert,
   Dimensions,
+  Modal,
 } from "react-native";
 import * as Location from "expo-location";
 import { useNavigation, useRoute } from "@react-navigation/native";
@@ -15,28 +16,24 @@ import { Ionicons } from "@expo/vector-icons";
 import { useAuth } from "../../contexts/AuthContext";
 import { updateUserLocation, getNearbyUsers } from "../../Firebase/firebaseHelper";
 import { db } from "../../Firebase/firebaseSetup";
-import { collection, onSnapshot, query } from 'firebase/firestore';
+import { collection, onSnapshot } from 'firebase/firestore';
 
 const { width } = Dimensions.get("window");
 
-const UserMarkerWithDistance = ({ user, onPress }) => {
-  return (
-    <View>
-      <TouchableOpacity 
-        style={styles.userMarker}
-        onPress={onPress}
-      >
-        <Image
-          source={{ uri: user.profileImage }}
-          style={styles.markerImage}
-        />
-      </TouchableOpacity>
-      <View style={styles.distanceContainer}>
+const CustomMarker = ({ user, onPress }) => (
+  <TouchableOpacity onPress={onPress}>
+    <View style={styles.markerContainer}>
+      <Image 
+        source={{ uri: user.profileImage }} 
+        style={styles.markerImage} 
+        resizeMode="cover"
+      />
+      <View style={styles.distanceBadge}>
         <Text style={styles.distanceText}>{user.distance}km</Text>
       </View>
     </View>
-  );
-};
+  </TouchableOpacity>
+);
 
 export default function MapScreen() {
   const navigation = useNavigation();
@@ -47,13 +44,17 @@ export default function MapScreen() {
   const [nearbyUsers, setNearbyUsers] = useState([]);
   const [filteredUsers, setFilteredUsers] = useState([]);
   const [currentRegion, setCurrentRegion] = useState({
-    latitude: 49.2827,  // Vancouver's default coordinates
+    latitude: 49.2827,
     longitude: -123.1207,
     latitudeDelta: 0.0922,
     longitudeDelta: 0.0421,
   });
   const [locationPermission, setLocationPermission] = useState(false);
   const [showUsers, setShowUsers] = useState(false);
+  const [isSelectingLocation, setIsSelectingLocation] = useState(false);
+  const [selectedLocation, setSelectedLocation] = useState(null);
+  const [tempLocation, setTempLocation] = useState(null);
+  const [showConfirmModal, setShowConfirmModal] = useState(false);
 
   const [filters, setFilters] = useState(route.params?.filters || {
     gender: "all",
@@ -61,19 +62,43 @@ export default function MapScreen() {
     ageRange: [18, 80],
   });
 
+  const UserMarkerWithDistance = ({ user, onPress }) => (
+    <TouchableOpacity onPress={onPress}>
+      <View style={styles.userMarker}>
+        <Image 
+          source={{ uri: user.profileImage }} 
+          style={styles.markerImage}
+        />
+        <View style={styles.distanceContainer}>
+          <Text style={styles.distanceText}>{user.distance}km</Text>
+        </View>
+      </View>
+    </TouchableOpacity>
+  );
+
   // update nearby users when location changes
   useEffect(() => {
-    const usersQuery = query(collection(db, 'Users'));
-    const unsubscribe = onSnapshot(usersQuery, (snapshot) => {
+    const loadAndSubscribe = async () => {
       if (location) {
-        loadNearbyUsers({
-          latitude: location.latitude,
-          longitude: location.longitude
-        });
+        try {
+          const usersRef = collection(db, 'Users');
+          const unsubscribe = onSnapshot(usersRef, async (snapshot) => {
+            await loadNearbyUsers({
+              latitude: location.latitude,
+              longitude: location.longitude
+            });
+          });
+          
+          return () => {
+            unsubscribe();
+          };
+        } catch (error) {
+          console.error("Error setting up user subscription:", error);
+        }
       }
-    });
-
-    return () => unsubscribe();
+    };
+  
+    loadAndSubscribe();
   }, [location]);
 
   useEffect(() => {
@@ -174,117 +199,273 @@ export default function MapScreen() {
     return filteredUsers.length > 0 ? filteredUsers : nearbyUsers;
   }, [filteredUsers, nearbyUsers]);
 
-  return (
-    <View style={styles.container}>
-      <View style={styles.subHeader}>
-        <View style={styles.peopleNearbyContainer}>
-          <Text style={styles.peopleNearbyText}>People nearby</Text>
-          <TouchableOpacity onPress={handleFilterPress} style={styles.filterButton}>
-            <Ionicons name="options-outline" size={24} color="#FF69B4" />
-          </TouchableOpacity>
+    const handleMapPress = (event) => {
+      if (isSelectingLocation) {
+        const { coordinate } = event.nativeEvent;
+        setTempLocation(coordinate);
+        setShowConfirmModal(true);
+      }
+    };
+  
+    // confirm location selection
+    const confirmLocationSelection = async () => {
+      if (tempLocation) {
+        setSelectedLocation(tempLocation);
+        setLocation({
+          ...currentRegion,
+          latitude: tempLocation.latitude,
+          longitude: tempLocation.longitude,
+        });
+  
+        // update user location
+        await updateUserLocation(user.email, {
+          latitude: tempLocation.latitude,
+          longitude: tempLocation.longitude,
+          isVirtual: true, // manually set virtual location
+        });
+  
+        // load nearby users
+        await loadNearbyUsers({
+          latitude: tempLocation.latitude,
+          longitude: tempLocation.longitude,
+        });
+  
+        setShowUsers(true);
+        setIsSelectingLocation(false);
+      }
+      setShowConfirmModal(false);
+    };
+  
+    // start location selection
+    const startLocationSelection = () => {
+      setIsSelectingLocation(true);
+      Alert.alert(
+        "Choose Location",
+        "Choose a location on the map to set as your virtual location." 
+      );
+    };
+
+    return (
+      <View style={styles.container}>
+        <View style={styles.subHeader}>
+          <View style={styles.peopleNearbyContainer}>
+            <Text style={styles.peopleNearbyText}>People nearby</Text>
+            <TouchableOpacity onPress={handleFilterPress} style={styles.filterButton}>
+              <Ionicons name="options-outline" size={24} color="#FF69B4" />
+            </TouchableOpacity>
+          </View>
         </View>
-      </View>
-
-      <MapView
-        ref={mapRef}
-        style={styles.map}
-        initialRegion={currentRegion}
-        onRegionChangeComplete={handleRegionChangeComplete}
-        showsUserLocation={locationPermission}
-        showsCompass={true}
-      >
-        {showUsers && displayedUsers.map((user) => (
-          <Marker
-            key={user.id}
-            coordinate={user.location}
-            tracksViewChanges={false}
-          >
-            <UserMarkerWithDistance 
-              user={user}
-              onPress={() => handleUserPress(user.id)}
+  
+        <MapView
+          ref={mapRef}
+          style={styles.map}
+          initialRegion={currentRegion}
+          onRegionChangeComplete={handleRegionChangeComplete}
+          showsUserLocation={locationPermission && !isSelectingLocation}
+          showsCompass={true}
+          onPress={handleMapPress}
+        >
+          {showUsers && displayedUsers.map((user) => (
+            <Marker
+              key={user.id}
+              coordinate={user.location}
+              tracksViewChanges={false}
+            >
+              <UserMarkerWithDistance 
+                user={user}
+                onPress={() => handleUserPress(user.id)}
+              />
+            </Marker>
+          ))}
+          {tempLocation && isSelectingLocation && (
+            <Marker
+              coordinate={tempLocation}
+              pinColor="#FF69B4"
             />
-          </Marker>
-        ))}
-      </MapView>
-
-      <TouchableOpacity
-        style={styles.locateButton}
-        onPress={verifyAndGetLocation}
-      >
-        <Ionicons name="locate" size={24} color="#FF69B4" />
-      </TouchableOpacity>
-    </View>
-  );
-}
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "#fff",
-  },
-  subHeader: {
-    paddingHorizontal: 20,
-    paddingVertical: 15,
-    backgroundColor: "#fff",
-    borderBottomWidth: 1,
-    borderBottomColor: "#f0f0f0",
-  },
-  peopleNearbyContainer: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-  },
-  peopleNearbyText: {
-    fontSize: 24,
-    fontWeight: "600",
-    color: "#000",
-  },
-  filterButton: {
-    padding: 8,
-    borderRadius: 8,
-    backgroundColor: "#f8f8f8",
-  },
-  map: {
-    flex: 1,
-    width: width,
-  },
-  userMarker: {
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  markerImage: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    borderWidth: 2,
-    borderColor: '#FF69B4',
-    backgroundColor: '#fff',
-  },
-  distanceContainer: {
-    position: 'absolute',
-    bottom: -20,
-    backgroundColor: '#FF69B4',
-    paddingHorizontal: 8,
-    paddingVertical: 2,
-    borderRadius: 10,
-    alignSelf: 'center',
-  },
-  distanceText: {
-    color: '#fff',
-    fontSize: 12,
-    fontWeight: '500',
-  },
-  locateButton: {
-    position: "absolute",
-    bottom: 30,
-    right: 20,
-    backgroundColor: "#fff",
-    padding: 15,
-    borderRadius: 30,
-    elevation: 5,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 3.84,
-  },
-});
+          )}
+          {selectedLocation && !isSelectingLocation && (
+            <Marker
+              coordinate={selectedLocation}
+            >
+              <View style={styles.virtualLocationMarker}>
+                <Ionicons name="location" size={30} color="#FF69B4" />
+              </View>
+            </Marker>
+          )}
+        </MapView>
+  
+        {/* locate me button */}
+        <TouchableOpacity
+          style={styles.locateButton}
+          onPress={verifyAndGetLocation}
+        >
+          <Ionicons name="locate" size={24} color="#FF69B4" />
+        </TouchableOpacity>
+  
+        {/* choose a location button */}
+        <TouchableOpacity
+          style={styles.selectLocationButton}
+          onPress={startLocationSelection}
+        >
+          <Ionicons name="location" size={24} color="#FF69B4" />
+        </TouchableOpacity>
+  
+        {/* location confirmation modal */}
+        <Modal
+          visible={showConfirmModal}
+          transparent={true}
+          animationType="fade"
+        >
+          <View style={styles.modalContainer}>
+            <View style={styles.modalContent}>
+              <Text style={styles.modalTitle}>Confirm location</Text>
+              <Text style={styles.modalText}>Do you want to set this as your virtual location?</Text>
+              <View style={styles.modalButtons}>
+                <TouchableOpacity
+                  style={[styles.modalButton, styles.cancelButton]}
+                  onPress={() => {
+                    setShowConfirmModal(false);
+                    setTempLocation(null);
+                  }}
+                >
+                  <Text style={styles.buttonText}>Cancel</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={[styles.modalButton, styles.confirmButton]}
+                  onPress={confirmLocationSelection}
+                >
+                  <Text style={styles.buttonText}>Confirm</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          </View>
+        </Modal>
+      </View>
+    );
+  }
+  
+  const styles = StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: "#fff",
+    },
+    subHeader: {
+      paddingHorizontal: 20,
+      paddingVertical: 15,
+      backgroundColor: "#fff",
+      borderBottomWidth: 1,
+      borderBottomColor: "#f0f0f0",
+    },
+    peopleNearbyContainer: {
+      flexDirection: "row",
+      justifyContent: "space-between",
+      alignItems: "center",
+    },
+    peopleNearbyText: {
+      fontSize: 24,
+      fontWeight: "600",
+      color: "#000",
+    },
+    filterButton: {
+      padding: 8,
+      borderRadius: 8,
+      backgroundColor: "#f8f8f8",
+    },
+    map: {
+      flex: 1,
+      width: width,
+    },
+    userMarker: {
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    markerImage: {
+      width: 44,
+      height: 44,
+      borderRadius: 22,
+      borderWidth: 2,
+      borderColor: '#FF69B4',
+      backgroundColor: '#fff',
+    },
+    distanceContainer: {
+      position: 'absolute',
+      bottom: -20,
+      backgroundColor: '#FF69B4',
+      paddingHorizontal: 8,
+      paddingVertical: 2,
+      borderRadius: 10,
+      alignSelf: 'center',
+    },
+    distanceText: {
+      color: '#fff',
+      fontSize: 12,
+      fontWeight: '500',
+    },
+    locateButton: {
+      position: "absolute",
+      bottom: 30,
+      right: 20,
+      backgroundColor: "#fff",
+      padding: 15,
+      borderRadius: 30,
+      elevation: 5,
+      shadowColor: "#000",
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.25,
+      shadowRadius: 3.84,
+    },
+    selectLocationButton: {
+      position: "absolute",
+      bottom: 30,
+      left: 20,
+      backgroundColor: "#fff",
+      padding: 15,
+      borderRadius: 30,
+      elevation: 5,
+      shadowColor: "#000",
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.25,
+      shadowRadius: 3.84,
+    },
+    modalContainer: {
+      flex: 1,
+      justifyContent: 'center',
+      alignItems: 'center',
+      backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    },
+    modalContent: {
+      backgroundColor: '#fff',
+      padding: 20,
+      borderRadius: 10,
+      width: '80%',
+    },
+    modalTitle: {
+      fontSize: 18,
+      fontWeight: 'bold',
+      marginBottom: 10,
+    },
+    modalText: {
+      fontSize: 16,
+      marginBottom: 20,
+    },
+    modalButtons: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+    },
+    modalButton: {
+      padding: 10,
+      borderRadius: 5,
+      width: '45%',
+      alignItems: 'center',
+    },
+    cancelButton: {
+      backgroundColor: '#ccc',
+    },
+    confirmButton: {
+      backgroundColor: '#FF69B4',
+    },
+    buttonText: {
+      color: '#fff',
+      fontSize: 16,
+    },
+  });
