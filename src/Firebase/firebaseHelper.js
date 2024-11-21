@@ -5,7 +5,8 @@ import {
     getDoc, 
     updateDoc, 
     collection, 
-    getDocs 
+    getDocs,
+    Timestamp 
 } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL, deleteObject } from 'firebase/storage';
 import { storage } from './firebaseSetup';
@@ -88,16 +89,15 @@ export const updateUserProfile = async (email, updateData) => {
         if (docSnap.exists()) {
             const currentData = docSnap.data();
             
-            // 如果有 photowall 数据，检查是否需要删除照片
+            // check if any photos were removed from the photowall
             if (updateData.photowall && currentData.photowall) {
                 const photosToDelete = currentData.photowall.filter(
                     photo => !updateData.photowall.includes(photo)
                 );
                 
-                // 删除不再使用的照片
+                // delete photos from storage
                 for (const photoUrl of photosToDelete) {
                     try {
-                        // 从 URL 中提取存储路径
                         const photoPath = decodeURIComponent(photoUrl.split('/o/')[1].split('?')[0]);
                         const photoRef = ref(storage, photoPath);
                         await deleteObject(photoRef);
@@ -108,7 +108,7 @@ export const updateUserProfile = async (email, updateData) => {
                 }
             }
             
-            // 更新用户数据
+            // update user profile
             await updateDoc(userRef, updateData);
         } else {
             await setDoc(userRef, {
@@ -123,7 +123,7 @@ export const updateUserProfile = async (email, updateData) => {
     }
 };
 
-// 获取所有用户
+// get all users
 export const getAllUsers = async (currentUserEmail) => {
     try {
         const usersRef = collection(db, 'Users');
@@ -131,11 +131,10 @@ export const getAllUsers = async (currentUserEmail) => {
         const users = [];
         
         querySnapshot.forEach((doc) => {
-            // 不包含当前用户
             if (doc.id !== currentUserEmail) {
                 const userData = doc.data();
                 users.push({
-                    id: doc.id,  // 确保这是邮箱
+                    id: doc.id,  // make sure it's user's email
                     name: userData.username || 'No Name',
                     age: userData.age || '',
                     city: userData.city || '',
@@ -153,70 +152,143 @@ export const getAllUsers = async (currentUserEmail) => {
     }
 };
 
+// uppload user profile photo
 export const updateUserProfilePhoto = async (email, photoUri) => {
     try {
-        // Create a reference to the user's profile photo
-        const storageRef = ref(storage, `profile_photos/${email}/profile.jpg`);
-        
-        // Convert URI to blob
+        // generate unique filename
+        const timestamp = Date.now();
+        const filename = `profile_photos/${email}/profile_${timestamp}.jpg`;
+        const storageRef = ref(storage, filename);
+
+        // get photo data
         const response = await fetch(photoUri);
         const blob = await response.blob();
-        
-        // Upload photo to Firebase Storage
+
+        // upload photo
         await uploadBytes(storageRef, blob);
-        
-        // Get the download URL
-        const photoURL = await getDownloadURL(storageRef);
-        
-        // Update user profile with new photo URL using profilePhoto field
-        await updateUserProfile(email, { profilePhoto: photoURL });
-        
-        return photoURL;
+
+        // get download URL
+        const downloadURL = await getDownloadURL(storageRef);
+
+        // update user profile 
+        const userRef = doc(db, 'Users', email);
+        await updateDoc(userRef, {
+            profilePhoto: downloadURL
+        });
+
+        return downloadURL;
     } catch (error) {
-        console.error('Error updating profile photo:', error);
+        console.error('Error uploading profile photo:', error);
         throw error;
     }
 };
 
+// update user photo wall
 export const updatePhotoWall = async (email, photoUri) => {
     try {
-        // Create a unique filename using timestamp
         const timestamp = Date.now();
-        const storageRef = ref(storage, `photo_wall/${email}/${timestamp}.jpg`);
-        
-        // Convert URI to blob
+        const filename = `photo_wall/${email}/photo_${timestamp}.jpg`;
+        const storageRef = ref(storage, filename);
+
         const response = await fetch(photoUri);
         const blob = await response.blob();
-        
-        // Upload photo to Firebase Storage
         await uploadBytes(storageRef, blob);
-        
-        // Get the download URL
-        const photoURL = await getDownloadURL(storageRef);
-        
-        // Get current user profile
+
+        const downloadURL = await getDownloadURL(storageRef);
+
         const userRef = doc(db, 'Users', email);
-        const docSnap = await getDoc(userRef);
-        
-        if (docSnap.exists()) {
-            const userData = docSnap.data();
-            const currentPhotoWall = userData.photowall || [];
-            
-            // Check if maximum photos limit reached
-            if (currentPhotoWall.length >= 3) {
-                throw new Error('Maximum 3 photos allowed in photo wall');
-            }
-            
-            // Add new photo URL to photowall array
-            await updateDoc(userRef, {
-                photowall: [...currentPhotoWall, photoURL]
-            });
+        const userDoc = await getDoc(userRef);
+        const userData = userDoc.data();
+        const currentPhotoWall = userData.photowall || [];
+
+        if (currentPhotoWall.length >= 3) {
+            throw new Error('Maximum 3 photos allowed in photo wall');
         }
-        
-        return photoURL;
+
+        await updateDoc(userRef, {
+            photowall: [...currentPhotoWall, downloadURL]
+        });
+
+        return downloadURL;
     } catch (error) {
         console.error('Error updating photo wall:', error);
         throw error;
     }
 };
 
+
+// update user location
+export const updateUserLocation = async (email, location) => {
+    try {
+        const userRef = doc(db, 'Users', email);
+        await updateDoc(userRef, {
+            location: {
+                latitude: location.latitude,
+                longitude: location.longitude,
+                lastUpdated: Timestamp.now()
+            }
+        });
+        return true;
+    } catch (error) {
+        console.error('Error updating user location:', error);
+        throw error;
+    }
+};
+
+// get nearby users
+export const getNearbyUsers = async (currentLocation, maxDistance = 10) => {
+    try {
+        const usersRef = collection(db, 'Users');
+        const querySnapshot = await getDocs(usersRef);
+        const nearbyUsers = [];
+
+        querySnapshot.forEach((doc) => {
+            const userData = doc.data();
+            if (userData.location) {
+                const distance = calculateDistance(
+                    currentLocation.latitude,
+                    currentLocation.longitude,
+                    userData.location.latitude,
+                    userData.location.longitude
+                );
+
+                if (distance <= maxDistance) {
+                    nearbyUsers.push({
+                        id: doc.id,
+                        userName: userData.username || 'Unknown User',
+                        profileImage: userData.profilePhoto || 'https://via.placeholder.com/150',
+                        age: userData.age || '',
+                        gender: userData.gender || 'other',
+                        location: {
+                            latitude: userData.location.latitude,
+                            longitude: userData.location.longitude
+                        },
+                        distance: Math.round(distance * 10) / 10
+                    });
+                }
+            }
+        });
+
+        return nearbyUsers;
+    } catch (error) {
+        console.error('Error getting nearby users:', error);
+        throw error;
+    }
+};
+
+// calculate distance between two locations
+function calculateDistance(lat1, lon1, lat2, lon2) {
+    const R = 6371; // earth radius in km
+    const dLat = degreesToRadians(lat2 - lat1);
+    const dLon = degreesToRadians(lon2 - lon1);
+    const a = 
+        Math.sin(dLat/2) * Math.sin(dLat/2) +
+        Math.cos(degreesToRadians(lat1)) * Math.cos(degreesToRadians(lat2)) * 
+        Math.sin(dLon/2) * Math.sin(dLon/2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+    return R * c;
+}
+
+function degreesToRadians(degrees) {
+    return degrees * (Math.PI/180);
+}

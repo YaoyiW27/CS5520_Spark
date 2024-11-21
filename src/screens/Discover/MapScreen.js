@@ -13,87 +13,107 @@ import { useNavigation, useRoute } from "@react-navigation/native";
 import MapView, { Marker } from "react-native-maps";
 import { Ionicons } from "@expo/vector-icons";
 import { useAuth } from "../../contexts/AuthContext";
+import { updateUserLocation, getNearbyUsers } from "../../Firebase/firebaseHelper";
+import { db } from "../../Firebase/firebaseSetup";
+import { collection, onSnapshot, query } from 'firebase/firestore';
 
 const { width } = Dimensions.get("window");
 
-// Mock data for nearby users
-const MOCK_NEARBY_USERS = [
-  {
-    id: "1",
-    userName: "Alex",
-    profileImage: "https://via.placeholder.com/150",
-    gender: "men",
-    age: 25,
-    location: {
-      latitude: 49.2488,
-      longitude: -122.9805,
-    },
-  },
-  {
-    id: "2",
-    userName: "Emma",
-    profileImage: "https://via.placeholder.com/150",
-    gender: "women",
-    age: 30,
-    location: {
-      latitude: 49.2398,
-      longitude: -122.9685,
-    },
-  },
-];
+const UserMarkerWithDistance = ({ user, onPress }) => {
+  return (
+    <View>
+      <TouchableOpacity 
+        style={styles.userMarker}
+        onPress={onPress}
+      >
+        <Image
+          source={{ uri: user.profileImage }}
+          style={styles.markerImage}
+        />
+      </TouchableOpacity>
+      <View style={styles.distanceContainer}>
+        <Text style={styles.distanceText}>{user.distance}km</Text>
+      </View>
+    </View>
+  );
+};
 
 export default function MapScreen() {
   const navigation = useNavigation();
   const route = useRoute();
-  const { userProfile } = useAuth();
+  const { user } = useAuth();
   const [location, setLocation] = useState(null);
   const mapRef = useRef(null);
-  const [nearbyUsers, setNearbyUsers] = useState(MOCK_NEARBY_USERS);
+  const [nearbyUsers, setNearbyUsers] = useState([]);
   const [filteredUsers, setFilteredUsers] = useState([]);
-  const [currentRegion, setCurrentRegion] = useState(null);
+  const [currentRegion, setCurrentRegion] = useState({
+    latitude: 49.2827,  // Vancouver's default coordinates
+    longitude: -123.1207,
+    latitudeDelta: 0.0922,
+    longitudeDelta: 0.0421,
+  });
+  const [locationPermission, setLocationPermission] = useState(false);
+  const [showUsers, setShowUsers] = useState(false);
 
-  // State to hold current filters
   const [filters, setFilters] = useState(route.params?.filters || {
     gender: "all",
     distanceRange: [0, 75],
     ageRange: [18, 80],
   });
 
-  // Update filters when route params change
+  // update nearby users when location changes
+  useEffect(() => {
+    const usersQuery = query(collection(db, 'Users'));
+    const unsubscribe = onSnapshot(usersQuery, (snapshot) => {
+      if (location) {
+        loadNearbyUsers({
+          latitude: location.latitude,
+          longitude: location.longitude
+        });
+      }
+    });
+
+    return () => unsubscribe();
+  }, [location]);
+
   useEffect(() => {
     if (route.params?.filters) {
       setFilters(route.params.filters);
     }
   }, [route.params?.filters]);
 
-  // Function to navigate to FilterScreen with current filters
   const handleFilterPress = () => {
     navigation.navigate("FilterScreen", { filters });
   };
 
-  // Load nearby users (mocked here)
-  const loadNearbyUsers = async () => {
+  const loadNearbyUsers = async (userLocation) => {
     try {
-      // In a real app, fetch data from API
-      setNearbyUsers(MOCK_NEARBY_USERS);
+      const users = await getNearbyUsers(userLocation);
+      setNearbyUsers(users.filter(u => u.id !== user.email));
     } catch (error) {
       console.error("Error loading nearby users:", error);
+      Alert.alert("Error", "Failed to load nearby users");
     }
   };
 
-  // Verify location permissions and get current location
   const verifyAndGetLocation = async () => {
     try {
       const { status } = await Location.requestForegroundPermissionsAsync();
       if (status !== "granted") {
         Alert.alert(
           "Permission Denied",
-          "Please enable location services to use this feature."
+          "Please enable location services to see nearby users."
         );
+        setLocationPermission(false);
         return;
       }
 
-      const currentLocation = await Location.getCurrentPositionAsync({});
+      setLocationPermission(true);
+      
+      const currentLocation = await Location.getCurrentPositionAsync({
+        accuracy: Location.Accuracy.Balanced,
+      });
+
       const newRegion = {
         latitude: currentLocation.coords.latitude,
         longitude: currentLocation.coords.longitude,
@@ -103,38 +123,41 @@ export default function MapScreen() {
 
       setLocation(newRegion);
       setCurrentRegion(newRegion);
+      setShowUsers(true);
 
-      // Animate map to current location
+      await updateUserLocation(user.email, {
+        latitude: currentLocation.coords.latitude,
+        longitude: currentLocation.coords.longitude,
+      });
+
+      await loadNearbyUsers({
+        latitude: currentLocation.coords.latitude,
+        longitude: currentLocation.coords.longitude,
+      });
+
       if (mapRef.current) {
         mapRef.current.animateToRegion(newRegion, 1000);
       }
+
     } catch (err) {
       console.error("Location error:", err);
       Alert.alert("Error", "Failed to get location");
     }
   };
 
-  // Get user location on component mount
-  useEffect(() => {
-    verifyAndGetLocation();
-  }, []);
+  const handleUserPress = (userId) => {
+    navigation.navigate("DisplayProfile", { userId });
+  };
 
-  // Load nearby users when location is available
-  useEffect(() => {
-    if (location) {
-      loadNearbyUsers();
-    }
-  }, [location]);
-
-  // Filter users based on current filters
   useEffect(() => {
     const filterUsers = () => {
-      const { gender, ageRange } = filters;
+      const { gender, ageRange, distanceRange } = filters;
 
       const filtered = nearbyUsers.filter((user) => {
         const matchesGender = gender === "all" || user.gender === gender;
         const matchesAge = user.age >= ageRange[0] && user.age <= ageRange[1];
-        return matchesGender && matchesAge;
+        const matchesDistance = user.distance >= distanceRange[0] && user.distance <= distanceRange[1];
+        return matchesGender && matchesAge && matchesDistance;
       });
 
       setFilteredUsers(filtered);
@@ -143,46 +166,16 @@ export default function MapScreen() {
     filterUsers();
   }, [filters, nearbyUsers]);
 
-  // Function to navigate to user's profile when marker is pressed
-  const handleUserPress = (userId) => {
-    navigation.navigate("DisplayProfile", { userId });
-  };
-
-  // Update current region when map region changes
   const handleRegionChangeComplete = (region) => {
     setCurrentRegion(region);
   };
 
-  // Determine if a marker should be visible based on map region
-  const isMarkerVisible = (markerLocation) => {
-    if (!currentRegion) return true;
-    return (
-      markerLocation.latitude >=
-        currentRegion.latitude - currentRegion.latitudeDelta / 2 &&
-      markerLocation.latitude <=
-        currentRegion.latitude + currentRegion.latitudeDelta / 2 &&
-      markerLocation.longitude >=
-        currentRegion.longitude - currentRegion.longitudeDelta / 2 &&
-      markerLocation.longitude <=
-        currentRegion.longitude + currentRegion.longitudeDelta / 2
-    );
-  };
-
-  // Use memoization to optimize performance
   const displayedUsers = useMemo(() => {
     return filteredUsers.length > 0 ? filteredUsers : nearbyUsers;
   }, [filteredUsers, nearbyUsers]);
 
-  // Prefetch user images for smoother rendering
-  useEffect(() => {
-    displayedUsers.forEach((user) => {
-      Image.prefetch(user.profileImage);
-    });
-  }, [displayedUsers]);
-
   return (
     <View style={styles.container}>
-      {/* Header */}
       <View style={styles.subHeader}>
         <View style={styles.peopleNearbyContainer}>
           <Text style={styles.peopleNearbyText}>People nearby</Text>
@@ -192,47 +185,34 @@ export default function MapScreen() {
         </View>
       </View>
 
-      {/* Map */}
-      {location && (
-        <MapView
-          ref={mapRef}
-          style={styles.map}
-          initialRegion={location}
-          onRegionChangeComplete={handleRegionChangeComplete}
-          showsMyLocationButton={true}
-        >
-          {/* Marker for Current User */}
-          <Marker coordinate={location}>
-            <View style={styles.currentUserMarker}>
-              <Image
-                source={{
-                  uri: userProfile?.profileImage || "https://via.placeholder.com/150",
-                }}
-                style={styles.currentUserImage}
-              />
-            </View>
+      <MapView
+        ref={mapRef}
+        style={styles.map}
+        initialRegion={currentRegion}
+        onRegionChangeComplete={handleRegionChangeComplete}
+        showsUserLocation={locationPermission}
+        showsCompass={true}
+      >
+        {showUsers && displayedUsers.map((user) => (
+          <Marker
+            key={user.id}
+            coordinate={user.location}
+            tracksViewChanges={false}
+          >
+            <UserMarkerWithDistance 
+              user={user}
+              onPress={() => handleUserPress(user.id)}
+            />
           </Marker>
+        ))}
+      </MapView>
 
-          {/* Markers for Nearby Users */}
-          {displayedUsers
-            .filter((user) => isMarkerVisible(user.location))
-            .map((user) => (
-              <Marker
-                key={user.id}
-                coordinate={user.location}
-                title={user.userName}
-                onPress={() => handleUserPress(user.id)}
-              >
-                <View style={styles.userMarker}>
-                  <Image
-                    source={{ uri: user.profileImage }}
-                    style={styles.markerImage}
-                  />
-                </View>
-              </Marker>
-            ))}
-        </MapView>
-      )}
+      <TouchableOpacity
+        style={styles.locateButton}
+        onPress={verifyAndGetLocation}
+      >
+        <Ionicons name="locate" size={24} color="#FF69B4" />
+      </TouchableOpacity>
     </View>
   );
 }
@@ -268,28 +248,43 @@ const styles = StyleSheet.create({
     flex: 1,
     width: width,
   },
-  currentUserMarker: {
-    padding: 2,
-    borderRadius: 25,
-    backgroundColor: "#FF69B4",
-    borderWidth: 2,
-    borderColor: "#fff",
-  },
-  currentUserImage: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-  },
   userMarker: {
-    padding: 2,
-    borderRadius: 20,
-    backgroundColor: "#fff",
-    borderWidth: 1,
-    borderColor: "#FF69B4",
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   markerImage: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    borderWidth: 2,
+    borderColor: '#FF69B4',
+    backgroundColor: '#fff',
+  },
+  distanceContainer: {
+    position: 'absolute',
+    bottom: -20,
+    backgroundColor: '#FF69B4',
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 10,
+    alignSelf: 'center',
+  },
+  distanceText: {
+    color: '#fff',
+    fontSize: 12,
+    fontWeight: '500',
+  },
+  locateButton: {
+    position: "absolute",
+    bottom: 30,
+    right: 20,
+    backgroundColor: "#fff",
+    padding: 15,
+    borderRadius: 30,
+    elevation: 5,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
   },
 });
