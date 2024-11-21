@@ -44,7 +44,7 @@ const ProfileScreen = () => {
 
       // Pick the image
       const result = await ImagePicker.launchImageLibraryAsync({
-        mediaTypes: 'images',
+        // mediaTypes: 'images',
         allowsEditing: true,
         aspect: [1, 1],
         quality: 0.2,

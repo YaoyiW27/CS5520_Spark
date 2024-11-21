@@ -109,7 +109,7 @@ const EditProfileScreen = () => {
       }
 
       const result = await ImagePicker.launchImageLibraryAsync({
-        mediaTypes: 'images',
+        // mediaTypes: 'images',
         allowsEditing: true,
         aspect: [4, 3],
         quality: 0.2,
