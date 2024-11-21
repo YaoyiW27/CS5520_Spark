@@ -9,7 +9,7 @@ import LikedListScreen from '../screens/Profile/LikedListScreen';
 import EditProfileScreen from '../screens/Profile/EditProfileScreen';
 import DisplayProfileScreen from '../screens/Profile/DisplayProfileScreen';
 import FilterScreen from '../screens/Discover/FilterScreen';
-
+import NotificationScreen from '../screens/Profile/NotificationScreen';
 const AppStack = createNativeStackNavigator();
 
 const AppStackNavigator = () => {
@@ -137,6 +137,11 @@ const AppStackNavigator = () => {
           title: 'Edit Profile',
           headerTintColor: '#FF69B4',
         }} 
+      />
+
+      <AppStack.Screen
+      name="NotificationScreen"
+      component={NotificationScreen}
       />
     </AppStack.Navigator>
   );
