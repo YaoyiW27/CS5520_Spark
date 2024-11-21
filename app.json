@@ -45,6 +45,9 @@
         {
           "whenInUsePermission": "Allow $(PRODUCT_NAME) to access your location while the app is in use."
         }
+      ],
+      [
+        "expo-notifications"
       ]
     ]
   }
