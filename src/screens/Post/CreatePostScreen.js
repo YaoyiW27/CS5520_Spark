@@ -46,7 +46,7 @@ const CreatePostScreen = () => {
         }
 
         const result = await ImagePicker.launchImageLibraryAsync({
-            mediaTypes: 'images',
+            mediaTypes: ImagePicker.MediaTypeOptions.images, 
             allowsEditing: true,
             aspect: [4, 3],
             quality: 0.2, 
@@ -70,7 +70,7 @@ const CreatePostScreen = () => {
         console.error('Error picking image:', error);
         Alert.alert('Error', 'Failed to pick image');
     }
-};
+  };
 
   const pickVideo = async () => {
     try {
@@ -81,15 +81,27 @@ const CreatePostScreen = () => {
             return;
         }
 
-        let result = await ImagePicker.launchImageLibraryAsync({
-            mediaTypes: ImagePicker.MediaTypeOptions.Videos,
+        const result = await ImagePicker.launchImageLibraryAsync({
+            mediaTypes: 'videos',
             allowsEditing: true,
             aspect: [16, 9],
-            quality: 0.2,
-            compress: 0.5,
+            quality: 0.5,
+            videoMaxDuration: 60,  
         });
 
+        console.log('Video picker result:', result);
+
         if (!result.canceled && result.assets[0].uri) {
+            // check video file size
+            const fileInfo = await FileSystem.getInfoAsync(result.assets[0].uri);
+            console.log('Video file info:', fileInfo);
+
+            // limit video size to 50MB
+            if (fileInfo.size > 50 * 1024 * 1024) {
+                Alert.alert('File too large', 'Please choose a video under 50MB');
+                return;
+            }
+
             setImage(result.assets[0].uri);
         }
     } catch (error) {
@@ -158,7 +170,7 @@ const CreatePostScreen = () => {
             </TouchableOpacity>
         ),
     });
-}, [navigation, content, image, isPosting]);
+  }, [navigation, content, image, isPosting]);
 
   return (
     <SafeAreaView style={styles.container}>
@@ -208,7 +220,7 @@ const CreatePostScreen = () => {
             </View>
         </KeyboardAvoidingView>
     </SafeAreaView>
-);
+  );
 };
 
 const styles = StyleSheet.create({
