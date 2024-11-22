@@ -1,12 +1,10 @@
 import React, { useState, useEffect, useRef, useMemo } from "react";
 import {
-  StyleSheet,
   View,
   Text,
   TouchableOpacity,
   Image,
   Alert,
-  Dimensions,
   Modal,
 } from "react-native";
 import * as Location from "expo-location";
@@ -17,25 +15,24 @@ import { useAuth } from "../../contexts/AuthContext";
 import { updateUserLocation, getNearbyUsers } from "../../Firebase/firebaseHelper";
 import { db } from "../../Firebase/firebaseSetup";
 import { collection, onSnapshot } from 'firebase/firestore';
-
-const { width } = Dimensions.get("window");
+import { mapScreenStyles as styles } from '../../styles/DiscoverStyles';
 
 const UserMarkerWithDistance = ({ user, onPress }) => {
   const [imageError, setImageError] = useState(false);
 
   return (
     <TouchableOpacity onPress={onPress}>
-      <View style={styles.userMarker}>
+      <View style={styles.mapUserMarker}>
         <Image 
           source={{ uri: imageError ? 'https://via.placeholder.com/150' : user.profileImage }}
-          style={styles.markerImage}
+          style={styles.mapMarkerImage}
           onError={(e) => {
             console.log(`Error loading image for user ${user.id}:`, e.nativeEvent.error);
             setImageError(true);
           }}
         />
-        <View style={styles.distanceContainer}>
-          <Text style={styles.distanceText}>{user.distance}km</Text>
+        <View style={styles.mapDistanceContainer}>
+          <Text style={styles.mapDistanceText}>{user.distance}km</Text>
         </View>
       </View>
     </TouchableOpacity>
@@ -240,11 +237,11 @@ export default function MapScreen() {
     };
 
     return (
-      <View style={styles.container}>
-        <View style={styles.subHeader}>
-          <View style={styles.peopleNearbyContainer}>
-            <Text style={styles.peopleNearbyText}>People nearby</Text>
-            <TouchableOpacity onPress={handleFilterPress} style={styles.filterButton}>
+      <View style={styles.mapContainer}>
+        <View style={styles.mapSubHeader}>
+          <View style={styles.mapPeopleNearbyContainer}>
+            <Text style={styles.mapPeopleNearbyText}>People nearby</Text>
+            <TouchableOpacity onPress={handleFilterPress} style={styles.mapFilterButton}>
               <Ionicons name="options-outline" size={24} color="#FF69B4" />
             </TouchableOpacity>
           </View>
@@ -293,7 +290,7 @@ export default function MapScreen() {
   
         {/* locate me button */}
         <TouchableOpacity
-          style={styles.locateButton}
+          style={styles.MapLocateButton}
           onPress={verifyAndGetLocation}
         >
           <Ionicons name="locate" size={24} color="#FF69B4" />
@@ -301,7 +298,7 @@ export default function MapScreen() {
   
         {/* choose a location button */}
         <TouchableOpacity
-          style={styles.selectLocationButton}
+          style={styles.mapSelectLocationButton}
           onPress={startLocationSelection}
         >
           <Ionicons name="location" size={24} color="#FF69B4" />
@@ -313,22 +310,22 @@ export default function MapScreen() {
           transparent={true}
           animationType="fade"
         >
-          <View style={styles.modalContainer}>
-            <View style={styles.modalContent}>
-              <Text style={styles.modalTitle}>Confirm location</Text>
-              <Text style={styles.modalText}>Do you want to set this as your virtual location?</Text>
-              <View style={styles.modalButtons}>
+          <View style={styles.mapModalContainer}>
+            <View style={styles.mapModalContent}>
+              <Text style={styles.mapModalTitle}>Confirm location</Text>
+              <Text style={styles.mapModalText}>Do you want to set this as your virtual location?</Text>
+              <View style={styles.mapModalButtons}>
                 <TouchableOpacity
-                  style={[styles.modalButton, styles.cancelButton]}
+                  style={[styles.mapModalButton, styles.mapCancelButton]}
                   onPress={() => {
                     setShowConfirmModal(false);
                     setTempLocation(null);
                   }}
                 >
-                  <Text style={styles.buttonText}>Cancel</Text>
+                  <Text style={styles.mapButtonText}>Cancel</Text>
                 </TouchableOpacity>
                 <TouchableOpacity
-                  style={[styles.modalButton, styles.confirmButton]}
+                  style={[styles.mapModalButton, styles.mapConfirmButton]}
                   onPress={confirmLocationSelection}
                 >
                   <Text style={styles.buttonText}>Confirm</Text>
@@ -339,130 +336,4 @@ export default function MapScreen() {
         </Modal>
       </View>
     );
-}
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "#fff",
-  },
-  subHeader: {
-    paddingHorizontal: 20,
-    paddingVertical: 15,
-    backgroundColor: "#fff",
-    borderBottomWidth: 1,
-    borderBottomColor: "#f0f0f0",
-  },
-  peopleNearbyContainer: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-  },
-  peopleNearbyText: {
-    fontSize: 24,
-    fontWeight: "600",
-    color: "#000",
-  },
-  filterButton: {
-    padding: 8,
-    borderRadius: 8,
-    backgroundColor: "#f8f8f8",
-  },
-  map: {
-    flex: 1,
-    width: width,
-  },
-  userMarker: {
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  markerImage: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    borderWidth: 2,
-    borderColor: '#FF69B4',
-    backgroundColor: '#fff',
-  },
-  distanceContainer: {
-    position: 'absolute',
-    bottom: -20,
-    backgroundColor: '#FF69B4',
-    paddingHorizontal: 8,
-    paddingVertical: 2,
-    borderRadius: 10,
-    alignSelf: 'center',
-  },
-  distanceText: {
-    color: '#fff',
-    fontSize: 12,
-    fontWeight: '500',
-  },
-  locateButton: {
-    position: "absolute",
-    bottom: 30,
-    right: 20,
-    backgroundColor: "#fff",
-    padding: 15,
-    borderRadius: 30,
-    elevation: 5,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 3.84,
-  },
-  selectLocationButton: {
-    position: "absolute",
-    bottom: 30,
-    left: 20,
-    backgroundColor: "#fff",
-    padding: 15,
-    borderRadius: 30,
-    elevation: 5,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 3.84,
-  },
-  modalContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-  },
-  modalContent: {
-    backgroundColor: '#fff',
-    padding: 20,
-    borderRadius: 10,
-    width: '80%',
-  },
-  modalTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    marginBottom: 10,
-  },
-  modalText: {
-    fontSize: 16,
-    marginBottom: 20,
-  },
-  modalButtons: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-  },
-  modalButton: {
-    padding: 10,
-    borderRadius: 5,
-    width: '45%',
-    alignItems: 'center',
-  },
-  cancelButton: {
-    backgroundColor: '#ccc',
-  },
-  confirmButton: {
-    backgroundColor: '#FF69B4',
-  },
-  buttonText: {
-    color: '#fff',
-    fontSize: 16,
-  },
-});
+  }

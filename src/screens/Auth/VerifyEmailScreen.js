@@ -1,117 +1,50 @@
 import React from 'react';
-import { View, Text, StyleSheet, SafeAreaView, TouchableOpacity } from 'react-native';
+import { View, Text, SafeAreaView, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { verifyEmailScreenStyles as styles } from '../../styles/AuthStyles';
 
 const VerifyEmailScreen = ({ navigation, route }) => {
   const { email } = route.params || {};
 
   return (
-    <SafeAreaView style={styles.container}>
-      <View style={styles.header}>
+    <SafeAreaView style={styles.emailContainer}>
+      <View style={styles.emailHeader}>
         <TouchableOpacity 
-          style={styles.backButton}
+          style={styles.emailBackButton}
           onPress={() => navigation.goBack()}
         >
           <Ionicons name="arrow-back" size={24} color="black" />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Verify Email</Text>
+        <Text style={styles.emailHeaderTitle}>Verify Email</Text>
       </View>
 
-      <View style={styles.content}>
-        <View style={styles.iconContainer}>
+      <View style={styles.emailContent}>
+        <View style={styles.emailIconContainer}>
           <Ionicons name="mail" size={50} color="#FF69B4" />
         </View>
-        <Text style={styles.title}>Email Sent!</Text>
-        <Text style={styles.subtitle}>
+        <Text style={styles.emailTitle}>Email Sent!</Text>
+        <Text style={styles.emailSubtitle}>
           A magic code to sign in was sent to{'\n'}
           <Text style={styles.email}>{email}</Text>
         </Text>
 
         <TouchableOpacity
-          style={styles.submitButton}
+          style={styles.emailSubmitButton}
           onPress={() => navigation.navigate('AuthOptions')}
         >
-          <Text style={styles.submitButtonText}>Confirm</Text>
+          <Text style={styles.emailSubmitButtonText}>Confirm</Text>
         </TouchableOpacity>
 
         <TouchableOpacity
-          style={styles.resendButton}
-          onPress={() => {
-            // 重新发送验证码的逻辑
+          style={styles.emailResendButton}
+          onPress={() => { /* Resend code */
           }}
         >
-          <Text style={styles.resendButtonText}>Resend Code</Text>
+          <Text style={styles.emailResendButtonText}>Resend Code</Text>
         </TouchableOpacity>
       </View>
     </SafeAreaView>
   );
 };
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#fff',
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: '#f0f0f0',
-  },
-  backButton: {
-    padding: 8,
-  },
-  headerTitle: {
-    fontSize: 16,
-    fontWeight: '600',
-    marginLeft: 16,
-  },
-  content: {
-    flex: 1,
-    padding: 20,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  iconContainer: {
-    marginBottom: 20,
-  },
-  title: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    marginBottom: 10,
-  },
-  subtitle: {
-    fontSize: 16,
-    color: '#666',
-    textAlign: 'center',
-    marginBottom: 30,
-  },
-  email: {
-    color: '#FF69B4',
-  },
-  submitButton: {
-    backgroundColor: '#FF69B4',
-    padding: 15,
-    borderRadius: 8,
-    width: '100%',
-    alignItems: 'center',
-    marginBottom: 12,
-  },
-  submitButtonText: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  resendButton: {
-    padding: 15,
-    width: '100%',
-    alignItems: 'center',
-  },
-  resendButtonText: {
-    color: '#666',
-    fontSize: 16,
-  },
-});
 
 export default VerifyEmailScreen;
