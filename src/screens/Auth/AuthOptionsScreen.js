@@ -22,6 +22,79 @@ const AuthOptionsScreen = ({ navigation }) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+  const [passwordStrength, setPasswordStrength] = useState('');
+
+  // password warning
+  const checkPasswordStrength = (pass) => {
+    if (pass.length === 0) {
+      setPasswordStrength('');
+    } else if (pass.length > 8) {
+      // check if password contains only numbers
+      const hasOnlyNumbers = /^\d+$/.test(pass);
+      // check if password contains both letters and numbers
+      const hasLettersAndNumbers = /^(?=.*[0-9])(?=.*[a-zA-Z])/.test(pass);
+      
+      if (hasLettersAndNumbers) {
+        setPasswordStrength('strong');
+      } else if (hasOnlyNumbers || /^[a-zA-Z]+$/.test(pass)) {
+        setPasswordStrength('medium');
+      } else {
+        setPasswordStrength('weak');
+      }
+    } else {
+      setPasswordStrength('weak');
+    }
+  };
+
+  const handlePasswordChange = (text) => {
+    setPassword(text);
+    checkPasswordStrength(text);
+  };
+
+  const renderPasswordStrength = () => {
+    if (!isLogin && passwordStrength) {
+      let strengthColor = '#ff4444'; // weak color - red
+      let strengthText = 'Weak';
+      let strengthWidth = '33%';
+      
+      if (passwordStrength === 'medium') {
+        strengthColor = '#ffa700'; // medium color - orange
+        strengthText = 'Medium';
+        strengthWidth = '66%';
+      } else if (passwordStrength === 'strong') {
+        strengthColor = '#00c851'; // strong color - green
+        strengthText = 'Strong';
+        strengthWidth = '100%';
+      }
+      
+      return (
+        <View style={styles.strengthContainer}>
+          <View style={styles.strengthBarContainer}>
+            <View 
+              style={[
+                styles.strengthBar, 
+                { backgroundColor: strengthColor, width: strengthWidth }
+              ]} 
+            />
+          </View>
+          <Text style={[styles.strengthText, { color: strengthColor }]}>
+            Password Strength: {strengthText}
+          </Text>
+          {passwordStrength === 'weak' && (
+            <Text style={styles.strengthHint}>
+              Password coule be at least 8 characters
+            </Text>
+          )}
+          {passwordStrength === 'medium' && (
+            <Text style={styles.strengthHint}>
+              Password could contain letters and numbers
+            </Text>
+          )}
+        </View>
+      );
+    }
+    return null;
+  };
 
   const handleSubmit = async () => {
     if (!email || !password) {
@@ -31,10 +104,10 @@ const AuthOptionsScreen = ({ navigation }) => {
 
     try {
       if (isLogin) {
-        // 登录
+        // log in
         await signInWithEmailAndPassword(auth, email, password);
       } else {
-        // 注册
+        // sign up
         const userCredential = await createUserWithEmailAndPassword(auth, email, password);
         // Create initial user profile
         await createUserProfile(email, {
@@ -124,7 +197,7 @@ const AuthOptionsScreen = ({ navigation }) => {
             style={[styles.input, styles.passwordInput]}
             placeholder="Password"
             value={password}
-            onChangeText={setPassword}
+            onChangeText={handlePasswordChange}
             secureTextEntry={!showPassword}
           />
           <Pressable 
@@ -134,6 +207,8 @@ const AuthOptionsScreen = ({ navigation }) => {
             <FontAwesome name={showPassword ? "eye" : "eye-slash"} size={20} color="#666" />
           </Pressable>
         </View>
+        
+        {!isLogin && renderPasswordStrength()}
 
         {isLogin && (
           <TouchableOpacity 
@@ -284,6 +359,31 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 16,
     fontWeight: '600',
+  },
+  strengthContainer: {
+    width: '100%',
+    marginBottom: 15,
+    alignItems: 'flex-start',
+  },
+  strengthBarContainer: {
+    width: '100%',
+    height: 4,
+    backgroundColor: '#e0e0e0',
+    borderRadius: 2,
+    marginBottom: 5,
+  },
+  strengthBar: {
+    height: '100%',
+    borderRadius: 2,
+  },
+  strengthText: {
+    fontSize: 12,
+    marginBottom: 4,
+  },
+  strengthHint: {
+    fontSize: 12,
+    color: '#666',
+    marginTop: 2,
   },
 });
 
