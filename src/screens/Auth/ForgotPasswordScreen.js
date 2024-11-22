@@ -2,12 +2,12 @@ import React, { useState } from 'react';
 import { 
   View, 
   Text, 
-  StyleSheet, 
   SafeAreaView, 
   TouchableOpacity,
   TextInput 
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { forgetPassworScreenStyles as styles } from '../../styles/AuthStyles';
 
 const ForgotPasswordScreen = ({ navigation }) => {
   const [email, setEmail] = useState('');
@@ -19,28 +19,28 @@ const ForgotPasswordScreen = ({ navigation }) => {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
-      <View style={styles.header}>
+    <SafeAreaView style={styles.forgetPasswordContainer}>
+      <View style={styles.forgetPasswordHeader}>
         <TouchableOpacity 
-          style={styles.backButton}
+          style={styles.forgetPasswordBackButton}
           onPress={() => navigation.goBack()}
         >
           <Ionicons name="arrow-back" size={24} color="black" />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Forgot Password</Text>
+        <Text style={styles.forgetPasswordHeaderTitle}>Forgot Password</Text>
       </View>
 
-      <View style={styles.content}>
-        <View style={styles.iconContainer}>
+      <View style={styles.forgetPasswordContent}>
+        <View style={styles.forgetPasswordIconContainer}>
           <Ionicons name="lock-closed" size={50} color="#FF69B4" />
         </View>
-        <Text style={styles.title}>Reset Password</Text>
-        <Text style={styles.subtitle}>
+        <Text style={styles.forgetPasswordTitle}>Reset Password</Text>
+        <Text style={styles.forgetPasswordSubtitle}>
           Enter your email address and we'll send you instructions to reset your password.
         </Text>
 
         <TextInput
-          style={styles.input}
+          style={styles.forgetPasswordInput}
           placeholder="Email"
           value={email}
           onChangeText={setEmail}
@@ -49,106 +49,21 @@ const ForgotPasswordScreen = ({ navigation }) => {
         />
 
         <TouchableOpacity
-          style={styles.submitButton}
+          style={styles.forgetPasswordSubmitButton}
           onPress={handleSubmit}
         >
-          <Text style={styles.submitButtonText}>Send Reset Link</Text>
+          <Text style={styles.forgetPasswordSubmitButtonText}>Send Reset Link</Text>
         </TouchableOpacity>
 
         <TouchableOpacity
-          style={styles.returnButton}
+          style={styles.forgetPasswordReturnButton}
           onPress={() => navigation.goBack()}
         >
-          <Text style={styles.returnButtonText}>Return to Login</Text>
+          <Text style={styles.forgetPasswordReturnButtonText}>Return to Login</Text>
         </TouchableOpacity>
       </View>
     </SafeAreaView>
   );
 };
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#fff',
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: '#f0f0f0',
-  },
-  backButton: {
-    padding: 8,
-  },
-  headerTitle: {
-    fontSize: 16,
-    fontWeight: '600',
-    marginLeft: 16,
-  },
-  content: {
-    flex: 1,
-    padding: 20,
-    alignItems: 'center',
-  },
-  iconContainer: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
-    backgroundColor: '#fff',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginTop: 40,
-    marginBottom: 20,
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
-  },
-  title: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    marginBottom: 10,
-  },
-  subtitle: {
-    fontSize: 16,
-    color: '#666',
-    textAlign: 'center',
-    marginBottom: 30,
-  },
-  input: {
-    backgroundColor: '#f5f5f5',
-    padding: 15,
-    borderRadius: 8,
-    width: '100%',
-    marginBottom: 20,
-  },
-  submitButton: {
-    backgroundColor: '#FF69B4',
-    padding: 15,
-    borderRadius: 8,
-    width: '100%',
-    alignItems: 'center',
-    marginBottom: 12,
-  },
-  submitButtonText: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  returnButton: {
-    padding: 15,
-    width: '100%',
-    alignItems: 'center',
-  },
-  returnButtonText: {
-    color: '#666',
-    fontSize: 16,
-  },
-});
 
 export default ForgotPasswordScreen;

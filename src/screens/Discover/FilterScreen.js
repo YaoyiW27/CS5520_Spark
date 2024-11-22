@@ -1,6 +1,7 @@
 import React, { useState } from "react";
-import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
+import { View, Text, TouchableOpacity } from "react-native";
 import Slider from "@react-native-community/slider";
+import { filterScreenStyles as styles } from '../../styles/DiscoverStyles';
 
 const FilterScreen = ({ navigation, route }) => {
   // Initialize state with passed filters or default values
@@ -28,56 +29,56 @@ const FilterScreen = ({ navigation, route }) => {
   };
 
   return (
-    <View style={styles.container}>
+    <View style={styles.filterContainer}>
       {/* Gender Filter */}
-      <Text style={styles.title}>Gender</Text>
-      <View style={styles.genderButtons}>
+      <Text style={styles.filterTitle}>Gender</Text>
+      <View style={styles.filterGenderButtons}>
         <TouchableOpacity
           style={[
-            styles.genderButton,
-            gender === "men" && styles.activeButton,
+            styles.filterGenderButton,
+            gender === "men" && styles.filterActiveButton,
             { flex: 1 },
           ]}
           onPress={() => setGender("men")}
         >
-          <Text style={[styles.buttonText, gender === "men" && styles.activeText]}>
+          <Text style={[styles.filterButtonText, gender === "men" && styles.filterActiveText]}>
             Men
           </Text>
         </TouchableOpacity>
 
         <TouchableOpacity
           style={[
-            styles.genderButton,
-            gender === "women" && styles.activeButton,
+            styles.filterGenderButton,
+            gender === "women" && styles.filterActiveButton,
             { flex: 1 },
           ]}
           onPress={() => setGender("women")}
         >
-          <Text style={[styles.buttonText, gender === "women" && styles.activeText]}>
+          <Text style={[styles.filterButtonText, gender === "women" && styles.filterActiveText]}>
             Women
           </Text>
         </TouchableOpacity>
 
         <TouchableOpacity
           style={[
-            styles.genderButton,
-            gender === "all" && styles.activeButton,
+            styles.filterGenderButton,
+            gender === "all" && styles.filterActiveButton,
             { flex: 1 },
           ]}
           onPress={() => setGender("all")}
         >
-          <Text style={[styles.buttonText, gender === "all" && styles.activeText]}>
+          <Text style={[styles.filterButtonText, gender === "all" && styles.filterActiveText]}>
             Both
           </Text>
         </TouchableOpacity>
       </View>
 
       {/* Distance Range Filter */}
-      <View style={styles.rangeContainer}>
-        <Text style={styles.title}>Distance (km)</Text>
-        <Text style={styles.rangeText}>{`${distanceRange[0]} - ${distanceRange[1]}`}</Text>
+      <View style={styles.filterRangeContainer}>
+        <Text style={styles.filterTitle}>Distance (km)</Text>
+        <Text style={styles.filterRangeText}>{`${distanceRange[0]} - ${distanceRange[1]}`}</Text>
         <Slider
-          style={styles.slider}
+          style={styles.filterSlider}
           minimumValue={0}
           maximumValue={75}
           value={distanceRange[1]}
@@ -89,11 +90,11 @@ const FilterScreen = ({ navigation, route }) => {
       </View>
 
       {/* Age Range Filter */}
-      <View style={styles.rangeContainer}>
-        <Text style={styles.title}>Age Range</Text>
+      <View style={styles.filterRangeContainer}>
+        <Text style={styles.filterTitle}>Age Range</Text>
         <Text style={styles.rangeText}>{`${ageRange[0]} - ${ageRange[1]}`}</Text>
         <Slider
-          style={styles.slider}
+          style={styles.filterSlider}
           minimumValue={18}
           maximumValue={80}
           value={ageRange[1]}
@@ -105,74 +106,11 @@ const FilterScreen = ({ navigation, route }) => {
       </View>
 
       {/* Apply Button */}
-      <TouchableOpacity style={styles.applyButton} onPress={handleApply}>
-        <Text style={styles.applyText}>Apply</Text>
+      <TouchableOpacity style={styles.filterApplyButton} onPress={handleApply}>
+        <Text style={styles.filterApplyText}>Apply</Text>
       </TouchableOpacity>
     </View>
   );
 };
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    padding: 20,
-    backgroundColor: "#fff",
-  },
-  title: {
-    fontSize: 24,
-    fontWeight: "600",
-    marginBottom: 20,
-    color: "#333",
-  },
-  genderButtons: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    marginBottom: 30,
-  },
-  genderButton: {
-    paddingVertical: 12,
-    borderRadius: 25,
-    borderWidth: 1,
-    borderColor: "#FF69B4",
-    alignItems: "center",
-  },
-  activeButton: {
-    backgroundColor: "#FF69B4",
-  },
-  buttonText: {
-    color: "#FF69B4",
-    fontSize: 16,
-  },
-  activeText: {
-    color: "#fff",
-  },
-  rangeContainer: {
-    marginBottom: 30,
-  },
-  rangeText: {
-    fontSize: 16,
-    color: "#666",
-    marginBottom: 10,
-  },
-  slider: {
-    width: "100%",
-    height: 40,
-  },
-  applyButton: {
-    backgroundColor: "#FF69B4",
-    padding: 15,
-    borderRadius: 25,
-    alignItems: "center",
-    position: "absolute",
-    bottom: 30,
-    left: 20,
-    right: 20,
-  },
-  applyText: {
-    color: "#fff",
-    fontSize: 18,
-    fontWeight: "bold",
-  },
-});
 
 export default FilterScreen;
