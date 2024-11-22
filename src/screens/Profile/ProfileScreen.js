@@ -5,6 +5,7 @@ import { useNavigation } from '@react-navigation/native';
 import { getUserProfile, updateUserProfilePhoto } from '../../Firebase/firebaseHelper';
 import { useFocusEffect } from '@react-navigation/native';
 import * as ImagePicker from 'expo-image-picker';
+import { Ionicons } from '@expo/vector-icons';
 
 const DEFAULT_PROFILE_PHOTO = 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=400';
 
@@ -71,6 +72,41 @@ const ProfileScreen = () => {
     }
   };
 
+  const handleCameraPress = async () => {
+    try {
+      const { status } = await ImagePicker.requestCameraPermissionsAsync();
+      if (status !== 'granted') {
+        Alert.alert('Permission needed', 'Please grant permission to access your camera.');
+        return;
+      }
+
+      const result = await ImagePicker.launchCameraAsync({
+        allowsEditing: true,
+        aspect: [1, 1],
+        quality: 0.2,
+        compress: 0.5,
+      });
+
+      if (!result.canceled && result.assets[0].uri) {
+        setUploading(true);
+        try {
+          await updateUserProfilePhoto(user.email, result.assets[0].uri);
+          // Refresh user profile to get the new photo
+          const profile = await getUserProfile(user.email);
+          setUserProfile(profile);
+        } catch (error) {
+          console.error('Error uploading photo:', error);
+          Alert.alert('Error', 'Failed to upload photo');
+        } finally {
+          setUploading(false);
+        }
+      }
+    } catch (error) {
+      console.error('Error taking photo:', error);
+      Alert.alert('Error', 'Failed to take photo');
+    }
+  };
+
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.content}>
@@ -81,6 +117,12 @@ const ProfileScreen = () => {
               source={{ uri: userProfile?.profilePhoto || DEFAULT_PROFILE_PHOTO }}
               style={styles.photo}
             />
+          </TouchableOpacity>
+          <TouchableOpacity 
+            style={styles.cameraButton}
+            onPress={handleCameraPress}
+          >
+            <Ionicons name="camera" size={16} color="#fff" />
           </TouchableOpacity>
         </View>
 
@@ -167,6 +209,7 @@ const styles = StyleSheet.create({
   },
   photoContainer: {
     marginTop: 20,
+    position: 'relative',
   },
   photoPlaceholder: {
     width: 100,
@@ -200,7 +243,19 @@ const styles = StyleSheet.create({
     height: 100,
     borderRadius: 50,
   },
-
+  cameraButton: {
+    position: 'absolute',
+    bottom: 0,
+    right: 0,
+    backgroundColor: '#FF69B4',
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 2,
+    borderColor: '#fff',
+  },
 });
 
 export default ProfileScreen;

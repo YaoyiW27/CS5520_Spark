@@ -1,18 +1,18 @@
 # CS 5520 Final Project: Spark 💫
 
 ## Project Description 
-Spark is a relationship app designed for meaningful connections beyond swipes. Using AI-powered matchmaking and an interactive map, it helps users discover people nearby and find connections aligned with their values. Share moments on your social feed and engage authentically with privacy and control.
+Spark is a relationship app designed for meaningful connections beyond swipes. Using an interactive map and interest-based matching, it helps users discover people nearby and find connections aligned with their values. Share moments on your social feed and engage authentically with privacy and control.
 
 ## Demo 🎬
 [Demo Video](https://drive.google.com/file/d/1yTaX6ZUhUpKg_5uJ4Qf5jvvhRtyrs_GT/view?usp=sharing)
 
 
 ## App Functionality ✨
-- **AI-powered matchmaking:** Users can use AI to find matches based on their preferences and values.
+- **Interest-based matching:** Users can find matches based on their preferences, values, and shared interests.
 - **Interactive map:** Users can see the map of their matches on the app, and filter matches by location and interests.
 - **Social Post:** Users can share their moments on the app, and engage with others' moments.
 - **Profile:** Users can customize their profile, and see others' profiles.
-- **Notification:** Users will receive notifications on special occasions, such as Valentine’s Day and Christmas, prompting them to send messages to their matches.
+- **Notification:** Users can create personalized notifications by setting custom descriptions, dates, and times to remind themselves of important moments or planned interactions.
  
 ## Database: Firebase Collections 📊
 ### Firestore Collections
@@ -62,7 +62,20 @@ Spark is a relationship app designed for meaningful connections beyond swipes. U
         - **CRUD Operations:**
           - `createComment`: create a new comment.
           - `readComment`: read comment information.
-  
+
+- **Reminders:** Stores user notification reminders with customizable descriptions and schedules.
+   - **Fields:**
+     - `userEmail`: email of the user who created the reminder.
+     - `description`: custom reminder message.
+     - `date`: scheduled date and time for the reminder.
+     - `status`: current status of the reminder.
+     - `createdAt`: timestamp when the reminder was created.
+   - **CRUD Operations:**
+     - **Create**: create a new reminder.
+     - **Read**: read reminder information.
+     - **Update**: update reminder status or details.
+     - **Delete**: delete reminder.
+
 
 ### Firestore Storage Structure
 - **Posts Folder** Stores user posts information, including photos and videos.
@@ -85,21 +98,77 @@ Spark is a relationship app designed for meaningful connections beyond swipes. U
 - [Yundi Tao](https://github.com/yundii)
 - [Yaoyi Wang](https://github.com/YaoyiW27)
 ### Contribution Statements:
-- Yundi Tao: Set up Firebase, including Firestore database configuration and initial CRUD operation connections. Write profile related functions and pages, including profile page, edit profile page, and profile details display page, connect them to the database. write home page,  connect it to the database.
-- Yaoyi Wang: Set up the initial project, created the initial project structure. Write sign up, login, and logout functions and pages, connect them to the database. Write Post related functions and pages, including post display page, create post page, connect them to the database. 
-- To be done: Map related page, including filter function; Search function on home page; profile related pages and functions, including notification page and photo wall display;
-If time allows, we will add chat pages and functions.
+- Yundi Tao: Set up Firebase, including Firestore database configuration and initial CRUD operation connections. Write profile related functions and pages, including profile page, edit profile page, profile details display page, connect them to the database. write home page, including swipe screen and search screen. Write Reminder related functions and page, connect them to the database.
+- Yaoyi Wang: Set up the initial project, created the initial project structure. Write sign up, login, and logout functions and pages, connect them to the database. Write Post related functions and pages, including post display page, create post page, connect them to the database. Write map related functions and pages, including map display page, filter function, connect them to the database.
+- To be done: chat pages and functions, styling of all pages, light and dark mode.
 
 ## Screenshots 
-<img src="./src/screenshots/screen1.jpg" width="300" />
-<img src="./src/screenshots/screen2.jpg" width="300" />
-<img src="./src/screenshots/screen3.jpg" width="300" />
-<img src="./src/screenshots/screen4.jpg" width="300" />
-<img src="./src/screenshots/screen5.jpg" width="300" />
-<img src="./src/screenshots/screen6.jpg" width="300" />
-<img src="./src/screenshots/screen7.jpg" width="300" />
-<img src="./src/screenshots/screen8.jpg" width="300" />
-<img src="./src/screenshots/screen9.jpg" width="300" />
+<img src="./src/screenshots/StartScreen.jpg" width="300" />
+<img src="./src/screenshots/LoginScreen.jpg" width="300" />
+<img src="./src/screenshots/SignUpScreen.jpg" width="300" />
+<img src="./src/screenshots/SwipeScreen.jpg" width="300" />
+<img src="./src/screenshots/SearchScreen.jpg" width="300" />
+<img src="./src/screenshots/MapScreen.jpg" width="300" />
+<img src="./src/screenshots/MapFiltersScreen.jpg" width="300" />
+<img src="./src/screenshots/PostScreen.jpg" width="300" />
+<img src="./src/screenshots/CreatePostScreen.jpg" width="300" />
+<img src="./src/screenshots/ProfileScreen.jpg" width="300" />
+<img src="./src/screenshots/EditProfileScreen1.jpg" width="300" />
+<img src="./src/screenshots/EditProfileScreen2.jpg" width="300" />
+<img src="./src/screenshots/ProfileDetailsScreen.jpg" width="300" />
+<img src="./src/screenshots/LikedListScreen.jpg" width="300" />
+<img src="./src/screenshots/NotificationScreen1.jpg" width="300" />
+<img src="./src/screenshots/NotificationScreen2.jpg" width="300" />
+
+## Firebase Rules
+### Firestore Rules
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /Posts/{postId} {
+      allow read: if true;  
+      allow write: if request.auth != null;  
+    }
+    
+    match /Users/{userId} {
+      allow read: if true;  
+      allow write: if request.auth != null 
+                  && request.auth.token.email == userId; 
+    }
+    match /reminders/{reminder} {
+      allow read: if request.auth != null 
+                 && request.auth.token.email == resource.data.userEmail;
+      allow create: if request.auth != null 
+                   && request.auth.token.email == request.resource.data.userEmail;
+      allow update, delete: if request.auth != null 
+                          && request.auth.token.email == resource.data.userEmail;
+    }
+  }
+}
+### Storage Rules
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+  	// Photo wall rules
+  	match /photo_wall/{userEmail}/{fileName} {
+      allow read: if true;
+      allow write: if request.auth != null 
+                  && request.auth.token.email == userEmail;
+    }
+    
+    // Profile photos rules
+    match /profile_photos/{userEmail}/{fileName} {
+      allow read: if true;
+      allow write: if request.auth != null;
+    }
+    
+    // Posts rules
+    match /posts/{userId}/{fileName} {
+      allow read: if true;
+      allow write: if request.auth != null;
+    }
+  }
+}
 
 ## Version Control and Collaboration
 All team members have equal access to the project repository, created branches for different features, and can push their changes to the main branch after review. Each member is responsible for creating separate branches for individual features or bug fixes, following the GitHub Flow workflow. Regular commits and pulls are made to ensure that the main branch stays up-to-date and conflicts are minimized.
