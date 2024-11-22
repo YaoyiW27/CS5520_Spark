@@ -30,17 +30,25 @@ function BottomTabNavigator() {
       <Tab.Screen 
         name="Home" 
         component={SwipeScreen}
-        options={{
+        options={({ navigation }) => ({
           headerTitle: 'Home',
           headerTitleStyle: {
             color: '#FF69B4',
             fontSize: 18,
           },
+          headerRight: () => (
+            <TouchableOpacity
+              onPress={() => navigation.navigate('Search')}
+              style={{ marginRight: 15 }}
+            >
+              <Ionicons name="search" size={24} color="#FF69B4" />
+            </TouchableOpacity>
+          ),
           tabBarIcon: ({ color, size }) => (
             <Ionicons name="home" size={size} color={color} />
           ),
           tabBarAccessibilityLabel: 'Home Tab',
-        }}
+        })}
       />
       <Tab.Screen 
         name="Discover" 

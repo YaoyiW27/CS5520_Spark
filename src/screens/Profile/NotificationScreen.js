@@ -23,7 +23,7 @@ import {
 } from '../../Firebase/firebaseHelper';
 import { AuthContext } from '../../contexts/AuthContext';
 
-// 设置通知处理
+
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
     shouldShowAlert: true,
@@ -39,14 +39,13 @@ const NotificationScreen = ({ route, navigation }) => {
   const [modalVisible, setModalVisible] = useState(false);
   const { user } = useContext(AuthContext);
 
-  // 添加 hideModal 函数
   const hideModal = () => {
     setModalVisible(false);
     setDescription('');
     setDate(new Date());
   };
 
-  // 请求通知权限
+
   useEffect(() => {
     const requestPermissions = async () => {
       const { status } = await Notifications.requestPermissionsAsync();
@@ -81,7 +80,7 @@ const NotificationScreen = ({ route, navigation }) => {
     }
   };
 
-  // 保存新提醒
+
   const saveReminder = async () => {
     if (!description.trim()) {
       alert('Please enter a description');
@@ -97,10 +96,9 @@ const NotificationScreen = ({ route, navigation }) => {
         return;
       }
 
-      // 先安排通知
+      
       const notificationId = await scheduleNotification(description, selectedDate);
 
-      // 准备数据
       const reminderData = {
         description: description,
         date: selectedDate.toISOString(),
@@ -109,10 +107,10 @@ const NotificationScreen = ({ route, navigation }) => {
         userEmail: user.email
       };
 
-      // 保存到 Firestore
+      
       const reminderId = await addReminder(user.email, reminderData);
       
-      // 更新本地状态
+      
       setReminders(prevReminders => [...prevReminders, {
         id: reminderId,
         description: description,
@@ -129,7 +127,7 @@ const NotificationScreen = ({ route, navigation }) => {
     }
   };
 
-  // 加载提醒数据
+  
   useEffect(() => {
     const loadReminders = async () => {
       try {
@@ -144,7 +142,7 @@ const NotificationScreen = ({ route, navigation }) => {
     loadReminders();
   }, [user.email]);
 
-  // 删除提醒
+  
   const deleteReminder = async (id) => {
     try {
       await deleteReminderFromDB(id);
@@ -155,7 +153,7 @@ const NotificationScreen = ({ route, navigation }) => {
     }
   };
 
-  // 检查和更新过期提醒
+  
   useEffect(() => {
     const timer = setInterval(() => {
       const now = new Date();
@@ -173,7 +171,7 @@ const NotificationScreen = ({ route, navigation }) => {
     return () => clearInterval(timer);
   }, []);
 
-  // 添加通知监听器
+  
   useEffect(() => {
     const subscription = Notifications.addNotificationReceivedListener(notification => {
       console.log('Notification received:', notification);
@@ -183,14 +181,14 @@ const NotificationScreen = ({ route, navigation }) => {
       console.log('Notification response:', response);
     });
 
-    // 清理函数
+    
     return () => {
       subscription.remove();
       responseSubscription.remove();
     };
   }, []);
 
-  // 在 NotificationScreen 组件中添加
+  
   useEffect(() => {
     if (route.params?.showModal) {
       setModalVisible(true);
@@ -198,7 +196,7 @@ const NotificationScreen = ({ route, navigation }) => {
     }
   }, [route.params?.showModal]);
 
-  // 在组件顶部添加通知通道设置（针对 Android）
+  
   useEffect(() => {
     if (Platform.OS === 'android') {
       Notifications.setNotificationChannelAsync('reminders', {
