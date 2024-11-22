@@ -74,7 +74,7 @@ export default function MapScreen() {
       if (location) {
         try {
           const unsubscribe = onSnapshot(collection(db, 'Users'), async (snapshot) => {
-            console.log("Snapshot updated");
+            //console.log("Snapshot updated");
             await loadNearbyUsers({
               latitude: location.latitude,
               longitude: location.longitude
@@ -106,7 +106,7 @@ export default function MapScreen() {
   const loadNearbyUsers = async (userLocation) => {
     try {
       const users = await getNearbyUsers(userLocation);
-      console.log("Loaded nearby users:", users);
+      //console.log("Loaded nearby users:", users);
       setNearbyUsers(users.filter(u => u.id !== user.email));
     } catch (error) {
       console.error("Error loading nearby users:", error);
@@ -164,7 +164,7 @@ export default function MapScreen() {
   };
 
   const handleUserPress = (userId) => {
-    console.log(`User pressed: ${userId}`);
+    //console.log(`User pressed: ${userId}`);
     navigation.navigate("DisplayProfile", { userId });
   };
 
