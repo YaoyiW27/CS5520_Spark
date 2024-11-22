@@ -20,20 +20,27 @@ import { collection, onSnapshot } from 'firebase/firestore';
 
 const { width } = Dimensions.get("window");
 
-const CustomMarker = ({ user, onPress }) => (
-  <TouchableOpacity onPress={onPress}>
-    <View style={styles.markerContainer}>
-      <Image 
-        source={{ uri: user.profileImage }} 
-        style={styles.markerImage} 
-        resizeMode="cover"
-      />
-      <View style={styles.distanceBadge}>
-        <Text style={styles.distanceText}>{user.distance}km</Text>
+const UserMarkerWithDistance = ({ user, onPress }) => {
+  const [imageError, setImageError] = useState(false);
+
+  return (
+    <TouchableOpacity onPress={onPress}>
+      <View style={styles.userMarker}>
+        <Image 
+          source={{ uri: imageError ? 'https://via.placeholder.com/150' : user.profileImage }}
+          style={styles.markerImage}
+          onError={(e) => {
+            console.log(`Error loading image for user ${user.id}:`, e.nativeEvent.error);
+            setImageError(true);
+          }}
+        />
+        <View style={styles.distanceContainer}>
+          <Text style={styles.distanceText}>{user.distance}km</Text>
+        </View>
       </View>
-    </View>
-  </TouchableOpacity>
-);
+    </TouchableOpacity>
+  );
+};
 
 export default function MapScreen() {
   const navigation = useNavigation();
@@ -62,27 +69,12 @@ export default function MapScreen() {
     ageRange: [18, 80],
   });
 
-  const UserMarkerWithDistance = ({ user, onPress }) => (
-    <TouchableOpacity onPress={onPress}>
-      <View style={styles.userMarker}>
-        <Image 
-          source={{ uri: user.profileImage }} 
-          style={styles.markerImage}
-        />
-        <View style={styles.distanceContainer}>
-          <Text style={styles.distanceText}>{user.distance}km</Text>
-        </View>
-      </View>
-    </TouchableOpacity>
-  );
-
-  // update nearby users when location changes
   useEffect(() => {
     const loadAndSubscribe = async () => {
       if (location) {
         try {
-          const usersRef = collection(db, 'Users');
-          const unsubscribe = onSnapshot(usersRef, async (snapshot) => {
+          const unsubscribe = onSnapshot(collection(db, 'Users'), async (snapshot) => {
+            console.log("Snapshot updated");
             await loadNearbyUsers({
               latitude: location.latitude,
               longitude: location.longitude
@@ -114,6 +106,7 @@ export default function MapScreen() {
   const loadNearbyUsers = async (userLocation) => {
     try {
       const users = await getNearbyUsers(userLocation);
+      console.log("Loaded nearby users:", users);
       setNearbyUsers(users.filter(u => u.id !== user.email));
     } catch (error) {
       console.error("Error loading nearby users:", error);
@@ -171,6 +164,7 @@ export default function MapScreen() {
   };
 
   const handleUserPress = (userId) => {
+    console.log(`User pressed: ${userId}`);
     navigation.navigate("DisplayProfile", { userId });
   };
 
@@ -268,7 +262,10 @@ export default function MapScreen() {
           {showUsers && displayedUsers.map((user) => (
             <Marker
               key={user.id}
-              coordinate={user.location}
+              coordinate={{
+                latitude: user.location.latitude,
+                longitude: user.location.longitude
+              }}
               tracksViewChanges={false}
             >
               <UserMarkerWithDistance 
@@ -342,130 +339,130 @@ export default function MapScreen() {
         </Modal>
       </View>
     );
-  }
-  
-  const styles = StyleSheet.create({
-    container: {
-      flex: 1,
-      backgroundColor: "#fff",
-    },
-    subHeader: {
-      paddingHorizontal: 20,
-      paddingVertical: 15,
-      backgroundColor: "#fff",
-      borderBottomWidth: 1,
-      borderBottomColor: "#f0f0f0",
-    },
-    peopleNearbyContainer: {
-      flexDirection: "row",
-      justifyContent: "space-between",
-      alignItems: "center",
-    },
-    peopleNearbyText: {
-      fontSize: 24,
-      fontWeight: "600",
-      color: "#000",
-    },
-    filterButton: {
-      padding: 8,
-      borderRadius: 8,
-      backgroundColor: "#f8f8f8",
-    },
-    map: {
-      flex: 1,
-      width: width,
-    },
-    userMarker: {
-      alignItems: 'center',
-      justifyContent: 'center',
-    },
-    markerImage: {
-      width: 44,
-      height: 44,
-      borderRadius: 22,
-      borderWidth: 2,
-      borderColor: '#FF69B4',
-      backgroundColor: '#fff',
-    },
-    distanceContainer: {
-      position: 'absolute',
-      bottom: -20,
-      backgroundColor: '#FF69B4',
-      paddingHorizontal: 8,
-      paddingVertical: 2,
-      borderRadius: 10,
-      alignSelf: 'center',
-    },
-    distanceText: {
-      color: '#fff',
-      fontSize: 12,
-      fontWeight: '500',
-    },
-    locateButton: {
-      position: "absolute",
-      bottom: 30,
-      right: 20,
-      backgroundColor: "#fff",
-      padding: 15,
-      borderRadius: 30,
-      elevation: 5,
-      shadowColor: "#000",
-      shadowOffset: { width: 0, height: 2 },
-      shadowOpacity: 0.25,
-      shadowRadius: 3.84,
-    },
-    selectLocationButton: {
-      position: "absolute",
-      bottom: 30,
-      left: 20,
-      backgroundColor: "#fff",
-      padding: 15,
-      borderRadius: 30,
-      elevation: 5,
-      shadowColor: "#000",
-      shadowOffset: { width: 0, height: 2 },
-      shadowOpacity: 0.25,
-      shadowRadius: 3.84,
-    },
-    modalContainer: {
-      flex: 1,
-      justifyContent: 'center',
-      alignItems: 'center',
-      backgroundColor: 'rgba(0, 0, 0, 0.5)',
-    },
-    modalContent: {
-      backgroundColor: '#fff',
-      padding: 20,
-      borderRadius: 10,
-      width: '80%',
-    },
-    modalTitle: {
-      fontSize: 18,
-      fontWeight: 'bold',
-      marginBottom: 10,
-    },
-    modalText: {
-      fontSize: 16,
-      marginBottom: 20,
-    },
-    modalButtons: {
-      flexDirection: 'row',
-      justifyContent: 'space-between',
-    },
-    modalButton: {
-      padding: 10,
-      borderRadius: 5,
-      width: '45%',
-      alignItems: 'center',
-    },
-    cancelButton: {
-      backgroundColor: '#ccc',
-    },
-    confirmButton: {
-      backgroundColor: '#FF69B4',
-    },
-    buttonText: {
-      color: '#fff',
-      fontSize: 16,
-    },
-  });
+}
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: "#fff",
+  },
+  subHeader: {
+    paddingHorizontal: 20,
+    paddingVertical: 15,
+    backgroundColor: "#fff",
+    borderBottomWidth: 1,
+    borderBottomColor: "#f0f0f0",
+  },
+  peopleNearbyContainer: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+  },
+  peopleNearbyText: {
+    fontSize: 24,
+    fontWeight: "600",
+    color: "#000",
+  },
+  filterButton: {
+    padding: 8,
+    borderRadius: 8,
+    backgroundColor: "#f8f8f8",
+  },
+  map: {
+    flex: 1,
+    width: width,
+  },
+  userMarker: {
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  markerImage: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    borderWidth: 2,
+    borderColor: '#FF69B4',
+    backgroundColor: '#fff',
+  },
+  distanceContainer: {
+    position: 'absolute',
+    bottom: -20,
+    backgroundColor: '#FF69B4',
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 10,
+    alignSelf: 'center',
+  },
+  distanceText: {
+    color: '#fff',
+    fontSize: 12,
+    fontWeight: '500',
+  },
+  locateButton: {
+    position: "absolute",
+    bottom: 30,
+    right: 20,
+    backgroundColor: "#fff",
+    padding: 15,
+    borderRadius: 30,
+    elevation: 5,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+  },
+  selectLocationButton: {
+    position: "absolute",
+    bottom: 30,
+    left: 20,
+    backgroundColor: "#fff",
+    padding: 15,
+    borderRadius: 30,
+    elevation: 5,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+  },
+  modalContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+  },
+  modalContent: {
+    backgroundColor: '#fff',
+    padding: 20,
+    borderRadius: 10,
+    width: '80%',
+  },
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginBottom: 10,
+  },
+  modalText: {
+    fontSize: 16,
+    marginBottom: 20,
+  },
+  modalButtons: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+  },
+  modalButton: {
+    padding: 10,
+    borderRadius: 5,
+    width: '45%',
+    alignItems: 'center',
+  },
+  cancelButton: {
+    backgroundColor: '#ccc',
+  },
+  confirmButton: {
+    backgroundColor: '#FF69B4',
+  },
+  buttonText: {
+    color: '#fff',
+    fontSize: 16,
+  },
+});

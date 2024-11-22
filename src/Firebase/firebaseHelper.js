@@ -258,10 +258,12 @@ export const getNearbyUsers = async (currentLocation, maxDistance = 10) => {
                 );
 
                 if (distance <= maxDistance) {
+                    const profileImage = userData.profilePhoto || 'https://via.placeholder.com/150';
+                    console.log(`Fetched user: ${doc.id}, profileImage: ${profileImage}`);
                     nearbyUsers.push({
                         id: doc.id,
                         userName: userData.username || 'Unknown User',
-                        profileImage: userData.profilePhoto || 'https://via.placeholder.com/150',
+                        profileImage,
                         age: userData.age || '',
                         gender: userData.gender || 'other',
                         location: {
