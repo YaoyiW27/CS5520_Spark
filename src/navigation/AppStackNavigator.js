@@ -10,6 +10,7 @@ import EditProfileScreen from '../screens/Profile/EditProfileScreen';
 import DisplayProfileScreen from '../screens/Profile/DisplayProfileScreen';
 import FilterScreen from '../screens/Discover/FilterScreen';
 import NotificationScreen from '../screens/Profile/NotificationScreen';
+import SearchScreen from '../screens/Home/SearchScreen';
 const AppStack = createNativeStackNavigator();
 
 const AppStackNavigator = () => {
@@ -153,6 +154,14 @@ const AppStackNavigator = () => {
           </TouchableOpacity>
           ),
         })}
+      />
+
+      <AppStack.Screen name="Search" component={SearchScreen}
+        options={{
+          headerShown: true,
+          title: 'Search',
+          headerTintColor: '#FF69B4',
+        }}
       />
     </AppStack.Navigator>
   );
