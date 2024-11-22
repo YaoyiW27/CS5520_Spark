@@ -203,32 +203,6 @@ const createPostScreenStyles = StyleSheet.create({
         borderBottomWidth: 1,
         borderBottomColor: '#f0f0f0',
     },
-    // headerLeft: {
-    //     flexDirection: 'row',
-    //     alignItems: 'center',
-    // },
-    // headerTitle: {
-    //     fontSize: 18,
-    //     fontWeight: '500',
-    //     color: '#FF69B4',
-    //     marginLeft: 10,
-    // },
-    // postButton: {
-    //     paddingHorizontal: 20,
-    //     paddingVertical: 8,
-    //     backgroundColor: '#FF69B4',
-    //     borderRadius: 20,
-    // },
-    // postButtonDisabled: {
-    //     backgroundColor: '#f0f0f0',
-    // },
-    // postButtonText: {
-    //     color: '#fff',
-    //     fontWeight: 'bold',
-    // },
-    // postButtonTextDisabled: {
-    //     color: '#666',
-    // },
     createPostContent: {
         flex: 1,
         padding: 15,
@@ -247,13 +221,6 @@ const createPostScreenStyles = StyleSheet.create({
         height: 300,
         borderRadius: 10,
     },
-    // removeImageButton: {
-    //     position: 'absolute',
-    //     top: 10,
-    //     right: 10,
-    //     backgroundColor: 'rgba(0,0,0,0.5)',
-    //     borderRadius: 12,
-    // },
     createPostFooter: {
         flexDirection: 'row',
         padding: 15,
