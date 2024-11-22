@@ -122,6 +122,7 @@ Spark is a relationship app designed for meaningful connections beyond swipes. U
 
 ## Firebase Rules
 ### Firestore Rules
+```plaintext
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
@@ -145,7 +146,9 @@ service cloud.firestore {
     }
   }
 }
+```
 ### Storage Rules
+```plaintext
 rules_version = '2';
 service firebase.storage {
   match /b/{bucket}/o {
@@ -169,6 +172,7 @@ service firebase.storage {
     }
   }
 }
+```
 
 ## Version Control and Collaboration
 All team members have equal access to the project repository, created branches for different features, and can push their changes to the main branch after review. Each member is responsible for creating separate branches for individual features or bug fixes, following the GitHub Flow workflow. Regular commits and pulls are made to ensure that the main branch stays up-to-date and conflicts are minimized.
