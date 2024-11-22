@@ -5,7 +5,6 @@ import {
   TouchableOpacity, 
   TextInput, 
   Image, 
-  StyleSheet, 
   SafeAreaView,
   KeyboardAvoidingView,
   Platform,
@@ -18,6 +17,7 @@ import * as ImagePicker from 'expo-image-picker';
 import { createPost } from '../../Firebase/postHelper';
 import { useAuth } from '../../contexts/AuthContext';
 import * as FileSystem from 'expo-file-system';
+import { createPostScreenStyles as styles } from '../../styles/PostStyles';
 
 const CreatePostScreen = () => {
   const navigation = useNavigation();
@@ -25,7 +25,6 @@ const CreatePostScreen = () => {
   const [content, setContent] = useState('');
   const [image, setImage] = useState(null);
   const [isPosting, setIsPosting] = useState(false);
-  const [uploadProgress, setUploadProgress] = useState(0);
 
   useEffect(() => {
     if (!user) {
@@ -110,11 +109,6 @@ const CreatePostScreen = () => {
     }
   };
 
-  const getFileInfo = async (fileUri) => {
-      const fileInfo = await FileSystem.getInfoAsync(fileUri);
-      return fileInfo;
-  };
-
   const handlePost = async () => {
     if (!content && !image) {
         Alert.alert('Error', 'Please add some content or media');
@@ -173,14 +167,14 @@ const CreatePostScreen = () => {
   }, [navigation, content, image, isPosting]);
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={styles.createPostContainer}>
         <KeyboardAvoidingView 
             behavior={Platform.OS === "ios" ? "padding" : "height"}
-            style={styles.container}
+            style={styles.createPostContainer}
         >
-            <ScrollView style={styles.content}>
+            <ScrollView style={styles.createPostContent}>
                 <TextInput
-                    style={styles.input}
+                    style={styles.createPostInput}
                     placeholder="What's on your mind?"
                     multiline
                     value={content}
@@ -189,8 +183,8 @@ const CreatePostScreen = () => {
                 />
                 
                 {image && (
-                    <View style={styles.imagePreviewContainer}>
-                        <Image source={{ uri: image }} style={styles.imagePreview} />
+                    <View style={styles.createImagePreviewContainer}>
+                        <Image source={{ uri: image }} style={styles.createImagePreview} />
                         <TouchableOpacity 
                             style={styles.removeImageButton}
                             onPress={() => setImage(null)}
@@ -201,110 +195,26 @@ const CreatePostScreen = () => {
                 )}
             </ScrollView>
 
-            <View style={styles.footer}>
+            <View style={styles.createPostFooter}>
                 <TouchableOpacity 
-                    style={styles.mediaButton}
+                    style={styles.createPostMediaButton}
                     onPress={pickImage}
                 >
                     <Ionicons name="image" size={24} color="#FF69B4" />
-                    <Text style={styles.mediaButtonText}>Photo</Text>
+                    <Text style={styles.createPostMediaButtonText}>Photo</Text>
                 </TouchableOpacity>
                 
                 <TouchableOpacity 
-                    style={styles.mediaButton}
+                    style={styles.createPostMediaButton}
                     onPress={pickVideo}
                 >
                     <Ionicons name="videocam" size={24} color="#FF69B4" />
-                    <Text style={styles.mediaButtonText}>Video</Text>
+                    <Text style={styles.createPostMediaButtonText}>Video</Text>
                 </TouchableOpacity>
             </View>
         </KeyboardAvoidingView>
     </SafeAreaView>
   );
 };
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#fff',
-  },
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: 15,
-    paddingVertical: 10,
-    borderBottomWidth: 1,
-    borderBottomColor: '#f0f0f0',
-  },
-  headerLeft: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  headerTitle: {
-    fontSize: 18,
-    fontWeight: '500',
-    color: '#FF69B4',
-    marginLeft: 10,
-  },
-  postButton: {
-    paddingHorizontal: 20,
-    paddingVertical: 8,
-    backgroundColor: '#FF69B4',
-    borderRadius: 20,
-  },
-  postButtonDisabled: {
-    backgroundColor: '#f0f0f0',
-  },
-  postButtonText: {
-    color: '#fff',
-    fontWeight: 'bold',
-  },
-  postButtonTextDisabled: {
-    color: '#666',
-  },
-  content: {
-    flex: 1,
-    padding: 15,
-  },
-  input: {
-    fontSize: 16,
-    color: '#333',
-    minHeight: 100,
-  },
-  imagePreviewContainer: {
-    marginTop: 15,
-    position: 'relative',
-  },
-  imagePreview: {
-    width: '100%',
-    height: 300,
-    borderRadius: 10,
-  },
-  removeImageButton: {
-    position: 'absolute',
-    top: 10,
-    right: 10,
-    backgroundColor: 'rgba(0,0,0,0.5)',
-    borderRadius: 12,
-  },
-  footer: {
-    flexDirection: 'row',
-    padding: 15,
-    borderTopWidth: 1,
-    borderTopColor: '#f0f0f0',
-  },
-  mediaButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginRight: 20,
-    padding: 5,
-  },
-  mediaButtonText: {
-    marginLeft: 5,
-    color: '#FF69B4',
-    fontWeight: '500',
-  },
-});
 
 export default CreatePostScreen;

@@ -23,6 +23,7 @@ import {
   addComment, 
   deletePost 
 } from '../../Firebase/postHelper';
+import { postScreenStyles as styles } from '../../styles/PostStyles';
 
 const formatTime = (timestamp) => {
   if (!timestamp || !timestamp.toDate) return '';
@@ -55,33 +56,33 @@ const PostCard = ({ post, onLike, onComment, onDelete, currentUserId }) => {
   };
 
   return (
-    <View style={styles.card}>
-      <View style={styles.header}>
-        <View style={styles.userInfo}>
-          <TouchableOpacity style={styles.avatar}>
+    <View style={styles.postCard}>
+      <View style={styles.postHeader}>
+        <View style={styles.postUserInfo}>
+          <TouchableOpacity style={styles.postAvatar}>
             {post.userAvatar ? (
-              <Image source={{ uri: post.userAvatar }} style={styles.avatarImage} />
+              <Image source={{ uri: post.userAvatar }} style={styles.postAvatarImage} />
             ) : (
-              <View style={[styles.avatarImage, styles.avatarPlaceholder]}>
+              <View style={[styles.postAvatarImage, styles.postAvatarPlaceholder]}>
                 <Ionicons name="person" size={20} color="#666" />
               </View>
             )}
           </TouchableOpacity>
-          <View style={styles.userTextInfo}>
-            <View style={styles.usernameContainer}>
-              <Text style={styles.username}>{post.username}</Text>
+          <View style={styles.postUserTextInfo}>
+            <View style={styles.postUsernameContainer}>
+              <Text style={styles.postUsername}>{post.username}</Text>
               {post.isOwnPost && (
-                <View style={styles.ownPostBadge}>
-                  <Text style={styles.ownPostText}>Me</Text>
+                <View style={styles.postOwnPostBadge}>
+                  <Text style={styles.postOwnPostText}>Me</Text>
                 </View>
               )}
             </View>
-            <Text style={styles.time}>{post.time}</Text>
+            <Text style={styles.postTime}>{post.time}</Text>
           </View>
         </View>
         {post.isOwnPost && (
           <TouchableOpacity 
-            style={styles.deleteButton} 
+            style={styles.postDeleteButton} 
             onPress={() => onDelete(post.id)}
           >
             <Ionicons name="trash-outline" size={24} color="#666" />
@@ -89,22 +90,22 @@ const PostCard = ({ post, onLike, onComment, onDelete, currentUserId }) => {
         )}
       </View>
 
-      <Text style={styles.content}>{post.content}</Text>
+      <Text style={styles.postContent}>{post.content}</Text>
       
       {post.media && post.media.length > 0 && (
-        <View style={styles.mediaContainer}>
+        <View style={styles.postMediaContainer}>
           <Image 
             source={{ uri: post.media[0] }}  
-            style={styles.mediaImage}
+            style={styles.postMediaImage}
             resizeMode="cover"
           />
         </View>
       )}
       
-      <View style={styles.footer}>
-        <View style={styles.actions}>
+      <View style={styles.postFooter}>
+        <View style={styles.postActions}>
           <TouchableOpacity 
-            style={styles.actionButton} 
+            style={styles.postActionButton} 
             onPress={() => onLike(post.id)}
           >
             <Ionicons 
@@ -112,18 +113,18 @@ const PostCard = ({ post, onLike, onComment, onDelete, currentUserId }) => {
               size={24} 
               color={post.isLiked ? "#FF69B4" : "#666"} 
             />
-            <Text style={styles.actionText}>{post.likes || 0}</Text>
+            <Text style={styles.postActionText}>{post.likes || 0}</Text>
           </TouchableOpacity>
           
           <TouchableOpacity 
-            style={styles.actionButton}
+            style={styles.postActionButton}
             onPress={() => {
               setShowComments(!showComments);
               setShowCommentInput(!showComments);
             }}
           >
             <Ionicons name="chatbubble-outline" size={24} color="#666" />
-            <Text style={styles.actionText}>
+            <Text style={styles.postActionText}>
               {post.comments ? post.comments.length : 0}
             </Text>
           </TouchableOpacity>
@@ -131,15 +132,15 @@ const PostCard = ({ post, onLike, onComment, onDelete, currentUserId }) => {
       </View>
 
       {(showComments || showCommentInput) && (
-        <View style={styles.commentsSection}>
+        <View style={styles.postCommentsSection}>
           {showCommentInput && (
             <KeyboardAvoidingView
               behavior={Platform.OS === "ios" ? "padding" : "height"}
               keyboardVerticalOffset={Platform.OS === "ios" ? 90 : 0}
             >
-              <View style={styles.commentInputContainer}>
+              <View style={styles.postCommentInputContainer}>
                 <TextInput
-                  style={styles.commentTextInput}
+                  style={styles.postCommentTextInput}
                   placeholder="Write a comment..."
                   value={commentText}
                   onChangeText={setCommentText}
@@ -147,7 +148,7 @@ const PostCard = ({ post, onLike, onComment, onDelete, currentUserId }) => {
                 />
                 <TouchableOpacity 
                   style={[
-                    styles.commentSendButton,
+                    styles.postCommentSendButton,
                     !commentText.trim() && styles.sendButtonDisabled
                   ]}
                   onPress={handleSubmitComment}
@@ -164,28 +165,28 @@ const PostCard = ({ post, onLike, onComment, onDelete, currentUserId }) => {
           )}
 
           {showComments && post.comments && post.comments.length > 0 && (
-            <ScrollView style={styles.commentsList}>
+            <ScrollView>
               {post.comments.map((comment, index) => (
-                <View key={index} style={styles.commentItem}>
-                  <View style={styles.commentHeader}>
+                <View key={index} style={styles.postCommentItem}>
+                  <View style={styles.postCommentHeader}>
                     {comment.userAvatar ? (
                       <Image 
                         source={{ uri: comment.userAvatar }} 
-                        style={styles.commentAvatar} 
+                        style={styles.postCommentAvatar} 
                       />
                     ) : (
-                      <View style={[styles.commentAvatar, styles.avatarPlaceholder]}>
+                      <View style={[styles.postCommentAvatar, styles.postAvatarPlaceholder]}>
                         <Ionicons name="person" size={16} color="#666" />
                       </View>
                     )}
-                    <View style={styles.commentUserInfo}>
-                      <Text style={styles.commentUsername}>{comment.username}</Text>
-                      <Text style={styles.commentTime}>
+                    <View style={styles.postCommentUserInfo}>
+                      <Text style={styles.postCommentUsername}>{comment.username}</Text>
+                      <Text style={styles.postCommentTime}>
                         {formatTime(comment.createdAt)}
                       </Text>
                     </View>
                   </View>
-                  <Text style={styles.commentContent}>{comment.content}</Text>
+                  <Text style={styles.postCommentContent}>{comment.content}</Text>
                 </View>
               ))}
             </ScrollView>
@@ -294,14 +295,14 @@ const PostScreen = () => {
 
   if (loading) {
     return (
-      <View style={styles.loadingContainer}>
+      <View style={styles.postLoadingContainer}>
         <ActivityIndicator size={40} color="#FF69B4" />
       </View>
     );
   }
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={styles.postContainer}>
       <FlatList
         data={posts}
         keyExtractor={(item) => item.id}
@@ -315,12 +316,12 @@ const PostScreen = () => {
           />
         )}
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={styles.listContainer}
+        contentContainerStyle={styles.postListContainer}
         refreshing={refreshing}
         onRefresh={handleRefresh}
         ListEmptyComponent={
-          <View style={styles.emptyContainer}>
-            <Text style={styles.emptyText}>
+          <View style={styles.postEmptyContainer}>
+            <Text style={styles.postEmptyText}>
               No posts yet. Like some users to see their posts!
             </Text>
           </View>
@@ -329,192 +330,5 @@ const PostScreen = () => {
     </SafeAreaView>
   );
 };
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#fff',
-  },
-  loadingContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  emptyContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: 20,
-    marginTop: 50,
-  },
-  emptyText: {
-    fontSize: 16,
-    color: '#666',
-    textAlign: 'center',
-    lineHeight: 24,
-  },
-  listContainer: {
-    paddingBottom: 20,
-  },
-  card: {
-    backgroundColor: '#fff',
-    marginVertical: 5,
-    borderBottomWidth: 1,
-    borderBottomColor: '#f0f0f0',
-  },
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    padding: 15,
-  },
-  userInfo: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  userTextInfo: {
-    marginLeft: 10,
-  },
-  usernameContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  ownPostBadge: {
-    backgroundColor: '#FF69B4',
-    paddingHorizontal: 8,
-    paddingVertical: 2,
-    borderRadius: 12,
-  },
-  ownPostText: {
-    color: '#fff',
-    fontSize: 12,
-    fontWeight: 'bold',
-  },
-  avatar: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    overflow: 'hidden',
-  },
-  avatarImage: {
-    width: '100%',
-    height: '100%',
-  },
-  avatarPlaceholder: {
-    backgroundColor: '#f0f0f0',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  username: {
-    fontWeight: 'bold',
-    fontSize: 16,
-    color: '#333',
-  },
-  time: {
-    fontSize: 12,
-    color: '#666',
-    marginTop: 2,
-  },
-  content: {
-    paddingHorizontal: 15,
-    paddingVertical: 10,
-    fontSize: 15,
-    color: '#333',
-    lineHeight: 20,
-  },
-  mediaContainer: {
-    width: '100%',
-    height: 300,
-    backgroundColor: '#f0f0f0',
-  },
-  mediaImage: {
-    width: '100%',
-    height: '100%',
-  },
-  footer: {
-    padding: 15,
-    borderBottomWidth: 1,
-    borderBottomColor: '#f0f0f0',
-  },
-  actions: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 20,
-  },
-  actionButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 5,
-  },
-  actionText: {
-    color: '#666',
-    fontSize: 14,
-  },
-  commentsSection: {
-    backgroundColor: '#f9f9f9',
-    maxHeight: 300,
-  },
-  commentInputContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: 10,
-    backgroundColor: '#fff',
-    borderTopWidth: 1,
-    borderTopColor: '#f0f0f0',
-  },
-  commentTextInput: {
-    flex: 1,
-    backgroundColor: '#f8f8f8',
-    borderRadius: 20,
-    paddingHorizontal: 15,
-    paddingVertical: 8,
-    marginRight: 10,
-    fontSize: 14,
-    maxHeight: 100,
-  },
-  commentSendButton: {
-    padding: 8,
-    borderRadius: 20,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  commentItem: {
-    backgroundColor: '#fff',
-    padding: 10,
-    marginVertical: 5,
-    borderRadius: 10,
-  },
-  commentHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 5,
-  },
-  commentAvatar: {
-    width: 30,
-    height: 30,
-    borderRadius: 15,
-    marginRight: 10,
-  },
-  commentUserInfo: {
-    flex: 1,
-  },
-  commentUsername: {
-    fontWeight: 'bold',
-    fontSize: 14,
-  },
-  commentTime: {
-    fontSize: 12,
-    color: '#666',
-  },
-  commentContent: {
-    fontSize: 14,
-    marginLeft: 40,
-    color: '#333',
-  },
-  deleteButton: {
-    padding: 10,
-  }
-});
 
 export default PostScreen;
