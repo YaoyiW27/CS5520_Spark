@@ -140,6 +140,38 @@ const CreatePostScreen = () => {
     }
   };
 
+  const handleCameraPress = async () => {
+    try {
+      const { status } = await ImagePicker.requestCameraPermissionsAsync();
+      if (status !== 'granted') {
+        Alert.alert('Permission needed', 'Please grant permission to access your camera.');
+        return;
+      }
+
+      const result = await ImagePicker.launchCameraAsync({
+        allowsEditing: true,
+        aspect: [4, 3],
+        quality: 0.2,
+        compress: 0.5,
+      });
+
+      if (!result.canceled && result.assets[0].uri) {
+        const fileInfo = await FileSystem.getInfoAsync(result.assets[0].uri);
+        console.log('File info:', fileInfo);
+
+        if (fileInfo.size > 5 * 1024 * 1024) {
+          Alert.alert('File too large', 'Please choose an image under 5MB');
+          return;
+        }
+
+        setImage(result.assets[0].uri);
+      }
+    } catch (error) {
+      console.error('Error taking photo:', error);
+      Alert.alert('Error', 'Failed to take photo');
+    }
+  };
+
   React.useLayoutEffect(() => {
     navigation.setOptions({
         headerRight: () => (
@@ -196,6 +228,14 @@ const CreatePostScreen = () => {
             </ScrollView>
 
             <View style={styles.createPostFooter}>
+                <TouchableOpacity 
+                    style={styles.createPostMediaButton}
+                    onPress={handleCameraPress}
+                >
+                    <Ionicons name="camera" size={24} color="#FF69B4" />
+                    <Text style={styles.createPostMediaButtonText}>Camera</Text>
+                </TouchableOpacity>
+
                 <TouchableOpacity 
                     style={styles.createPostMediaButton}
                     onPress={pickImage}
