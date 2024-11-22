@@ -15,6 +15,7 @@ import { useNavigation } from '@react-navigation/native';
 import { AuthContext } from '../../contexts/AuthContext';
 import { updateUserProfile, getUserProfile, updatePhotoWall } from '../../Firebase/firebaseHelper';
 import * as ImagePicker from 'expo-image-picker';
+import { Ionicons } from '@expo/vector-icons';
 
 const EditProfileScreen = () => {
   const navigation = useNavigation();
@@ -149,6 +150,39 @@ const EditProfileScreen = () => {
     );
   };
 
+  const handleCameraPress = async () => {
+    try {
+      const { status } = await ImagePicker.requestCameraPermissionsAsync();
+      if (status !== 'granted') {
+        Alert.alert('Permission needed', 'Please grant permission to access your camera.');
+        return;
+      }
+
+      const result = await ImagePicker.launchCameraAsync({
+        allowsEditing: true,
+        aspect: [4, 3],
+        quality: 0.2,
+        compress: 0.5,
+      });
+
+      if (!result.canceled && result.assets[0].uri) {
+        setUploading(true);
+        try {
+          const photoURL = await updatePhotoWall(user.email, result.assets[0].uri);
+          setPhotoWall([...photoWall, photoURL]);
+        } catch (error) {
+          console.error('Error uploading photo:', error);
+          Alert.alert('Error', 'Failed to upload photo');
+        } finally {
+          setUploading(false);
+        }
+      }
+    } catch (error) {
+      console.error('Error taking photo:', error);
+      Alert.alert('Error', 'Failed to take photo');
+    }
+  };
+
   if (loading) {
     return (
       <View style={styles.loadingContainer}>
@@ -186,15 +220,24 @@ const EditProfileScreen = () => {
               </View>
             ))}
             {photoWall.length < 3 && (
-              <TouchableOpacity
-                style={styles.addPhotoButton}
-                onPress={handlePhotoWallUpload}
-                disabled={uploading}
-              >
-                <Text style={styles.addPhotoButtonText}>
-                  {uploading ? 'Uploading...' : '+'}
-                </Text>
-              </TouchableOpacity>
+              <View style={styles.addButtonsContainer}>
+                <TouchableOpacity
+                  style={[styles.addPhotoButton, styles.cameraButton]}
+                  onPress={handleCameraPress}
+                  disabled={uploading}
+                >
+                  <Ionicons name="camera" size={24} color="#FF69B4" />
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={styles.addPhotoButton}
+                  onPress={handlePhotoWallUpload}
+                  disabled={uploading}
+                >
+                  <Text style={styles.addPhotoButtonText}>
+                    {uploading ? 'Uploading...' : '+'}
+                  </Text>
+                </TouchableOpacity>
+              </View>
             )}
           </View>
         </View>
@@ -428,6 +471,14 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: 'bold',
     lineHeight: 20,
+  },
+  addButtonsContainer: {
+    flexDirection: 'row',
+    gap: 10,
+  },
+  cameraButton: {
+    justifyContent: 'center',
+    alignItems: 'center',
   },
 });
 
