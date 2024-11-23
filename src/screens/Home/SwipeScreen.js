@@ -4,6 +4,7 @@ import Swiper from 'react-native-deck-swiper';
 import { getAllUsers } from '../../Firebase/firebaseHelper';
 import { AuthContext } from '../../contexts/AuthContext';
 import { useNavigation } from '@react-navigation/native';
+import { swipeScreenStyles as styles } from '../../styles/HomeStyles';
 
 const SCREEN_WIDTH = Dimensions.get('window').width;
 
@@ -158,54 +159,5 @@ const SwipeScreen = () => {
     </SafeAreaView>
   );
 };
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#f5f5f5',
-  },
-  card: {
-    height: SCREEN_WIDTH * 1.25,
-    width: SCREEN_WIDTH * 0.8,
-    backgroundColor: '#fff',
-    borderRadius: 20,
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.25,
-    shadowRadius: 3.84,
-    elevation: 5,
-    alignSelf: 'center',
-    position: 'relative',
-    marginTop: 20,
-  },
-  photoContainer: {
-    flex: 3.5,
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
-    overflow: 'hidden',
-  },
-  photo: {
-    width: '100%',
-    height: '100%',
-  },
-  userInfo: {
-    flex: 1,
-    padding: 12,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  username: {
-    fontSize: 22,
-    fontWeight: 'bold',
-    marginBottom: 6,
-  },
-  location: {
-    fontSize: 14,
-    color: '#666',
-  },
-});
 
 export default SwipeScreen;

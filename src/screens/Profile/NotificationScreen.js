@@ -22,6 +22,7 @@ import {
   deleteReminder as deleteReminderFromDB 
 } from '../../Firebase/firebaseHelper';
 import { AuthContext } from '../../contexts/AuthContext';
+import { notificationScreenStyles as styles } from '../../styles/ProfileStyles';
 
 
 Notifications.setNotificationHandler({
@@ -291,101 +292,5 @@ const NotificationScreen = ({ route, navigation }) => {
     </View>
   );
 };
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#fff',
-  },
-  addButton: {
-    position: 'absolute',
-    right: 10,
-    top: 10,
-    zIndex: 1,
-    padding: 10,
-  },
-  reminderItem: {
-    flexDirection: 'row',
-    backgroundColor: 'black',
-    borderRadius: 15,
-    padding: 15,
-    marginBottom: 10,
-    alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.1,
-    shadowRadius: 3,
-    elevation: 3,
-  },
-  reminderContent: {
-    flex: 1,
-    marginRight: 10,
-  },
-  reminderTitle: {
-    fontSize: 16,
-    fontWeight: '500',
-    marginBottom: 5,
-    color: 'white',
-  },
-  reminderDate: {
-    fontSize: 14,
-    color: 'white',
-  },
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.5)',
-    justifyContent: 'center',
-    padding: 20,
-  },
-  modalContent: {
-    backgroundColor: 'white',
-    padding: 20,
-    borderRadius: 10,
-  },
-  input: {
-    borderWidth: 1,
-    borderColor: '#ddd',
-    padding: 10,
-    marginBottom: 15,
-    borderRadius: 5,
-  },
-  dateButton: {
-    borderWidth: 1,
-    borderColor: '#ddd',
-    padding: 10,
-    marginBottom: 15,
-    borderRadius: 5,
-    alignItems: 'center',
-  },
-  saveButton: {
-    backgroundColor: '#007AFF',
-    padding: 15,
-    borderRadius: 5,
-    alignItems: 'center',
-    marginTop: 10,
-  },
-  saveButtonText: {
-    color: 'white',
-    fontWeight: 'bold',
-  },
-  deleteButton: {
-    padding: 8,
-  },
-  timeInput: {
-    marginVertical: 15,
-  },
-  listContainer: {
-    padding: 16,
-  },
-  pastReminderItem: {
-    opacity: 0.6,
-  },
-  pastReminderText: {
-    textDecorationLine: 'line-through',
-  },
-});
 
 export default NotificationScreen;

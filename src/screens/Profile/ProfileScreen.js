@@ -6,6 +6,7 @@ import { getUserProfile, updateUserProfilePhoto } from '../../Firebase/firebaseH
 import { useFocusEffect } from '@react-navigation/native';
 import * as ImagePicker from 'expo-image-picker';
 import { Ionicons } from '@expo/vector-icons';
+import { profileScreenStyles as styles } from '../../styles/ProfileStyles';
 
 const DEFAULT_PROFILE_PHOTO = 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=400';
 
@@ -176,86 +177,5 @@ const ProfileScreen = () => {
     </SafeAreaView>
   );
 };
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#fff',
-  },
-  content: {
-    flex: 1,
-    padding: 16,
-    alignItems: 'center',
-  },
-  title: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    marginTop: 20,
-    marginBottom: 20,
-  },
-  button: {
-    width: '80%',
-    padding: 12,
-    backgroundColor: '#fff',
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: '#FF69B4',
-    marginTop: 16,
-    alignItems: 'center',
-  },
-  buttonText: {
-    color: '#FF69B4',
-    fontSize: 16,
-  },
-  photoContainer: {
-    marginTop: 20,
-    position: 'relative',
-  },
-  photoPlaceholder: {
-    width: 100,
-    height: 100,
-    borderRadius: 50,
-    backgroundColor: '#f0f0f0',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  plusIcon: {
-    fontSize: 30,
-    color: '#666',
-  },
-  nameText: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    marginTop: 16,
-    color: '#000',
-  },
-  likesContainer: {
-    marginTop: 12,
-    padding: 8,
-    borderRadius: 20,
-    backgroundColor: '#FFE4E1', // Light pink
-  },
-  likesText: {
-    color: '#FF69B4', // Hot pink
-  },
-  photo: {
-    width: 100,
-    height: 100,
-    borderRadius: 50,
-  },
-  cameraButton: {
-    position: 'absolute',
-    bottom: 0,
-    right: 0,
-    backgroundColor: '#FF69B4',
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    justifyContent: 'center',
-    alignItems: 'center',
-    borderWidth: 2,
-    borderColor: '#fff',
-  },
-});
 
 export default ProfileScreen;

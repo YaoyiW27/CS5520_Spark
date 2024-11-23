@@ -3,6 +3,7 @@ import { View, Text, Image, StyleSheet, ScrollView, TouchableOpacity, Alert } fr
 import { getUserProfile, updateUserProfile } from '../../Firebase/firebaseHelper';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { AuthContext } from '../../contexts/AuthContext';
+import { displayProfileScreenStyles as styles } from '../../styles/ProfileStyles';
 
 const DisplayProfileScreen = ({ route }) => {
     const { userId } = route.params;
@@ -156,70 +157,5 @@ const DisplayProfileScreen = ({ route }) => {
         </ScrollView>
     );
 };
-
-const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-        backgroundColor: '#fff',
-    },
-    header: {
-        alignItems: 'center',
-        padding: 20,
-    },
-    profilePhoto: {
-        width: 120,
-        height: 120,
-        borderRadius: 60,
-        marginBottom: 10,
-    },
-    username: {
-        fontSize: 24,
-        fontWeight: 'bold',
-    },
-    likeButton: {
-        marginTop: 10,
-    },
-    infoContainer: {
-        padding: 20,
-    },
-    infoItem: {
-        marginBottom: 15,
-    },
-    label: {
-        fontSize: 16,
-        fontWeight: 'bold',
-        color: '#333',
-        marginBottom: 5,
-    },
-    value: {
-        fontSize: 16,
-        color: '#666',
-    },
-    // Photo Wall Styles
-    photoWallSection: {
-        padding: 15,
-    },
-    sectionTitle: {
-        fontSize: 18,
-        fontWeight: 'bold',
-        marginBottom: 10,
-    },
-    photoWallContainer: {
-        flexDirection: 'row',
-        justifyContent: 'center',
-        alignItems: 'center',
-        flexWrap: 'wrap',
-        gap: 10,
-    },
-    photoWallImage: {
-        width: 100,
-        height: 100,
-        borderRadius: 8,
-    },
-    noPhotosText: {
-        color: '#666',
-        fontStyle: 'italic',
-    },
-});
 
 export default DisplayProfileScreen;

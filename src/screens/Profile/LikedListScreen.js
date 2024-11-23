@@ -2,6 +2,7 @@ import React, { useState, useEffect, useContext } from 'react';
 import { View, StyleSheet, SafeAreaView, Text, FlatList, Image, ActivityIndicator, TouchableOpacity } from 'react-native';
 import { AuthContext } from '../../contexts/AuthContext';
 import { getUserProfile } from '../../Firebase/firebaseHelper';
+import { likedListScreenStyles as styles } from '../../styles/ProfileStyles';
 
 const LikedListScreen = ({ navigation }) => {
     const [likedUsers, setLikedUsers] = useState([]);
@@ -74,51 +75,5 @@ const LikedListScreen = ({ navigation }) => {
         </SafeAreaView>
     );
 };
-
-const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-        backgroundColor: '#fff',
-    },
-    loadingContainer: {
-        flex: 1,
-        justifyContent: 'center',
-        alignItems: 'center',
-    },
-    title: {
-        fontSize: 20,
-        fontWeight: 'bold',
-        padding: 16,
-        color: '#000',
-    },
-    listContent: {
-        padding: 16,
-    },
-    likeItem: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        paddingVertical: 8,
-        paddingHorizontal: 16,
-    },
-    avatarContainer: {
-        marginRight: 12,
-    },
-    avatar: {
-        width: 40,
-        height: 40,
-        borderRadius: 20,
-        backgroundColor: '#f0f0f0',
-    },
-    username: {
-        fontSize: 16,
-        color: '#000',
-    },
-    noLikesText: {
-        textAlign: 'center',
-        marginTop: 20,
-        fontSize: 16,
-        color: '#666',
-    },
-});
 
 export default LikedListScreen;
