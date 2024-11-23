@@ -19,7 +19,8 @@ import TimeInput from '../../components/TimeInput';
 import { 
   addReminder, 
   getUserReminders, 
-  deleteReminder as deleteReminderFromDB 
+  deleteReminder as deleteReminderFromDB,
+  updateReminderStatus
 } from '../../Firebase/firebaseHelper';
 import { AuthContext } from '../../contexts/AuthContext';
 import { notificationScreenStyles as styles } from '../../styles/ProfileStyles';
@@ -156,21 +157,28 @@ const NotificationScreen = ({ route, navigation }) => {
 
   
   useEffect(() => {
-    const timer = setInterval(() => {
+    const timer = setInterval(async () => {
       const now = new Date();
-      setReminders(prevReminders => 
-        prevReminders.map(reminder => {
+      const updatedReminders = await Promise.all(
+        reminders.map(async reminder => {
           if (new Date(reminder.date) <= now && reminder.status === 'pending') {
-            // 可以选择在这里调用 updateReminderStatus
-            return { ...reminder, status: 'completed' };
+            try {
+              await updateReminderStatus(reminder.id, 'completed');
+              return { ...reminder, status: 'completed' };
+            } catch (error) {
+              console.error('Error updating reminder status:', error);
+              return reminder;
+            }
           }
           return reminder;
         })
       );
+      
+      setReminders(updatedReminders);
     }, 60000);
 
     return () => clearInterval(timer);
-  }, []);
+  }, [reminders]);
 
   
   useEffect(() => {
