@@ -12,16 +12,15 @@ const LikedListScreen = ({ navigation }) => {
     useEffect(() => {
         const fetchLikedUsers = async () => {
             try {
-                // 获取当前用户的profile
                 const userProfile = await getUserProfile(user.email);
                 const likedUserIds = userProfile?.likes || [];
 
-                // 获取所有被喜欢用户的详细信息
                 const likedUsersDetails = await Promise.all(
                     likedUserIds.map(userId => getUserProfile(userId))
                 );
 
-                setLikedUsers(likedUsersDetails);
+                const validUsers = likedUsersDetails.filter(user => user != null);
+                setLikedUsers(validUsers);
             } catch (error) {
                 console.error('Error fetching liked users:', error);
             } finally {
@@ -32,24 +31,30 @@ const LikedListScreen = ({ navigation }) => {
         fetchLikedUsers();
     }, [user]);
 
-    const renderItem = ({ item }) => (
-        <TouchableOpacity 
-            style={styles.likeItem}
-            onPress={() => navigation.navigate('DisplayProfile', { userId: item.email })}
-        >
-            <View style={styles.avatarContainer}>
-                {item.profilePhoto ? (
-                    <Image 
-                        source={{ uri: item.profilePhoto }} 
-                        style={styles.avatar}
-                    />
-                ) : (
-                    <View style={styles.avatar} />
-                )}
-            </View>
-            <Text style={styles.username}>{item.username}</Text>
-        </TouchableOpacity>
-    );
+    const renderItem = ({ item }) => {
+        if (!item || !item.email) {
+            return null;
+        }
+
+        return (
+            <TouchableOpacity 
+                style={styles.likeItem}
+                onPress={() => navigation.navigate('DisplayProfile', { userId: item.email })}
+            >
+                <View style={styles.avatarContainer}>
+                    {item.profilePhoto ? (
+                        <Image 
+                            source={{ uri: item.profilePhoto }} 
+                            style={styles.avatar}
+                        />
+                    ) : (
+                        <View style={styles.avatar} />
+                    )}
+                </View>
+                <Text style={styles.username}>{item.username || 'Unknown User'}</Text>
+            </TouchableOpacity>
+        );
+    };
 
     if (loading) {
         return (
@@ -61,12 +66,11 @@ const LikedListScreen = ({ navigation }) => {
 
     return (
         <SafeAreaView style={styles.container}>
-            {/* <Text style={styles.title}>Liked Users</Text> */}
             {likedUsers.length > 0 ? (
                 <FlatList
                     data={likedUsers}
                     renderItem={renderItem}
-                    keyExtractor={item => item.email}
+                    keyExtractor={item => item?.email || Math.random().toString()}
                     contentContainerStyle={styles.listContent}
                 />
             ) : (
