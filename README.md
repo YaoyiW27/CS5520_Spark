@@ -4,7 +4,7 @@
 Spark is a relationship app designed for meaningful connections beyond swipes. Using an interactive map and interest-based matching, it helps users discover people nearby and find connections aligned with their values. Share moments on your social feed and engage authentically with privacy and control.
 
 ## Demo 🎬
-[Demo Video](https://drive.google.com/file/d/1yTaX6ZUhUpKg_5uJ4Qf5jvvhRtyrs_GT/view?usp=sharing)
+[Demo Video](https://drive.google.com/file/d/18ULG5tqN8Pc9rD3odXxjrTN1-qMSzJej/view?usp=sharing)
 
 
 ## App Functionality ✨
