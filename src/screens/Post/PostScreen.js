@@ -20,14 +20,14 @@ import { postScreenStyles as styles } from '../../styles/PostStyles';
 
 const PostScreen = () => {
   const navigation = useNavigation();
-  const { user, isLoggedIn } = useAuth();
+  const { user, isLoggedIn, resetStates } = useAuth(); // add resetStates
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
 
   useEffect(() => {
     if (!isLoggedIn || !user) {
-      navigation.replace('Login');
+      resetStates(); // reset states if user is not logged in
       return;
     }
   }, [isLoggedIn, user]);
