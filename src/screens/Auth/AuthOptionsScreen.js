@@ -110,13 +110,12 @@ const AuthOptionsScreen = ({ navigation }) => {
         await signInWithEmailAndPassword(auth, email, password);
         setProfileComplete(true);
       } else {
-        // 注册逻辑
+        // sign up logic
         try {
-          // 先设置 profileComplete 为 false
           setProfileComplete(false);
-          // 创建新用户
+          // create user with email and password
           await createUserWithEmailAndPassword(auth, email, password);
-          // 创建成功后再导航到完善资料页面
+          // after creating user, navigate to complete profile screen
           navigation.navigate('CompleteProfile');
         } catch (error) {
           if (error.code === 'auth/email-already-in-use') {
@@ -140,45 +139,25 @@ const AuthOptionsScreen = ({ navigation }) => {
         }
       }
     } catch (error) {
-      console.error('Authentication error:', error);
-      
-      // Handle error codes
       if (error.code === 'auth/email-already-in-use') {
         Alert.alert(
           'Account Exists',
           'An account with this email already exists. Would you like to login instead?',
           [
-            {
-              text: 'Cancel',
-              style: 'cancel'
-            },
-            {
-              text: 'Login',
-              onPress: () => setIsLogin(true)
-            }
+            { text: 'Cancel', style: 'cancel' },
+            { text: 'Login', onPress: () => setIsLogin(true) },
           ]
         );
       } else if (error.code === 'auth/invalid-email') {
-        Alert.alert('Error', 'Please enter a valid email address.');
+        Alert.alert('Invalid Email', 'Please enter a valid email address.');
       } else if (error.code === 'auth/weak-password') {
-        Alert.alert('Error', 'Password should be at least 6 characters.');
+        Alert.alert('Weak Password', 'Password should be at least 6 characters.');
       } else if (error.code === 'auth/user-not-found' || error.code === 'auth/wrong-password') {
-        Alert.alert('Error', 'Invalid email or password.');
+        Alert.alert('Login Failed', 'Invalid email or password. Please try again.');
       } else {
         Alert.alert('Error', 'Authentication failed. Please try again.');
       }
     }
-};
-
-// email check
-const checkEmailExists = async (email) => {
-  try {
-    const methods = await fetchSignInMethodsForEmail(auth, email);
-    return methods.length > 0;
-  } catch (error) {
-    console.error('Error checking email:', error);
-    return false;
-  }
 };
 
   return (
