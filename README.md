@@ -179,3 +179,18 @@ All team members have equal access to the project repository, created branches f
 
 ### Note on Contributions
 If any contributions were not directly recorded in GitHub commits (e.g., discussions on project design, feature planning, or debugging sessions), these contributions are documented here along with the names of the responsible team members. This ensures that all work, including collaborative planning and problem-solving, is acknowledged.
+
+### New Functionality Added in This Iteration
+
+  1. External API Integration
+    Implemented GeoJS API to fetch the user’s location automatically when the component mounts. This data is displayed and used within the app, shown in profile's city and country.
+  2. Mandatory User Profile Form
+    After registering a new account, users are required to complete a personal information form to proceed further in the application.
+  3. Forgot Password Flow Improvement
+	  Improved the “Forgot Password” feature for better usability, including enhanced UI/UX and secure password reset functionality.
+  4. LottieView Styling for Login Page
+	  Integrated Lottie animations to enhance the styling and interactivity of the login screen.
+  5. Profile Photo Wall Enhancement
+	  Redesigned the photo wall on the profile details page for a better user experience and visual appeal.
+  6. Mutual Like Notification Feature
+	  Added functionality where, upon mutual liking between two users, a notification is pushed suggesting a time and location for a potential meeting.
