@@ -161,9 +161,9 @@ const ProfileScreen = () => {
         {/* Notification Button */}
         <TouchableOpacity 
           style={styles.button}
-          onPress={() => navigation.navigate('NotificationScreen')}
+          onPress={() => navigation.navigate('DatePlanScreen')}
         >
-          <Text style={styles.buttonText}>Add Notification</Text>
+          <Text style={styles.buttonText}>Add Date Plan</Text>
         </TouchableOpacity>
 
         {/* Logout Button */}

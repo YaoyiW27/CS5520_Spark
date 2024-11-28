@@ -310,9 +310,13 @@ export const addReminder = async (userEmail, reminderData) => {
         const remindersRef = collection(db, 'reminders');
         const docRef = await addDoc(remindersRef, {
             userEmail,
-            description: reminderData.description,
+            matchId: reminderData.matchId,
+            matchName: reminderData.matchName,
+            location: reminderData.location,
             date: reminderData.date,
-            status: reminderData.status,
+            alertType: reminderData.alertType,
+            notificationId: reminderData.notificationId,
+            reminderStatus: 'pending',
             createdAt: new Date().toISOString()
         });
         return docRef.id;
@@ -326,10 +330,15 @@ export const addReminder = async (userEmail, reminderData) => {
 export const getUserReminders = async (userEmail) => {
     try {
         const remindersRef = collection(db, 'reminders');
-        const q = query(remindersRef, where('userEmail', '==', userEmail));
-        const querySnapshot = await getDocs(q);
+        const q = query(
+            remindersRef, 
+            where('userEmail', '==', userEmail),
+            orderBy('date', 'desc')  // 添加排序
+        );
         
+        const querySnapshot = await getDocs(q);
         const reminders = [];
+        
         querySnapshot.forEach((doc) => {
             reminders.push({
                 id: doc.id,
@@ -357,10 +366,10 @@ export const deleteReminder = async (reminderId) => {
 };
 
 // update reminder status
-export const updateReminderStatus = async (reminderId, status) => {
+export const updateReminderStatus = async (reminderId, reminderStatus) => {
     try {
         const reminderRef = doc(db, 'reminders', reminderId);
-        await updateDoc(reminderRef, { status });
+        await updateDoc(reminderRef, { reminderStatus });
     } catch (error) {
         console.error('Error updating reminder status:', error);
         throw error;
@@ -449,13 +458,14 @@ export const getMatchNotifications = async (userId) => {
         querySnapshot.forEach((doc) => {
             notifications.push({
                 id: doc.id,
-                ...doc.data()
+                ...doc.data(),
+                timestamp: new Date(doc.data().timestamp)  // 确保时间戳格式正确
             });
         });
         
         return notifications;
     } catch (error) {
-            console.error('Error getting match notifications:', error);
+        console.error('Error getting match notifications:', error);
         throw error;
     }
 };
@@ -464,9 +474,19 @@ export const getMatchNotifications = async (userId) => {
 export const markNotificationAsRead = async (notificationId, userId) => {
     try {
         const notificationRef = doc(db, 'matches', notificationId);
-        await updateDoc(notificationRef, {
-            [`isRead.${userId}`]: true
-        });
+        // 先获取当前文档的数据
+        const docSnap = await getDoc(notificationRef);
+        if (docSnap.exists()) {
+            const currentData = docSnap.data();
+            const updatedIsRead = {
+                ...currentData.isRead,
+                [userId]: true
+            };
+            // 更新整个 isRead 对象
+            await updateDoc(notificationRef, {
+                isRead: updatedIsRead
+            });
+        }
     } catch (error) {
         console.error('Error marking notification as read:', error);
         throw error;

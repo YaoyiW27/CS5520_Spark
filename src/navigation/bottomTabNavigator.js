@@ -3,6 +3,7 @@ import { TouchableOpacity, View } from 'react-native';
 import { useState, useEffect, useContext } from 'react';
 import { AuthContext } from '../contexts/AuthContext';
 import { getMatchNotifications } from '../Firebase/firebaseHelper';
+import { useNavigation } from '@react-navigation/native';
 import SwipeScreen from '../screens/Home/SwipeScreen';
 import MapScreen from '../screens/Discover/MapScreen';
 import PostScreen from '../screens/Post/PostScreen';
@@ -20,7 +21,10 @@ function BottomTabNavigator() {
     
     try {
       const notifications = await getMatchNotifications(user.email);
-      const hasUnread = notifications.some(notification => !notification.isRead[user.email]);
+      console.log('Checking notifications:', notifications);
+      const hasUnread = notifications.some(notification => 
+        notification.isRead && !notification.isRead[user.email]
+      );
       setHasUnreadMessages(hasUnread);
     } catch (error) {
       console.error('Error checking unread messages:', error);
@@ -33,14 +37,14 @@ function BottomTabNavigator() {
 
   useEffect(() => {
     checkUnreadMessages();
-    const interval = setInterval(checkUnreadMessages, 300000);
+    const interval = setInterval(checkUnreadMessages, 60000);
     return () => clearInterval(interval);
   }, [user]);
 
   return (
     <Tab.Navigator
       screenOptions={{
-        tabBarActiveTintColor: '#FF69B4', 
+        tabBarActiveTintColor: '#FF69B4',
         tabBarInactiveTintColor: 'gray',
         tabBarShowLabel: true,
         tabBarStyle: {

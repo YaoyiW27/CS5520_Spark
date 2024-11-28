@@ -9,7 +9,7 @@ import LikedListScreen from '../screens/Profile/LikedListScreen';
 import EditProfileScreen from '../screens/Profile/EditProfileScreen';
 import DisplayProfileScreen from '../screens/Profile/DisplayProfileScreen';
 import FilterScreen from '../screens/Discover/FilterScreen';
-import NotificationScreen from '../screens/Profile/NotificationScreen';
+import NotificationScreen from '../screens/Profile/DatePlanScreen';
 import SearchScreen from '../screens/Home/SearchScreen';
 import InboxScreen from '../screens/Profile/InboxScreen';
 const AppStack = createNativeStackNavigator();
@@ -142,17 +142,17 @@ const AppStackNavigator = () => {
       />
 
       <AppStack.Screen
-      name="NotificationScreen"
-      component={NotificationScreen}
-      options={({ navigation }) => ({
-        title: 'Notifications',
-        headerRight: () => (
-          <TouchableOpacity 
-            onPress={() => navigation.setParams({ showModal: true })}
-            style={{ marginRight: 15 }}
-          >
-            <Ionicons name="add" size={24} color="black" />
-          </TouchableOpacity>
+        name="DatePlanScreen"
+        component={NotificationScreen}
+        options={({ navigation }) => ({
+          title: 'Date Plans',
+          headerRight: () => (
+            <TouchableOpacity 
+              onPress={() => navigation.setParams({ showModal: true })}
+              style={{ marginRight: 15 }}
+            >
+              <Ionicons name="add" size={24} color="#FF69B4" />
+            </TouchableOpacity>
           ),
         })}
       />

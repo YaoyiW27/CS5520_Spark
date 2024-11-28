@@ -23,6 +23,7 @@ const InboxScreen = () => {
         
         try {
             const fetchedNotifications = await getMatchNotifications(user.email);
+            console.log('Fetched notifications:', fetchedNotifications);
             setNotifications(fetchedNotifications);
         } catch (error) {
             console.error('Error fetching notifications:', error);
@@ -31,7 +32,13 @@ const InboxScreen = () => {
 
     useEffect(() => {
         fetchNotifications();
-    }, [user]);
+        
+        const unsubscribe = navigation.addListener('focus', () => {
+            fetchNotifications();
+        });
+
+        return unsubscribe;
+    }, [navigation, user]);
 
     const onRefresh = async () => {
         setRefreshing(true);
@@ -41,10 +48,8 @@ const InboxScreen = () => {
 
     const handleNotificationPress = async (notification) => {
         try {
-            // 标记消息为已读
             await markNotificationAsRead(notification.id, user.email);
             
-            // 立即更新本地状态以反映UI变化
             setNotifications(prevNotifications => 
                 prevNotifications.map(notif => {
                     if (notif.id === notification.id) {
@@ -60,10 +65,7 @@ const InboxScreen = () => {
                 })
             );
             
-            // 确定要查看的用户ID
             const otherUserId = notification.users.find(id => id !== user.email);
-            
-            // 导航到用户资料页面
             navigation.navigate('DisplayProfile', { userId: otherUserId });
             
         } catch (error) {
@@ -72,7 +74,6 @@ const InboxScreen = () => {
     };
 
     const renderNotification = ({ item }) => {
-        // 确保 isRead 对象存在且包含当前用户的状态
         const isUnread = !(item.isRead && item.isRead[user.email]);
         const otherUserName = user.email === item.users[0] ? item.user2Name : item.user1Name;
 
@@ -80,7 +81,7 @@ const InboxScreen = () => {
             <TouchableOpacity 
                 style={[
                     styles.notificationItem,
-                    isUnread ? styles.unreadItem : null  // 使用条件运算符确保样式正确应用
+                    isUnread ? styles.unreadItem : null
                 ]}
                 onPress={() => handleNotificationPress(item)}
             >
