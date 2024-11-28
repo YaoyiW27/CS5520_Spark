@@ -36,26 +36,39 @@ const FilterScreen = ({ navigation, route }) => {
         <TouchableOpacity
           style={[
             styles.filterGenderButton,
-            gender === "men" && styles.filterActiveButton,
+            gender === "male" && styles.filterActiveButton,
             { flex: 1 },
           ]}
-          onPress={() => setGender("men")}
+          onPress={() => setGender("male")}
         >
-          <Text style={[styles.filterButtonText, gender === "men" && styles.filterActiveText]}>
-            Men
+          <Text style={[styles.filterButtonText, gender === "male" && styles.filterActiveText]}>
+            Male
           </Text>
         </TouchableOpacity>
 
         <TouchableOpacity
           style={[
             styles.filterGenderButton,
-            gender === "women" && styles.filterActiveButton,
+            gender === "female" && styles.filterActiveButton,
             { flex: 1 },
           ]}
-          onPress={() => setGender("women")}
+          onPress={() => setGender("female")}
         >
-          <Text style={[styles.filterButtonText, gender === "women" && styles.filterActiveText]}>
-            Women
+          <Text style={[styles.filterButtonText, gender === "female" && styles.filterActiveText]}>
+            Female
+          </Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={[
+            styles.filterGenderButton,
+            gender === "non-binary" && styles.filterActiveButton,
+            { flex: 1 },
+          ]}
+          onPress={() => setGender("non-binary")}
+        >
+          <Text style={[styles.filterButtonText, gender === "non-binary" && styles.filterActiveText]}>
+            Non-binary
           </Text>
         </TouchableOpacity>
 
@@ -68,7 +81,7 @@ const FilterScreen = ({ navigation, route }) => {
           onPress={() => setGender("all")}
         >
           <Text style={[styles.filterButtonText, gender === "all" && styles.filterActiveText]}>
-            Both
+            All
           </Text>
         </TouchableOpacity>
       </View>

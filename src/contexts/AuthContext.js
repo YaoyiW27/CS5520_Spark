@@ -18,7 +18,8 @@ export const AuthProvider = ({ children }) => {
     const [isLoggedIn, setIsLoggedIn] = useState(false);
     const [user, setUser] = useState(null);
     const [loading, setLoading] = useState(true);
-    
+    const [profileComplete, setProfileComplete] = useState(false);
+
     // User profile states
     const [userName, setUserName] = useState('TextName');
     const [userProfile, setUserProfile] = useState({
@@ -145,6 +146,8 @@ export const AuthProvider = ({ children }) => {
                 setUserName, 
                 userProfile, 
                 setUserProfile,
+                profileComplete,
+                setProfileComplete,
                 logout: handleLogout,
                 resetStates
             }}

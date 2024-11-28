@@ -5,11 +5,19 @@ import AppStackNavigator from './AppStackNavigator';
 import { AuthContext } from '../contexts/AuthContext';
 
 const RootNavigator = () => {
-  const { isLoggedIn } = useContext(AuthContext);
+  const { isLoggedIn, user, profileComplete } = useContext(AuthContext);
 
   return (
     <NavigationContainer>
-      {isLoggedIn ? <AppStackNavigator /> : <AuthStackNavigator />}
+      {user ? (
+        profileComplete ? (
+          <AppStackNavigator />
+        ) : (
+          <AuthStackNavigator />
+        )
+      ) : (
+        <AuthStackNavigator />
+      )}
     </NavigationContainer>
   );
 };

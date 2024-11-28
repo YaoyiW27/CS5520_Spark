@@ -15,7 +15,6 @@ import {
   createUserWithEmailAndPassword, 
   signInWithEmailAndPassword 
 } from 'firebase/auth';
-import { createUserProfile } from '../../Firebase/firebaseHelper';
 
 const AuthOptionsScreen = ({ navigation }) => {
   const [isLogin, setIsLogin] = useState(true);
@@ -101,56 +100,77 @@ const AuthOptionsScreen = ({ navigation }) => {
       Alert.alert('Error', 'Please fill in all fields');
       return;
     }
-
+  
     try {
       if (isLogin) {
-        // log in
+        // Login logic
         await signInWithEmailAndPassword(auth, email, password);
+        navigation.navigate('CompleteProfile'); // navigate to the complete profile screen
       } else {
-        // sign up
-        const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-        // Create initial user profile
-        await createUserProfile(email, {
-          username: '',
-          pronouns: '',
-          age: '',
-          occupation: '',
-          city: '',
-          country: '',
-          hobbies: '',
-          personalityTags: [],
-          favoriteBooks: [],
-          favoriteMovies: [],
-          favoriteMusic: [],
-          aboutMe: '',
-          likes: []
-        });
+        // Sign up logic
+        const userExists = await checkEmailExists(email);
+        if (userExists) {
+          Alert.alert(
+            'Account Exists',
+            'An account with this email already exists. Would you like to login instead?',
+            [
+              {
+                text: 'Cancel',
+                style: 'cancel'
+              },
+              {
+                text: 'Login',
+                onPress: () => setIsLogin(true)
+              }
+            ]
+          );
+          return;
+        }
+        
+        await createUserWithEmailAndPassword(auth, email, password);
+        navigation.navigate('CompleteProfile');
       }
     } catch (error) {
-      let errorMessage = 'An error occurred';
-      switch (error.code) {
-        case 'auth/email-already-in-use':
-          errorMessage = 'This email is already registered';
-          break;
-        case 'auth/invalid-email':
-          errorMessage = 'Invalid email address';
-          break;
-        case 'auth/operation-not-allowed':
-          errorMessage = 'Email/password accounts are not enabled';
-          break;
-        case 'auth/weak-password':
-          errorMessage = 'Password should be at least 6 characters';
-          break;
-        case 'auth/wrong-password':
-          errorMessage = 'Incorrect password';
-          break;
-        case 'auth/user-not-found':
-          errorMessage = 'User not found';
-          break;
+      console.error('Authentication error:', error);
+      
+      // Handle error codes
+      if (error.code === 'auth/email-already-in-use') {
+        Alert.alert(
+          'Account Exists',
+          'An account with this email already exists. Would you like to login instead?',
+          [
+            {
+              text: 'Cancel',
+              style: 'cancel'
+            },
+            {
+              text: 'Login',
+              onPress: () => setIsLogin(true)
+            }
+          ]
+        );
+      } else if (error.code === 'auth/invalid-email') {
+        Alert.alert('Error', 'Please enter a valid email address.');
+      } else if (error.code === 'auth/weak-password') {
+        Alert.alert('Error', 'Password should be at least 6 characters.');
+      } else if (error.code === 'auth/user-not-found' || error.code === 'auth/wrong-password') {
+        Alert.alert('Error', 'Invalid email or password.');
+      } else {
+        Alert.alert('Error', 'Authentication failed. Please try again.');
       }
-      Alert.alert('Error', errorMessage);
     }
-  };
+};
+
+// email check
+const checkEmailExists = async (email) => {
+  try {
+    const methods = await fetchSignInMethodsForEmail(auth, email);
+    return methods.length > 0;
+  } catch (error) {
+    console.error('Error checking email:', error);
+    return false;
+  }
+};
 
   return (
     <SafeAreaView style={styles.container}>

@@ -15,7 +15,7 @@ import {
 import { ref, uploadBytes, getDownloadURL, deleteObject } from 'firebase/storage';
 import { storage } from './firebaseSetup';
 
-// set default profile photo
+// Set default profile photo
 const DEFAULT_PROFILE_PHOTO = 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=400';
 
 // Create new user profile
@@ -25,7 +25,7 @@ export const createUserProfile = async (email, userData) => {
         await setDoc(userRef, {
             email,
             username: userData.username || '',
-            profilePhoto: DEFAULT_PROFILE_PHOTO,  // use default avatar
+            profilePhoto: DEFAULT_PROFILE_PHOTO,  // Use default avatar
             photowall: [],     
             pronouns: userData.pronouns || '',
             age: userData.age || '',
@@ -39,6 +39,10 @@ export const createUserProfile = async (email, userData) => {
             favoriteMusic: userData.favoriteMusic || [],
             aboutMe: userData.aboutMe || '',
             likes: userData.likes || [],
+            // Include location field (optional)
+            location: userData.location || null,
+            gender: userData.gender || '',  // Added gender field
+            name: userData.name || '',      // Added name field
         });
         return true;
     } catch (error) {
@@ -55,7 +59,7 @@ export const getUserProfile = async (userId) => {
         
         if (docSnap.exists()) {
             const userData = docSnap.data();
-            // ensure the returned data includes all necessary fields and array fields have default values
+            // Ensure the returned data includes all necessary fields and array fields have default values
             return {
                 email: userId,
                 username: userData.username || '',
@@ -73,6 +77,9 @@ export const getUserProfile = async (userId) => {
                 favoriteMusic: userData.favoriteMusic || [],
                 aboutMe: userData.aboutMe || '',
                 likes: userData.likes || [],
+                location: userData.location || null,  // Include location field
+                gender: userData.gender || '',        // Include gender field
+                name: userData.name || '',            // Include name field
             };
         } else {
             console.log('No such document!');
@@ -93,13 +100,13 @@ export const updateUserProfile = async (email, updateData) => {
         if (docSnap.exists()) {
             const currentData = docSnap.data();
             
-            // check if any photos were removed from the photowall
+            // Check if any photos were removed from the photowall
             if (updateData.photowall && currentData.photowall) {
                 const photosToDelete = currentData.photowall.filter(
                     photo => !updateData.photowall.includes(photo)
                 );
                 
-                // delete photos from storage
+                // Delete photos from storage
                 for (const photoUrl of photosToDelete) {
                     try {
                         const photoPath = decodeURIComponent(photoUrl.split('/o/')[1].split('?')[0]);
@@ -112,11 +119,14 @@ export const updateUserProfile = async (email, updateData) => {
                 }
             }
             
-            // update user profile
+            // Update user profile
             await updateDoc(userRef, updateData);
         } else {
+            // If the user document doesn't exist, create it with the provided data
             await setDoc(userRef, {
                 email,
+                profilePhoto: DEFAULT_PROFILE_PHOTO,  // Use default avatar
+                photowall: [],
                 ...updateData
             });
         }
@@ -302,7 +312,7 @@ function degreesToRadians(degrees) {
     return degrees * (Math.PI/180);
 }
 
-// 添加新的提醒到 Firestore
+// add reminder
 export const addReminder = async (userEmail, reminderData) => {
     try {
         const remindersRef = collection(db, 'reminders');
@@ -320,7 +330,7 @@ export const addReminder = async (userEmail, reminderData) => {
     }
 };
 
-// 获取用户的所有提醒
+// get user reminders
 export const getUserReminders = async (userEmail) => {
     try {
         const remindersRef = collection(db, 'reminders');
@@ -343,7 +353,7 @@ export const getUserReminders = async (userEmail) => {
     }
 };
 
-// 删除提醒
+// delete reminder
 export const deleteReminder = async (reminderId) => {
     try {
         const reminderRef = doc(db, 'reminders', reminderId);
@@ -354,7 +364,7 @@ export const deleteReminder = async (reminderId) => {
     }
 };
 
-// 更新提醒状态
+// update reminder status
 export const updateReminderStatus = async (reminderId, status) => {
     try {
         const reminderRef = doc(db, 'reminders', reminderId);

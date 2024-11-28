@@ -25,6 +25,7 @@ const EditProfileScreen = () => {
   
   // Initialize state with empty values
   const [name, setName] = useState('');
+  const [gender, setGender] = useState('');
   const [pronouns, setPronouns] = useState('');
   const [age, setAge] = useState('');
   const [occupation, setOccupation] = useState('');
@@ -46,6 +47,7 @@ const EditProfileScreen = () => {
         const profile = await getUserProfile(user.email);
         if (profile) {
           setName(profile.username || '');
+          setGender(profile.gender || '');
           setPronouns(profile.pronouns || '');
           setAge(profile.age || '');
           setOccupation(profile.occupation || '');
@@ -74,6 +76,7 @@ const EditProfileScreen = () => {
     try {
       const updatedProfile = {
         username: name,
+        gender,
         pronouns,
         age,
         occupation,
@@ -250,6 +253,14 @@ const EditProfileScreen = () => {
             value={name}
             onChangeText={setName}
             placeholder="Enter your name"
+          />
+
+          <Text style={styles.label}>Gender</Text>
+          <TextInput
+            style={styles.input}
+            value={gender}
+            onChangeText={setGender}
+            placeholder="Enter your gender"
           />
 
           <Text style={styles.label}>Pronouns</Text>
