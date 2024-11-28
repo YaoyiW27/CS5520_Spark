@@ -386,6 +386,7 @@ const datePlanScreenStyles = StyleSheet.create({
     pastDateItem: {
         opacity: 0.7,
         backgroundColor: '#F8F8F8',
+        borderColor: '#D3D3D3',
     },
     dateContent: {
         flex: 1,

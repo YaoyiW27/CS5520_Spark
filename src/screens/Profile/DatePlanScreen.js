@@ -25,6 +25,7 @@ import {
   updateReminderStatus
 } from '../../Firebase/firebaseHelper';
 import { datePlanScreenStyles as styles } from '../../styles/ProfileStyles';
+import { useFocusEffect } from '@react-navigation/native';
 
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
@@ -105,6 +106,11 @@ const DatePlanScreen = ({ route, navigation }) => {
   const scheduleNotification = async (matchName, location, dateTime, alertTime) => {
     if (!alertTime) return null;
     
+    const now = new Date();
+    if (alertTime <= now) {
+      return null;
+    }
+    
     try {
       const identifier = await Notifications.scheduleNotificationAsync({
         content: {
@@ -168,13 +174,24 @@ const DatePlanScreen = ({ route, navigation }) => {
       if (user?.email) {
         try {
           const userReminders = await getUserReminders(user.email);
+          const now = new Date();
+          
           userReminders.forEach(reminder => {
-            const now = new Date();
-            const reminderDate = new Date(reminder.date);
-            if (now > reminderDate && reminder.reminderStatus === 'pending') {
-              updateReminderStatus(reminder.id, 'completed');
+            if (reminder.reminderStatus === 'pending') {
+              if (reminder.alertType === 'none') {
+                const reminderDate = new Date(reminder.date);
+                if (now > reminderDate) {
+                  updateReminderStatus(reminder.id, 'completed');
+                }
+              } else if (reminder.notificationId) {
+                const alertTime = getAlertTime(new Date(reminder.date), reminder.alertType);
+                if (alertTime && now > alertTime) {
+                  updateReminderStatus(reminder.id, 'completed');
+                }
+              }
             }
           });
+          
           setDatePlans(userReminders);
         } catch (error) {
           console.error('Error loading reminders:', error);
@@ -211,21 +228,70 @@ const DatePlanScreen = ({ route, navigation }) => {
     }
   };
 
-  const checkAndUpdateReminderStatus = (reminder) => {
+  const checkAndUpdateReminderStatus = async (reminders) => {
     const now = new Date();
-    const reminderDate = new Date(reminder.date);
+    const updates = [];
     
-    if (now > reminderDate && reminder.reminderStatus === 'pending') {
-      updateReminderStatus(reminder.id, 'completed');
+    reminders.forEach(reminder => {
+      if (reminder.reminderStatus === 'pending') {
+        if (reminder.alertType === 'none') {
+          const reminderDate = new Date(reminder.date);
+          if (now > reminderDate) {
+            updates.push({
+              id: reminder.id,
+              status: 'completed'
+            });
+          }
+        } else if (reminder.notificationId) {
+          // For reminders with notifications, check if notification time has passed
+          const alertTime = getAlertTime(new Date(reminder.date), reminder.alertType);
+          if (alertTime && now > alertTime) {
+            updates.push({
+              id: reminder.id,
+              status: 'completed'
+            });
+          }
+        }
+      }
+    });
+
+    if (updates.length > 0) {
+      await Promise.all(updates.map(update => 
+        updateReminderStatus(update.id, update.status)
+      ));
+
       setDatePlans(prevPlans => 
         prevPlans.map(plan => 
-          plan.id === reminder.id 
-            ? {...plan, reminderStatus: 'completed'} 
+          updates.some(update => update.id === plan.id)
+            ? {...plan, reminderStatus: 'completed'}
             : plan
         )
       );
     }
   };
+
+  useEffect(() => {
+    checkAndUpdateReminderStatus(datePlans);
+  }, [datePlans]);
+
+  useFocusEffect(
+    React.useCallback(() => {
+      // 页面获得焦点时刷新数据
+      const refreshData = async () => {
+        if (user?.email) {
+          const userReminders = await getUserReminders(user.email);
+          setDatePlans(userReminders);
+        }
+      };
+
+      refreshData();
+      
+      // 设置定时刷新
+      const intervalId = setInterval(refreshData, 60000);
+
+      return () => clearInterval(intervalId);
+    }, [user])
+  );
 
   return (
     <View style={styles.container}>
@@ -251,8 +317,7 @@ const DatePlanScreen = ({ route, navigation }) => {
           return (
             <View style={[
               styles.dateItem, 
-              isPast && styles.pastDateItem,
-              item.reminderStatus === 'completed' && styles.completedDateItem
+              isPast && styles.pastDateItem
             ]}>
               <View style={styles.dateContent}>
                 <Text style={styles.matchName}>
