@@ -98,7 +98,7 @@ const loginScreenStyles = StyleSheet.create({
         justifyContent: 'center',
     },
     loginTitle: {
-        fontSize: 28,
+        fontSize: 26,
         fontWeight: 'bold',
         textAlign: 'center',
         marginBottom: 30,
@@ -139,6 +139,24 @@ const loginScreenStyles = StyleSheet.create({
     },
     loginTermsLink: {
         color: '#FF69B4',
+    },
+    sparkContainer: {
+      alignItems: 'center', 
+      marginBottom: 20, 
+    },
+    
+    sparkAnimation: {
+      width: 100,
+      height: 100,
+      color: '#FF69B4',
+    },
+    
+    sparkTitle: {
+      fontSize: 42,
+      fontWeight: 'bold',
+      color: '#FF69B4',
+      textAlign: 'center',
+      marginTop: -20, 
     },
 });
 
@@ -208,6 +226,17 @@ const verifyEmailScreenStyles = StyleSheet.create({
         color: '#666',
         fontSize: 16,
     },
+    emailInstructions: {
+      textAlign: 'center',
+      color: '#666',
+      marginHorizontal: 20,
+      marginVertical: 15,
+      lineHeight: 20,
+    },
+    
+    emailResendButtonDisabled: {
+      opacity: 0.6,
+    }
 });
 
 export { forgetPassworScreenStyles, loginScreenStyles, verifyEmailScreenStyles };
