@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useContext } from 'react';
 import { 
   View, 
   Text, 
@@ -13,8 +13,10 @@ import { FontAwesome, Ionicons } from '@expo/vector-icons';
 import { auth } from '../../Firebase/firebaseSetup';
 import { 
   createUserWithEmailAndPassword, 
-  signInWithEmailAndPassword 
+  signInWithEmailAndPassword,
+  fetchSignInMethodsForEmail
 } from 'firebase/auth';
+import { AuthContext } from '../../contexts/AuthContext'; 
 
 const AuthOptionsScreen = ({ navigation }) => {
   const [isLogin, setIsLogin] = useState(true);
@@ -22,6 +24,7 @@ const AuthOptionsScreen = ({ navigation }) => {
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [passwordStrength, setPasswordStrength] = useState('');
+  const { setProfileComplete } = useContext(AuthContext); 
 
   // password warning
   const checkPasswordStrength = (pass) => {
@@ -105,30 +108,36 @@ const AuthOptionsScreen = ({ navigation }) => {
       if (isLogin) {
         // Login logic
         await signInWithEmailAndPassword(auth, email, password);
-        navigation.navigate('CompleteProfile'); // navigate to the complete profile screen
+        setProfileComplete(true);
       } else {
-        // Sign up logic
-        const userExists = await checkEmailExists(email);
-        if (userExists) {
-          Alert.alert(
-            'Account Exists',
-            'An account with this email already exists. Would you like to login instead?',
-            [
-              {
-                text: 'Cancel',
-                style: 'cancel'
-              },
-              {
-                text: 'Login',
-                onPress: () => setIsLogin(true)
-              }
-            ]
-          );
-          return;
+        // 注册逻辑
+        try {
+          // 先设置 profileComplete 为 false
+          setProfileComplete(false);
+          // 创建新用户
+          await createUserWithEmailAndPassword(auth, email, password);
+          // 创建成功后再导航到完善资料页面
+          navigation.navigate('CompleteProfile');
+        } catch (error) {
+          if (error.code === 'auth/email-already-in-use') {
+            Alert.alert(
+              'Account Exists',
+              'An account with this email already exists. Would you like to login instead?',
+              [
+                {
+                  text: 'Cancel',
+                  style: 'cancel'
+                },
+                {
+                  text: 'Login',
+                  onPress: () => setIsLogin(true)
+                }
+              ]
+            );
+          } else {
+            throw error;
+          }
         }
-        
-        await createUserWithEmailAndPassword(auth, email, password);
-        navigation.navigate('CompleteProfile');
       }
     } catch (error) {
       console.error('Authentication error:', error);
