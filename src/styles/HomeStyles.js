@@ -113,6 +113,35 @@ const swipeScreenStyles = StyleSheet.create({
         fontSize: 14,
         color: '#666',
     },
+    finishedContainer: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+        padding: 20,
+      },
+      finishedText: {
+        fontSize: 18,
+        textAlign: 'center',
+        color: '#666',
+        marginBottom: 20,
+        lineHeight: 24,
+      },
+      resetButton: {
+        backgroundColor: '#FF69B4',
+        paddingHorizontal: 30,
+        paddingVertical: 15,
+        borderRadius: 25,
+        elevation: 2,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.25,
+        shadowRadius: 3.84,
+      },
+      resetButtonText: {
+        color: 'white',
+        fontSize: 16,
+        fontWeight: 'bold',
+    },
 });
 
 export { searchScreenStyles, swipeScreenStyles };
