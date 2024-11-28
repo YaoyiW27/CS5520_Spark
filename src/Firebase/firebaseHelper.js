@@ -430,28 +430,86 @@ export const checkMatch = async (user1Id, user2Id) => {
     }
 };
 
-// create match notification
-export const createMatchNotification = async (user1Id, user2Id) => {
+// 检查两个用户之间是否已经存在 match
+const checkExistingMatch = async (user1Id, user2Id) => {
     try {
         const matchesRef = collection(db, 'matches');
-        const timestamp = new Date().toISOString();
+        const q = query(
+            matchesRef,
+            where('users', 'array-contains', user1Id)
+        );
         
-        // get user info to display name
-        const user1Profile = await getUserProfile(user1Id);
-        const user2Profile = await getUserProfile(user2Id);
-        
-        await addDoc(matchesRef, {
-            users: [user1Id, user2Id],
-            user1Name: user1Profile.username,
-            user2Name: user2Profile.username,
-            timestamp,
-            isRead: {
-                [user1Id]: false,
-                [user2Id]: false
-            }
+        const querySnapshot = await getDocs(q);
+        return querySnapshot.docs.find(doc => {
+            const data = doc.data();
+            return data.users.includes(user2Id);
         });
     } catch (error) {
-        console.error('Error creating match notification:', error);
+        console.error('Error checking existing match:', error);
+        throw error;
+    }
+};
+
+// 创建或删除 match
+export const handleMatch = async (user1Id, user2Id) => {
+    try {
+        const isMatched = await checkMatch(user1Id, user2Id);
+        const existingMatch = await checkExistingMatch(user1Id, user2Id);
+
+        if (isMatched && !existingMatch) {
+            // 如果匹配且不存在 match 记录，创建新的 match
+            const matchesRef = collection(db, 'matches');
+            const timestamp = new Date().toISOString();
+            
+            const user1Profile = await getUserProfile(user1Id);
+            const user2Profile = await getUserProfile(user2Id);
+            
+            await addDoc(matchesRef, {
+                users: [user1Id, user2Id],
+                user1Name: user1Profile.username,
+                user2Name: user2Profile.username,
+                timestamp,
+                isRead: {
+                    [user1Id]: false,
+                    [user2Id]: false
+                }
+            });
+        } else if (!isMatched && existingMatch) {
+            // 如果不再匹配但存在 match 记录，删除该记录
+            await deleteDoc(doc(db, 'matches', existingMatch.id));
+        }
+    } catch (error) {
+        console.error('Error handling match:', error);
+        throw error;
+    }
+};
+
+// 更新用户的 likes 列表时调用 handleMatch
+export const updateUserLikes = async (userId, likedUserId, isLiking) => {
+    try {
+        const userRef = doc(db, 'Users', userId);
+        const userDoc = await getDoc(userRef);
+        
+        if (userDoc.exists()) {
+            const userData = userDoc.data();
+            let likes = userData.likes || [];
+            
+            if (isLiking && !likes.includes(likedUserId)) {
+                likes.push(likedUserId);
+            } else if (!isLiking) {
+                likes = likes.filter(id => id !== likedUserId);
+            }
+            
+            await updateDoc(userRef, { likes });
+            
+            // 处理 match 状态
+            await handleMatch(userId, likedUserId);
+            
+            // 更新对方的 likedBy 列表
+            await updateUserLikedBy(likedUserId, userId, isLiking);
+        }
+    } catch (error) {
+        console.error('Error updating likes:', error);
         throw error;
     }
 };

@@ -9,6 +9,8 @@ import MapScreen from '../screens/Discover/MapScreen';
 import PostScreen from '../screens/Post/PostScreen';
 import ProfileScreen from '../screens/Profile/ProfileScreen';
 import { Ionicons } from '@expo/vector-icons';
+import { onSnapshot, collection, query, where } from 'firebase/firestore';
+import { db } from '../Firebase/firebaseSetup'; // 确保已导入 db
 
 const Tab = createBottomTabNavigator();
 
@@ -16,29 +18,26 @@ function BottomTabNavigator() {
   const [hasUnreadMessages, setHasUnreadMessages] = useState(false);
   const { user } = useContext(AuthContext);
 
-  const checkUnreadMessages = async () => {
-    if (!user?.email) return;
-    
-    try {
-      const notifications = await getMatchNotifications(user.email);
-      console.log('Checking notifications:', notifications);
-      const hasUnread = notifications.some(notification => 
-        notification.isRead && !notification.isRead[user.email]
-      );
-      setHasUnreadMessages(hasUnread);
-    } catch (error) {
-      console.error('Error checking unread messages:', error);
-    }
-  };
-
-  const resetUnreadMessages = () => {
-    setHasUnreadMessages(false);
-  };
-
   useEffect(() => {
-    checkUnreadMessages();
-    const interval = setInterval(checkUnreadMessages, 60000);
-    return () => clearInterval(interval);
+    if (!user?.email) return;
+
+    // 创建对通知集合的实时监听
+    const notificationsRef = collection(db, 'matches');
+    const q = query(
+      notificationsRef,
+      where('users', 'array-contains', user.email)
+    );
+
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      const hasUnread = snapshot.docs.some(doc => {
+        const notification = doc.data();
+        return !notification.isRead || !notification.isRead[user.email];
+      });
+      setHasUnreadMessages(hasUnread);
+    });
+
+    // 清理监听器
+    return () => unsubscribe();
   }, [user]);
 
   return (
@@ -134,7 +133,6 @@ function BottomTabNavigator() {
               <TouchableOpacity
                 onPress={() => {
                   navigation.navigate('InboxScreen');
-                  resetUnreadMessages();
                 }}
                 style={{ marginRight: 15 }}
               >
