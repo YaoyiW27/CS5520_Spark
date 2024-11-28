@@ -1,18 +1,49 @@
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import { TouchableOpacity } from 'react-native';
+import { TouchableOpacity, View } from 'react-native';
+import { useState, useEffect, useContext } from 'react';
+import { AuthContext } from '../contexts/AuthContext';
+import { getMatchNotifications } from '../Firebase/firebaseHelper';
+import { useNavigation } from '@react-navigation/native';
 import SwipeScreen from '../screens/Home/SwipeScreen';
 import MapScreen from '../screens/Discover/MapScreen';
 import PostScreen from '../screens/Post/PostScreen';
 import ProfileScreen from '../screens/Profile/ProfileScreen';
 import { Ionicons } from '@expo/vector-icons';
+import { onSnapshot, collection, query, where } from 'firebase/firestore';
+import { db } from '../Firebase/firebaseSetup'; // ensure db is imported
 
 const Tab = createBottomTabNavigator();
 
 function BottomTabNavigator() {
+  const [hasUnreadMessages, setHasUnreadMessages] = useState(false);
+  const { user } = useContext(AuthContext);
+
+  useEffect(() => {
+    if (!user?.email) return;
+
+    // create a realtime listener for the notifications collection
+    const notificationsRef = collection(db, 'matches');
+    const q = query(
+      notificationsRef,
+      where('users', 'array-contains', user.email)
+    );
+
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      const hasUnread = snapshot.docs.some(doc => {
+        const notification = doc.data();
+        return !notification.isRead || !notification.isRead[user.email];
+      });
+      setHasUnreadMessages(hasUnread);
+    });
+
+    // clean up the listener
+    return () => unsubscribe();
+  }, [user]);
+
   return (
     <Tab.Navigator
       screenOptions={{
-        tabBarActiveTintColor: '#FF69B4', 
+        tabBarActiveTintColor: '#FF69B4',
         tabBarInactiveTintColor: 'gray',
         tabBarShowLabel: true,
         tabBarStyle: {
@@ -91,17 +122,40 @@ function BottomTabNavigator() {
       <Tab.Screen 
         name="Profile" 
         component={ProfileScreen}
-        options={{
+        options={({ navigation }) => ({
           headerTitle: 'Profile',
           headerTitleStyle: {
             color: '#FF69B4',
             fontSize: 18,
           },
+          headerRight: () => (
+            <View>
+              <TouchableOpacity
+                onPress={() => {
+                  navigation.navigate('InboxScreen');
+                }}
+                style={{ marginRight: 15 }}
+              >
+                <Ionicons name="mail" size={24} color="#FF69B4" />
+                {hasUnreadMessages && (
+                  <View style={{
+                    position: 'absolute',
+                    right: -6,
+                    top: -6,
+                    backgroundColor: 'red',
+                    borderRadius: 6,
+                    width: 12,
+                    height: 12,
+                  }} />
+                )}
+              </TouchableOpacity>
+            </View>
+          ),
           tabBarIcon: ({ color, size }) => (
             <Ionicons name="person" size={size} color={color} />
           ),
           tabBarAccessibilityLabel: 'Profile Tab',
-        }}
+        })}
       />
     </Tab.Navigator>
   );

@@ -1,35 +1,39 @@
-import React, { useState, useEffect, useContext } from 'react';
-import { View, StyleSheet, SafeAreaView, Text, FlatList, Image, ActivityIndicator, TouchableOpacity } from 'react-native';
+import React, { useState, useEffect, useContext, useCallback } from 'react';
+import { View, SafeAreaView, Text, FlatList, Image, ActivityIndicator, TouchableOpacity } from 'react-native';
 import { AuthContext } from '../../contexts/AuthContext';
 import { getUserProfile } from '../../Firebase/firebaseHelper';
 import { likedListScreenStyles as styles } from '../../styles/ProfileStyles';
+import { useFocusEffect } from '@react-navigation/native';
 
 const LikedListScreen = ({ navigation }) => {
     const [likedUsers, setLikedUsers] = useState([]);
     const [loading, setLoading] = useState(true);
     const { user } = useContext(AuthContext);
 
-    useEffect(() => {
-        const fetchLikedUsers = async () => {
-            try {
-                const userProfile = await getUserProfile(user.email);
-                const likedUserIds = userProfile?.likes || [];
+    const fetchLikedUsers = async () => {
+        try {
+            setLoading(true);
+            const userProfile = await getUserProfile(user.email);
+            const likedUserIds = userProfile?.likes || [];
 
-                const likedUsersDetails = await Promise.all(
-                    likedUserIds.map(userId => getUserProfile(userId))
-                );
+            const likedUsersDetails = await Promise.all(
+                likedUserIds.map(userId => getUserProfile(userId))
+            );
 
-                const validUsers = likedUsersDetails.filter(user => user != null);
-                setLikedUsers(validUsers);
-            } catch (error) {
-                console.error('Error fetching liked users:', error);
-            } finally {
-                setLoading(false);
-            }
-        };
+            const validUsers = likedUsersDetails.filter(user => user != null);
+            setLikedUsers(validUsers);
+        } catch (error) {
+            console.error('Error fetching liked users:', error);
+        } finally {
+            setLoading(false);
+        }
+    };
 
-        fetchLikedUsers();
-    }, [user]);
+    useFocusEffect(
+        useCallback(() => {
+            fetchLikedUsers();
+        }, [user])
+    );
 
     const renderItem = ({ item }) => {
         if (!item || !item.email) {

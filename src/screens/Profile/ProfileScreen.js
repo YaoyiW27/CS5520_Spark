@@ -1,5 +1,5 @@
 import React, { useContext, useState } from 'react';
-import { View, StyleSheet, SafeAreaView, Text, TouchableOpacity, Image, Alert } from 'react-native';
+import { View, SafeAreaView, Text, TouchableOpacity, Image, Alert } from 'react-native';
 import { AuthContext } from '../../contexts/AuthContext';
 import { useNavigation } from '@react-navigation/native';
 import { getUserProfile, updateUserProfilePhoto } from '../../Firebase/firebaseHelper';
@@ -161,9 +161,9 @@ const ProfileScreen = () => {
         {/* Notification Button */}
         <TouchableOpacity 
           style={styles.button}
-          onPress={() => navigation.navigate('NotificationScreen')}
+          onPress={() => navigation.navigate('DatePlanScreen')}
         >
-          <Text style={styles.buttonText}>Add Notification</Text>
+          <Text style={styles.buttonText}>Add Date Plan</Text>
         </TouchableOpacity>
 
         {/* Logout Button */}

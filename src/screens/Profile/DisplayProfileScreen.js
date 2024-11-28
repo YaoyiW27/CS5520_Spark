@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useContext } from 'react';
-import { View, Text, Image, StyleSheet, ScrollView, TouchableOpacity, Alert } from 'react-native';
-import { getUserProfile, updateUserProfile } from '../../Firebase/firebaseHelper';
+import { View, Text, Image, ScrollView, TouchableOpacity, Alert } from 'react-native';
+import { getUserProfile, updateUserProfile, updateUserLikedBy, checkMatch, updateUserLikes } from '../../Firebase/firebaseHelper';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { AuthContext } from '../../contexts/AuthContext';
 import { displayProfileScreenStyles as styles } from '../../styles/ProfileStyles';
@@ -34,19 +34,14 @@ const DisplayProfileScreen = ({ route }) => {
 
     const handleLike = async () => {
         try {
-            const currentUserProfile = await getUserProfile(user.email);
-            const likes = currentUserProfile?.likes || [];
-            
-            let updatedLikes;
             if (isLiked) {
-                updatedLikes = likes.filter(id => id !== userId);
+                // 取消点赞
+                await updateUserLikes(user.email, userId, false);
             } else {
-                updatedLikes = [...likes, userId];
+                // 添加点赞
+                await updateUserLikes(user.email, userId, true);
             }
-            
-            await updateUserProfile(user.email, { likes: updatedLikes });
             setIsLiked(!isLiked);
-            
         } catch (error) {
             console.error('Error updating like:', error);
             Alert.alert('Error', 'Failed to update like');

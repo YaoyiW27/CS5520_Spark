@@ -10,7 +10,8 @@ import {
     addDoc,
     query,
     where,
-    deleteDoc
+    deleteDoc,
+    orderBy
 } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL, deleteObject } from 'firebase/storage';
 import { storage } from './firebaseSetup';
@@ -43,6 +44,7 @@ export const createUserProfile = async (email, userData) => {
             location: userData.location || null,
             gender: userData.gender || '',  // Added gender field
             name: userData.name || '',      // Added name field
+            likedBy: userData.likedBy || [],
         });
         return true;
     } catch (error) {
@@ -313,14 +315,19 @@ function degreesToRadians(degrees) {
 }
 
 // add reminder
+// add reminder
 export const addReminder = async (userEmail, reminderData) => {
     try {
         const remindersRef = collection(db, 'reminders');
         const docRef = await addDoc(remindersRef, {
             userEmail,
-            description: reminderData.description,
+            matchId: reminderData.matchId,
+            matchName: reminderData.matchName,
+            location: reminderData.location,
             date: reminderData.date,
-            status: reminderData.status,
+            alertType: reminderData.alertType,
+            notificationId: reminderData.notificationId,
+            reminderStatus: 'pending',
             createdAt: new Date().toISOString()
         });
         return docRef.id;
@@ -331,13 +338,19 @@ export const addReminder = async (userEmail, reminderData) => {
 };
 
 // get user reminders
+// get user reminders
 export const getUserReminders = async (userEmail) => {
     try {
         const remindersRef = collection(db, 'reminders');
-        const q = query(remindersRef, where('userEmail', '==', userEmail));
-        const querySnapshot = await getDocs(q);
+        const q = query(
+            remindersRef, 
+            where('userEmail', '==', userEmail),
+            orderBy('date', 'desc')  // 添加排序
+        );
         
+        const querySnapshot = await getDocs(q);
         const reminders = [];
+        
         querySnapshot.forEach((doc) => {
             reminders.push({
                 id: doc.id,
@@ -354,6 +367,7 @@ export const getUserReminders = async (userEmail) => {
 };
 
 // delete reminder
+// delete reminder
 export const deleteReminder = async (reminderId) => {
     try {
         const reminderRef = doc(db, 'reminders', reminderId);
@@ -364,13 +378,207 @@ export const deleteReminder = async (reminderId) => {
     }
 };
 
+
 // update reminder status
-export const updateReminderStatus = async (reminderId, status) => {
+export const updateReminderStatus = async (reminderId, reminderStatus) => {
     try {
         const reminderRef = doc(db, 'reminders', reminderId);
-        await updateDoc(reminderRef, { status });
+        await updateDoc(reminderRef, { reminderStatus });
     } catch (error) {
         console.error('Error updating reminder status:', error);
         throw error;
     }
+};
+
+// update likedBy list
+export const updateUserLikedBy = async (userId, likedByUserId, isLiking) => {
+    try {
+        const userRef = doc(db, 'Users', userId);
+        const userDoc = await getDoc(userRef);
+        
+        if (userDoc.exists()) {
+            const userData = userDoc.data();
+            let likedBy = userData.likedBy || [];
+            
+            if (isLiking && !likedBy.includes(likedByUserId)) {
+                likedBy.push(likedByUserId);
+            } else if (!isLiking) {
+                likedBy = likedBy.filter(id => id !== likedByUserId);
+            }
+            
+            await updateDoc(userRef, { likedBy });
+        }
+    } catch (error) {
+        console.error('Error updating likedBy list:', error);
+        throw error;
+    }
+};
+
+// check if mutual likes
+export const checkMatch = async (user1Id, user2Id) => {
+    try {
+        const user1Doc = await getDoc(doc(db, 'Users', user1Id));
+        const user2Doc = await getDoc(doc(db, 'Users', user2Id));
+        
+        const user1Data = user1Doc.data();
+        const user2Data = user2Doc.data();
+        
+        return user1Data.likes?.includes(user2Id) && user2Data.likes?.includes(user1Id);
+    } catch (error) {
+        console.error('Error checking match:', error);
+        throw error;
+    }
+};
+
+// check if two users have an existing match
+const checkExistingMatch = async (user1Id, user2Id) => {
+    try {
+        const matchesRef = collection(db, 'matches');
+        const q = query(
+            matchesRef,
+            where('users', 'array-contains', user1Id)
+        );
+        
+        const querySnapshot = await getDocs(q);
+        return querySnapshot.docs.find(doc => {
+            const data = doc.data();
+            return data.users.includes(user2Id);
+        });
+    } catch (error) {
+        console.error('Error checking existing match:', error);
+        throw error;
+    }
+};
+
+// create or delete match
+export const handleMatch = async (user1Id, user2Id) => {
+    try {
+        const isMatched = await checkMatch(user1Id, user2Id);
+        const existingMatch = await checkExistingMatch(user1Id, user2Id);
+
+        if (isMatched && !existingMatch) {
+            // if matched and no match record, create new match
+            const matchesRef = collection(db, 'matches');
+            const timestamp = new Date().toISOString();
+            
+            const user1Profile = await getUserProfile(user1Id);
+            const user2Profile = await getUserProfile(user2Id);
+            
+            await addDoc(matchesRef, {
+                users: [user1Id, user2Id],
+                user1Name: user1Profile.username,
+                user2Name: user2Profile.username,
+                timestamp,
+                isRead: {
+                    [user1Id]: false,
+                    [user2Id]: false
+                }
+            });
+        } else if (!isMatched && existingMatch) {
+            // if not matched but there is a match record, delete the record
+            await deleteDoc(doc(db, 'matches', existingMatch.id));
+        }
+    } catch (error) {
+        console.error('Error handling match:', error);
+        throw error;
+    }
+};
+
+// update user likes list
+export const updateUserLikes = async (userId, likedUserId, isLiking) => {
+    try {
+        const userRef = doc(db, 'Users', userId);
+        const userDoc = await getDoc(userRef);
+        
+        if (userDoc.exists()) {
+            const userData = userDoc.data();
+            let likes = userData.likes || [];
+            
+            if (isLiking && !likes.includes(likedUserId)) {
+                likes.push(likedUserId);
+            } else if (!isLiking) {
+                likes = likes.filter(id => id !== likedUserId);
+            }
+            
+            await updateDoc(userRef, { likes });
+            
+            // handle match status
+            await handleMatch(userId, likedUserId);
+            
+            // update the other user's likedBy list
+            await updateUserLikedBy(likedUserId, userId, isLiking);
+        }
+    } catch (error) {
+        console.error('Error updating likes:', error);
+        throw error;
+    }
+};
+
+// get match notifications
+export const getMatchNotifications = async (userId) => {
+    try {
+        const matchesRef = collection(db, 'matches');
+        const q = query(
+            matchesRef,
+            where('users', 'array-contains', userId),
+            orderBy('timestamp', 'desc')
+        );
+        
+        const querySnapshot = await getDocs(q);
+        const notifications = [];
+        
+        querySnapshot.forEach((doc) => {
+            notifications.push({
+                id: doc.id,
+                ...doc.data(),
+                timestamp: new Date(doc.data().timestamp)  // ensure timestamp format is correct
+            });
+        });
+        
+        return notifications;
+    } catch (error) {
+        console.error('Error getting match notifications:', error);
+        throw error;
+    }
+};
+
+// mark notification as read
+export const markNotificationAsRead = async (notificationId, userId) => {
+    try {
+        const notificationRef = doc(db, 'matches', notificationId);
+        // get current document data
+        const docSnap = await getDoc(notificationRef);
+        if (docSnap.exists()) {
+            const currentData = docSnap.data();
+            const updatedIsRead = {
+                ...currentData.isRead,
+                [userId]: true
+            };
+            // update the whole isRead object
+            await updateDoc(notificationRef, {
+                isRead: updatedIsRead
+            });
+        }
+    } catch (error) {
+        console.error('Error marking notification as read:', error);
+        throw error;
+    }
+};
+
+// add date invitation notification
+export const addDateInvitation = async (senderEmail, receiverEmail, dateDetails) => {
+  try {
+    const notificationRef = collection(db, 'dateInvitations');
+    await addDoc(notificationRef, {
+      senderEmail,
+      receiverEmail,
+      dateDetails,
+      createdAt: new Date().toISOString(),
+      isRead: false,
+      //status: 'pending' // can be 'pending', 'accepted', 'declined'
+    });
+  } catch (error) {
+    console.error('Error adding date invitation:', error);
+    throw error;
+  }
 };

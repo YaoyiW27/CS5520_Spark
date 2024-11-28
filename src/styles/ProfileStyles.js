@@ -323,49 +323,113 @@ const likedListScreenStyles = StyleSheet.create({
     },
 });
 
-// Styles for NotificationScreen
-const notificationScreenStyles = StyleSheet.create({
+// Styles for date plan screen
+const datePlanScreenStyles = StyleSheet.create({
     container: {
         flex: 1,
         backgroundColor: '#fff',
+        padding: 16,
     },
-    addButton: {
-        position: 'absolute',
-        right: 10,
-        top: 10,
-        zIndex: 1,
-        padding: 10,
+    headerContainer: {
+        alignItems: 'center',
+        marginBottom: 20,
     },
-    reminderItem: {
+    headerText: {
+        fontSize: 24,
+        fontWeight: 'bold',
+        color: '#FF69B4',
+        textAlign: 'center',
+        marginVertical: 10,
+    },
+    decorationContainer: {
         flexDirection: 'row',
-        backgroundColor: 'black',
-        borderRadius: 15,
-        padding: 15,
-        marginBottom: 10,
+        alignItems: 'center',
+        justifyContent: 'center',
+        marginTop: 5,
+        marginBottom: 15,
+    },
+    decorationLine: {
+        height: 1,
+        width: 50,
+        backgroundColor: '#FFB6C1',
+        marginHorizontal: 10,
+    },
+    decorationHeart: {
+        color: '#FF69B4',
+        fontSize: 20,
+    },
+    subHeaderText: {
+        fontSize: 14,
+        color: '#666',
+        textAlign: 'center',
+        fontStyle: 'italic',
+        marginTop: 5,
+    },
+    dateItem: {
+        flexDirection: 'row',
+        backgroundColor: '#FFF0F5',
+        borderRadius: 12,
+        padding: 16,
+        marginBottom: 16,
         alignItems: 'center',
         shadowColor: '#000',
         shadowOffset: {
             width: 0,
             height: 2,
         },
-        shadowOpacity: 0.1,
-        shadowRadius: 3,
-        elevation: 3,
+        shadowOpacity: 0.15,
+        shadowRadius: 4,
+        elevation: 4,
+        borderWidth: 1,
+        borderColor: '#FFB6C1',
     },
-    reminderContent: {
+    pastDateItem: {
+        opacity: 0.7,
+        backgroundColor: '#F8F8F8',
+        borderColor: '#D3D3D3',
+    },
+    dateContent: {
         flex: 1,
-        marginRight: 10,
+        marginRight: 12,
     },
-    reminderTitle: {
+    matchName: {
+        fontSize: 18,
+        fontWeight: '600',
+        color: '#333',
+        marginBottom: 6,
+    },
+    location: {
         fontSize: 16,
+        color: '#444',
+        marginBottom: 6,
         fontWeight: '500',
-        marginBottom: 5,
-        color: 'white',
     },
-    reminderDate: {
+    dateTime: {
+        fontSize: 15,
+        color: '#555',
+        marginBottom: 6,
+        fontWeight: '400',
+    },
+    alertText: {
         fontSize: 14,
-        color: 'white',
+        color: '#FF1493',
+        fontWeight: '500',
+        fontStyle: 'italic',
     },
+    deleteButton: {
+        padding: 8,
+        backgroundColor: '#FFF0F5',
+        borderRadius: 20,
+        shadowColor: '#000',
+        shadowOffset: {
+            width: 0,
+            height: 1,
+        },
+        shadowOpacity: 0.1,
+        shadowRadius: 2,
+        elevation: 2,
+    },
+    // Modal styles
     modalOverlay: {
         flex: 1,
         backgroundColor: 'rgba(0,0,0,0.5)',
@@ -373,50 +437,142 @@ const notificationScreenStyles = StyleSheet.create({
         padding: 20,
     },
     modalContent: {
-        backgroundColor: 'white',
+        backgroundColor: '#fff',
+        borderRadius: 16,
         padding: 20,
-        borderRadius: 10,
+        shadowColor: '#000',
+        shadowOffset: {
+            width: 0,
+            height: 4,
+        },
+        shadowOpacity: 0.25,
+        shadowRadius: 8,
+        elevation: 5,
+    },
+    modalTitle: {
+        fontSize: 24,
+        fontWeight: 'bold',
+        color: '#FF69B4',
+        textAlign: 'center',
+        marginBottom: 20,
+    },
+    picker: {
+        backgroundColor: '#f8f8f8',
+        borderRadius: 8,
+        marginBottom: 16,
+        borderWidth: 1,
+        borderColor: '#ddd',
     },
     input: {
         borderWidth: 1,
         borderColor: '#ddd',
-        padding: 10,
-        marginBottom: 15,
-        borderRadius: 5,
-    },
-    dateButton: {
-        borderWidth: 1,
-        borderColor: '#ddd',
-        padding: 10,
-        marginBottom: 15,
-        borderRadius: 5,
-        alignItems: 'center',
+        borderRadius: 8,
+        padding: 12,
+        marginBottom: 16,
+        fontSize: 16,
+        backgroundColor: '#f8f8f8',
     },
     saveButton: {
-        backgroundColor: '#007AFF',
-        padding: 15,
-        borderRadius: 5,
+        backgroundColor: '#FF69B4',
+        padding: 16,
+        borderRadius: 8,
         alignItems: 'center',
-        marginTop: 10,
+        marginTop: 16,
+        shadowColor: '#000',
+        shadowOffset: {
+            width: 0,
+            height: 2,
+        },
+        shadowOpacity: 0.2,
+        shadowRadius: 4,
+        elevation: 3,
     },
     saveButtonText: {
-        color: 'white',
+        color: '#fff',
+        fontSize: 18,
         fontWeight: 'bold',
     },
-    deleteButton: {
-        padding: 8,
+    // Empty state
+    emptyContainer: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+        padding: 20,
     },
-    timeInput: {
-        marginVertical: 15,
+    emptyText: {
+        fontSize: 18,
+        color: '#666',
+        textAlign: 'center',
+        marginTop: 10,
     },
-    listContainer: {
+    // Date and Time inputs
+    dateTimeContainer: {
+        marginBottom: 16,
+    },
+    dateTimeLabel: {
+        fontSize: 16,
+        color: '#666',
+        marginBottom: 8,
+    },
+    completedDateItem: {
+        backgroundColor: '#F0F0F0',
+        borderColor: '#D3D3D3',
+    },
+    statusText: {
+        fontSize: 14,
+        fontWeight: '500',
+        marginTop: 4,
+        color: '#FF69B4',
+        textTransform: 'capitalize',
+    },
+    completedStatusText: {
+        color: '#888',
+    },
+    inputLabel: {
+        fontSize: 16,
+        fontWeight: '600',
+        color: '#333',
+        marginBottom: 8,
+    },
+    selectedValueContainer: {
+        borderWidth: 1,
+        borderColor: '#ddd',
+        borderRadius: 8,
+        padding: 12,
+        marginBottom: 16,
+        backgroundColor: '#f8f8f8',
+    },
+    selectedValueText: {
+        fontSize: 16,
+        color: '#333',
+    },
+    modalButtonsContainer: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        marginTop: 20,
+    },
+    cancelButton: {
+        backgroundColor: '#f8f8f8',
         padding: 16,
+        borderRadius: 8,
+        alignItems: 'center',
+        flex: 1,
+        marginRight: 10,
+        borderWidth: 1,
+        borderColor: '#ddd',
     },
-    pastReminderItem: {
-        opacity: 0.6,
+    cancelButtonText: {
+        color: '#666',
+        fontSize: 16,
+        fontWeight: '600',
     },
-    pastReminderText: {
-        textDecorationLine: 'line-through',
+    saveButton: {
+        backgroundColor: '#FF69B4',
+        padding: 16,
+        borderRadius: 8,
+        alignItems: 'center',
+        flex: 1,
+        marginLeft: 10,
     },
 });
 
@@ -425,5 +581,5 @@ export {
     editProfileScreenStyles,
     displayProfileScreenStyles,
     likedListScreenStyles,
-    notificationScreenStyles,
+    datePlanScreenStyles,
 };
