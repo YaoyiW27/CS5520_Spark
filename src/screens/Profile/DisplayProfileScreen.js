@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useContext } from 'react';
 import { View, Text, Image, StyleSheet, ScrollView, TouchableOpacity, Alert } from 'react-native';
-import { getUserProfile, updateUserProfile, updateUserLikedBy } from '../../Firebase/firebaseHelper';
+import { getUserProfile, updateUserProfile, updateUserLikedBy, checkMatch, createMatchNotification } from '../../Firebase/firebaseHelper';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { AuthContext } from '../../contexts/AuthContext';
 import { displayProfileScreenStyles as styles } from '../../styles/ProfileStyles';
@@ -49,6 +49,14 @@ const DisplayProfileScreen = ({ route }) => {
             await updateUserProfile(user.email, { likes: updatedLikes });
             setIsLiked(!isLiked);
             
+            const checkAndCreateMatch = async (currentUserId, likedUserId) => {
+                const isMatch = await checkMatch(currentUserId, likedUserId);
+                if (isMatch) {
+                    await createMatchNotification(currentUserId, likedUserId);
+                }
+            };
+
+            await checkAndCreateMatch(user.email, userId);
         } catch (error) {
             console.error('Error updating like:', error);
             Alert.alert('Error', 'Failed to update like');

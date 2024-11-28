@@ -10,7 +10,8 @@ import {
     addDoc,
     query,
     where,
-    deleteDoc
+    deleteDoc,
+    orderBy
 } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL, deleteObject } from 'firebase/storage';
 import { storage } from './firebaseSetup';
@@ -386,6 +387,88 @@ export const updateUserLikedBy = async (userId, likedByUserId, isLiking) => {
         }
     } catch (error) {
         console.error('Error updating likedBy list:', error);
+        throw error;
+    }
+};
+
+// check if mutual likes
+export const checkMatch = async (user1Id, user2Id) => {
+    try {
+        const user1Doc = await getDoc(doc(db, 'Users', user1Id));
+        const user2Doc = await getDoc(doc(db, 'Users', user2Id));
+        
+        const user1Data = user1Doc.data();
+        const user2Data = user2Doc.data();
+        
+        return user1Data.likes?.includes(user2Id) && user2Data.likes?.includes(user1Id);
+    } catch (error) {
+        console.error('Error checking match:', error);
+        throw error;
+    }
+};
+
+// create match notification
+export const createMatchNotification = async (user1Id, user2Id) => {
+    try {
+        const matchesRef = collection(db, 'matches');
+        const timestamp = new Date().toISOString();
+        
+        // get user info to display name
+        const user1Profile = await getUserProfile(user1Id);
+        const user2Profile = await getUserProfile(user2Id);
+        
+        await addDoc(matchesRef, {
+            users: [user1Id, user2Id],
+            user1Name: user1Profile.username,
+            user2Name: user2Profile.username,
+            timestamp,
+            isRead: {
+                [user1Id]: false,
+                [user2Id]: false
+            }
+        });
+    } catch (error) {
+        console.error('Error creating match notification:', error);
+        throw error;
+    }
+};
+
+// get match notifications
+export const getMatchNotifications = async (userId) => {
+    try {
+        const matchesRef = collection(db, 'matches');
+        const q = query(
+            matchesRef,
+            where('users', 'array-contains', userId),
+            orderBy('timestamp', 'desc')
+        );
+        
+        const querySnapshot = await getDocs(q);
+        const notifications = [];
+        
+        querySnapshot.forEach((doc) => {
+            notifications.push({
+                id: doc.id,
+                ...doc.data()
+            });
+        });
+        
+        return notifications;
+    } catch (error) {
+            console.error('Error getting match notifications:', error);
+        throw error;
+    }
+};
+
+// mark notification as read
+export const markNotificationAsRead = async (notificationId, userId) => {
+    try {
+        const notificationRef = doc(db, 'matches', notificationId);
+        await updateDoc(notificationRef, {
+            [`isRead.${userId}`]: true
+        });
+    } catch (error) {
+        console.error('Error marking notification as read:', error);
         throw error;
     }
 };

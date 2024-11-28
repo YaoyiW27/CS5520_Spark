@@ -1,7 +1,7 @@
 import React, { useState, useRef, useContext, useEffect } from 'react';
 import { View, StyleSheet, SafeAreaView, Text, TouchableOpacity, Dimensions, Image, Platform } from 'react-native';
 import Swiper from 'react-native-deck-swiper';
-import { getAllUsers, getUserProfile, updateUserProfile, updateUserLikedBy } from '../../Firebase/firebaseHelper';
+import { getAllUsers, getUserProfile, updateUserProfile, updateUserLikedBy, checkMatch, createMatchNotification } from '../../Firebase/firebaseHelper';
 import { AuthContext } from '../../contexts/AuthContext';
 import { useNavigation } from '@react-navigation/native';
 import { swipeScreenStyles as styles } from '../../styles/HomeStyles';
@@ -78,6 +78,15 @@ const SwipeScreen = () => {
         await updateUserProfile(user.email, { likes: updatedLikes });
         await updateUserLikedBy(swipedUser.id, user.email, true);
       }
+      
+      const checkAndCreateMatch = async (currentUserId, likedUserId) => {
+        const isMatch = await checkMatch(currentUserId, likedUserId);
+        if (isMatch) {
+          await createMatchNotification(currentUserId, likedUserId);
+        }
+      };
+      
+      await checkAndCreateMatch(user.email, swipedUser.id);
       
       setCurrentIndex(cardIndex + 1);
     } catch (error) {
