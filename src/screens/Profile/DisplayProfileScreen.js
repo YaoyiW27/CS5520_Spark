@@ -91,6 +91,13 @@ const DisplayProfileScreen = ({ route }) => {
             </View>
 
             <View style={styles.infoContainer}>
+                {userProfile?.gender && (
+                    <View style={styles.infoItem}>
+                        <Text style={styles.label}>Gender:</Text>
+                        <Text style={styles.value}>{userProfile.gender}</Text>
+                    </View>
+                )}
+
                 {userProfile?.pronouns && (
                     <View style={styles.infoItem}>
                         <Text style={styles.label}>Pronouns:</Text>
