@@ -4,17 +4,32 @@ import {
   Text, 
   SafeAreaView, 
   TouchableOpacity,
-  TextInput 
+  TextInput,
+  Alert
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { forgetPassworScreenStyles as styles } from '../../styles/AuthStyles';
+import { sendPasswordResetEmail } from 'firebase/auth';
+import { auth } from '../../Firebase/firebaseSetup';
 
 const ForgotPasswordScreen = ({ navigation }) => {
   const [email, setEmail] = useState('');
 
   const handleSubmit = () => {
     if (email) {
-      navigation.navigate('VerifyEmail', { email });
+      sendPasswordResetEmail(auth, email)
+        .then(() => {
+          // email sent successfully
+          navigation.navigate('VerifyEmail', { email });
+        })
+        .catch((error) => {
+          // error occurred
+          const errorMessage = error.message;
+          console.error('Error sending password reset email:', errorMessage);
+          Alert.alert('Failed to send email, please check if your email address is correct.');
+        });
+    } else {
+      Alert.alert('Tip', 'Please enter your email address.');
     }
   };
 
@@ -36,12 +51,12 @@ const ForgotPasswordScreen = ({ navigation }) => {
         </View>
         <Text style={styles.forgetPasswordTitle}>Reset Password</Text>
         <Text style={styles.forgetPasswordSubtitle}>
-          Enter your email address and we'll send you instructions to reset your password.
+          Please enter your email address to receive a password reset link.
         </Text>
 
         <TextInput
           style={styles.forgetPasswordInput}
-          placeholder="Email"
+          placeholder="email"
           value={email}
           onChangeText={setEmail}
           keyboardType="email-address"
