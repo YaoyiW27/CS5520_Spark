@@ -378,8 +378,7 @@ export const deleteReminder = async (reminderId) => {
     }
 };
 
-// update reminder status
-export const updateReminderStatus = async (reminderId, status) => {
+
 // update reminder status
 export const updateReminderStatus = async (reminderId, reminderStatus) => {
     try {
