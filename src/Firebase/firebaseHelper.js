@@ -430,7 +430,7 @@ export const checkMatch = async (user1Id, user2Id) => {
     }
 };
 
-// 检查两个用户之间是否已经存在 match
+// check if two users have an existing match
 const checkExistingMatch = async (user1Id, user2Id) => {
     try {
         const matchesRef = collection(db, 'matches');
@@ -450,14 +450,14 @@ const checkExistingMatch = async (user1Id, user2Id) => {
     }
 };
 
-// 创建或删除 match
+// create or delete match
 export const handleMatch = async (user1Id, user2Id) => {
     try {
         const isMatched = await checkMatch(user1Id, user2Id);
         const existingMatch = await checkExistingMatch(user1Id, user2Id);
 
         if (isMatched && !existingMatch) {
-            // 如果匹配且不存在 match 记录，创建新的 match
+            // if matched and no match record, create new match
             const matchesRef = collection(db, 'matches');
             const timestamp = new Date().toISOString();
             
@@ -475,7 +475,7 @@ export const handleMatch = async (user1Id, user2Id) => {
                 }
             });
         } else if (!isMatched && existingMatch) {
-            // 如果不再匹配但存在 match 记录，删除该记录
+            // if not matched but there is a match record, delete the record
             await deleteDoc(doc(db, 'matches', existingMatch.id));
         }
     } catch (error) {
@@ -484,7 +484,7 @@ export const handleMatch = async (user1Id, user2Id) => {
     }
 };
 
-// 更新用户的 likes 列表时调用 handleMatch
+// update user likes list
 export const updateUserLikes = async (userId, likedUserId, isLiking) => {
     try {
         const userRef = doc(db, 'Users', userId);
@@ -502,10 +502,10 @@ export const updateUserLikes = async (userId, likedUserId, isLiking) => {
             
             await updateDoc(userRef, { likes });
             
-            // 处理 match 状态
+            // handle match status
             await handleMatch(userId, likedUserId);
             
-            // 更新对方的 likedBy 列表
+            // update the other user's likedBy list
             await updateUserLikedBy(likedUserId, userId, isLiking);
         }
     } catch (error) {
@@ -531,7 +531,7 @@ export const getMatchNotifications = async (userId) => {
             notifications.push({
                 id: doc.id,
                 ...doc.data(),
-                timestamp: new Date(doc.data().timestamp)  // 确保时间戳格式正确
+                timestamp: new Date(doc.data().timestamp)  // ensure timestamp format is correct
             });
         });
         
@@ -546,7 +546,7 @@ export const getMatchNotifications = async (userId) => {
 export const markNotificationAsRead = async (notificationId, userId) => {
     try {
         const notificationRef = doc(db, 'matches', notificationId);
-        // 先获取当前文档的数据
+        // get current document data
         const docSnap = await getDoc(notificationRef);
         if (docSnap.exists()) {
             const currentData = docSnap.data();
@@ -554,7 +554,7 @@ export const markNotificationAsRead = async (notificationId, userId) => {
                 ...currentData.isRead,
                 [userId]: true
             };
-            // 更新整个 isRead 对象
+            // update the whole isRead object
             await updateDoc(notificationRef, {
                 isRead: updatedIsRead
             });
@@ -563,4 +563,22 @@ export const markNotificationAsRead = async (notificationId, userId) => {
         console.error('Error marking notification as read:', error);
         throw error;
     }
+};
+
+// add date invitation notification
+export const addDateInvitation = async (senderEmail, receiverEmail, dateDetails) => {
+  try {
+    const notificationRef = collection(db, 'dateInvitations');
+    await addDoc(notificationRef, {
+      senderEmail,
+      receiverEmail,
+      dateDetails,
+      createdAt: new Date().toISOString(),
+      isRead: false,
+      //status: 'pending' // can be 'pending', 'accepted', 'declined'
+    });
+  } catch (error) {
+    console.error('Error adding date invitation:', error);
+    throw error;
+  }
 };

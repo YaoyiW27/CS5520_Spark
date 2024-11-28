@@ -12,6 +12,7 @@ import FilterScreen from '../screens/Discover/FilterScreen';
 import NotificationScreen from '../screens/Profile/DatePlanScreen';
 import SearchScreen from '../screens/Home/SearchScreen';
 import InboxScreen from '../screens/Profile/InboxScreen';
+import DateDetailsScreen from '../screens/Profile/DateDetailsScreen';
 const AppStack = createNativeStackNavigator();
 
 const AppStackNavigator = () => {
@@ -172,6 +173,20 @@ const AppStackNavigator = () => {
           headerShown: true,
           title: 'Inbox',
           headerTintColor: '#FF69B4',
+        }}
+      />
+
+      <AppStack.Screen 
+        name="DateDetails" 
+        component={DateDetailsScreen}
+        options={{ 
+          headerShown: true,
+          title: 'Date Invitation',
+          headerTintColor: '#FF69B4',
+          headerTitleStyle: {
+            color: '#FF69B4',
+            fontSize: 18,
+          },
         }}
       />
     </AppStack.Navigator>

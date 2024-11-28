@@ -22,7 +22,8 @@ import {
   getUserReminders, 
   deleteReminder as deleteReminderFromDB,
   getMatchNotifications,
-  updateReminderStatus
+  updateReminderStatus,
+  addDateInvitation
 } from '../../Firebase/firebaseHelper';
 import { datePlanScreenStyles as styles } from '../../styles/ProfileStyles';
 import { useFocusEffect } from '@react-navigation/native';
@@ -153,6 +154,18 @@ const DatePlanScreen = ({ route, navigation }) => {
       };
 
       await addReminder(user.email, datePlanData);
+      
+      await addDateInvitation(
+        user.email,
+        matchInfo.userId,
+        {
+          senderName: user.displayName || user.email,
+          location: location,
+          date: date.toISOString(),
+          //alertType: alertType
+        }
+      );
+
       const userReminders = await getUserReminders(user.email);
       setDatePlans(userReminders);
       hideModal();

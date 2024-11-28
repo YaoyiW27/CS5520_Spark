@@ -8,12 +8,16 @@ import {
     RefreshControl 
 } from 'react-native';
 import { AuthContext } from '../../contexts/AuthContext';
+import { db } from '../../Firebase/firebaseSetup';
 import { getMatchNotifications, markNotificationAsRead } from '../../Firebase/firebaseHelper';
 import { useNavigation } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
+import { collection, query, where, onSnapshot, doc, updateDoc } from 'firebase/firestore';
+import { format } from 'date-fns';
 
 const InboxScreen = () => {
     const [notifications, setNotifications] = useState([]);
+    const [dateInvitations, setDateInvitations] = useState([]);
     const [refreshing, setRefreshing] = useState(false);
     const { user } = useContext(AuthContext);
     const navigation = useNavigation();
@@ -106,33 +110,101 @@ const InboxScreen = () => {
         );
     };
 
+    useEffect(() => {
+        let unsubscribeFunction = null;
+
+        const setupDateInvitationsListener = async () => {
+            if (!user?.email) return;
+            
+            try {
+                const invitationsRef = collection(db, 'dateInvitations');
+                const q = query(
+                    invitationsRef,
+                    where('receiverEmail', '==', user.email),
+                    where('status', 'in', [null, 'accepted'])
+                );
+                
+                unsubscribeFunction = onSnapshot(q, (snapshot) => {
+                    const invitations = snapshot.docs.map(doc => ({
+                        id: doc.id,
+                        ...doc.data()
+                    }));
+                    setDateInvitations(invitations);
+                });
+            } catch (error) {
+                console.error('Error fetching date invitations:', error);
+            }
+        };
+
+        setupDateInvitationsListener();
+
+        return () => {
+            if (unsubscribeFunction) {
+                unsubscribeFunction();
+            }
+        };
+    }, [user]);
+
+    const handleDateInvitationPress = async (invitation) => {
+        try {
+            // 导航到约会详情页面，传递完整的invitation对象
+            navigation.navigate('DateDetails', {
+                invitation: invitation  // 传递整个invitation对象，而不仅仅是dateDetails
+            });
+        } catch (error) {
+            console.error('Error handling date invitation:', error);
+        }
+    };
+
+    const renderDateInvitation = ({ item }) => (
+        <TouchableOpacity 
+            style={[
+                styles.notificationItem, 
+                !item.isRead && styles.unreadItem
+            ]}
+            onPress={() => handleDateInvitationPress(item)}
+        >
+            <View style={styles.notificationContent}>
+                <Ionicons 
+                    name="calendar" 
+                    size={24} 
+                    color="#FF69B4" 
+                    style={styles.icon}
+                />
+                <View style={styles.textContainer}>
+                    <Text style={styles.matchText}>
+                        Date Invitation from {item.dateDetails.senderName}
+                    </Text>
+                    <Text style={styles.messageText}>
+                        {`Date: ${format(new Date(item.dateDetails.date), 'PPpp')}\nLocation: ${item.dateDetails.location}`}
+                    </Text>
+                    {item.status === 'accepted' && (
+                        <Text style={styles.statusText}>Accepted</Text>
+                    )}
+                </View>
+                {!item.isRead && <View style={styles.unreadDot} />}
+            </View>
+        </TouchableOpacity>
+    );
+
     return (
         <View style={styles.container}>
-            {notifications.length > 0 ? (
-                <FlatList
-                    data={notifications}
-                    renderItem={renderNotification}
-                    keyExtractor={item => item.id}
-                    refreshControl={
-                        <RefreshControl
-                            refreshing={refreshing}
-                            onRefresh={onRefresh}
-                            tintColor="#FF69B4"
-                        />
-                    }
-                />
-            ) : (
-                <View style={styles.emptyContainer}>
-                    <Ionicons 
-                        name="heart-outline" 
-                        size={50} 
-                        color="#666"
+            <FlatList
+                data={[...notifications, ...dateInvitations]}
+                renderItem={({ item }) => 
+                    item.dateDetails 
+                        ? renderDateInvitation({ item })
+                        : renderNotification({ item })
+                }
+                keyExtractor={item => item.id}
+                refreshControl={
+                    <RefreshControl
+                        refreshing={refreshing}
+                        onRefresh={onRefresh}
+                        tintColor="#FF69B4"
                     />
-                    <Text style={styles.emptyText}>
-                        No matches yet.{'\n'}Keep swiping!
-                    </Text>
-                </View>
-            )}
+                }
+            />
         </View>
     );
 };
@@ -195,6 +267,12 @@ const styles = StyleSheet.create({
         textAlign: 'center',
         lineHeight: 24,
     },
+    statusText: {
+        fontSize: 12,
+        color: '#4CAF50',
+        marginTop: 4,
+        fontStyle: 'italic'
+    }
 });
 
 export default InboxScreen;

@@ -10,7 +10,7 @@ import PostScreen from '../screens/Post/PostScreen';
 import ProfileScreen from '../screens/Profile/ProfileScreen';
 import { Ionicons } from '@expo/vector-icons';
 import { onSnapshot, collection, query, where } from 'firebase/firestore';
-import { db } from '../Firebase/firebaseSetup'; // 确保已导入 db
+import { db } from '../Firebase/firebaseSetup'; // ensure db is imported
 
 const Tab = createBottomTabNavigator();
 
@@ -21,7 +21,7 @@ function BottomTabNavigator() {
   useEffect(() => {
     if (!user?.email) return;
 
-    // 创建对通知集合的实时监听
+    // create a realtime listener for the notifications collection
     const notificationsRef = collection(db, 'matches');
     const q = query(
       notificationsRef,
@@ -36,7 +36,7 @@ function BottomTabNavigator() {
       setHasUnreadMessages(hasUnread);
     });
 
-    // 清理监听器
+    // clean up the listener
     return () => unsubscribe();
   }, [user]);
 
