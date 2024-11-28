@@ -91,17 +91,25 @@ function BottomTabNavigator() {
       <Tab.Screen 
         name="Profile" 
         component={ProfileScreen}
-        options={{
+        options={({ navigation }) => ({
           headerTitle: 'Profile',
           headerTitleStyle: {
             color: '#FF69B4',
             fontSize: 18,
           },
+          headerRight: () => (
+            <TouchableOpacity
+              onPress={() => navigation.navigate('InboxScreen')}
+              style={{ marginRight: 15 }}
+            >
+              <Ionicons name="mail" size={24} color="#FF69B4" />
+            </TouchableOpacity>
+          ),
           tabBarIcon: ({ color, size }) => (
             <Ionicons name="person" size={size} color={color} />
           ),
           tabBarAccessibilityLabel: 'Profile Tab',
-        }}
+        })}
       />
     </Tab.Navigator>
   );

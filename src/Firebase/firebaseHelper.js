@@ -39,6 +39,7 @@ export const createUserProfile = async (email, userData) => {
             favoriteMusic: userData.favoriteMusic || [],
             aboutMe: userData.aboutMe || '',
             likes: userData.likes || [],
+            likedBy: userData.likedBy || [],
         });
         return true;
     } catch (error) {
@@ -302,7 +303,7 @@ function degreesToRadians(degrees) {
     return degrees * (Math.PI/180);
 }
 
-// 添加新的提醒到 Firestore
+// add reminder
 export const addReminder = async (userEmail, reminderData) => {
     try {
         const remindersRef = collection(db, 'reminders');
@@ -320,7 +321,7 @@ export const addReminder = async (userEmail, reminderData) => {
     }
 };
 
-// 获取用户的所有提醒
+// get user reminders
 export const getUserReminders = async (userEmail) => {
     try {
         const remindersRef = collection(db, 'reminders');
@@ -343,7 +344,7 @@ export const getUserReminders = async (userEmail) => {
     }
 };
 
-// 删除提醒
+// delete reminder
 export const deleteReminder = async (reminderId) => {
     try {
         const reminderRef = doc(db, 'reminders', reminderId);
@@ -354,13 +355,37 @@ export const deleteReminder = async (reminderId) => {
     }
 };
 
-// 更新提醒状态
+// update reminder status
 export const updateReminderStatus = async (reminderId, status) => {
     try {
         const reminderRef = doc(db, 'reminders', reminderId);
         await updateDoc(reminderRef, { status });
     } catch (error) {
         console.error('Error updating reminder status:', error);
+        throw error;
+    }
+};
+
+// update likedBy list
+export const updateUserLikedBy = async (userId, likedByUserId, isLiking) => {
+    try {
+        const userRef = doc(db, 'Users', userId);
+        const userDoc = await getDoc(userRef);
+        
+        if (userDoc.exists()) {
+            const userData = userDoc.data();
+            let likedBy = userData.likedBy || [];
+            
+            if (isLiking && !likedBy.includes(likedByUserId)) {
+                likedBy.push(likedByUserId);
+            } else if (!isLiking) {
+                likedBy = likedBy.filter(id => id !== likedByUserId);
+            }
+            
+            await updateDoc(userRef, { likedBy });
+        }
+    } catch (error) {
+        console.error('Error updating likedBy list:', error);
         throw error;
     }
 };

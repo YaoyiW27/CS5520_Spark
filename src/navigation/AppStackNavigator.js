@@ -11,6 +11,7 @@ import DisplayProfileScreen from '../screens/Profile/DisplayProfileScreen';
 import FilterScreen from '../screens/Discover/FilterScreen';
 import NotificationScreen from '../screens/Profile/NotificationScreen';
 import SearchScreen from '../screens/Home/SearchScreen';
+import InboxScreen from '../screens/Profile/InboxScreen';
 const AppStack = createNativeStackNavigator();
 
 const AppStackNavigator = () => {
@@ -160,6 +161,16 @@ const AppStackNavigator = () => {
         options={{
           headerShown: true,
           title: 'Search',
+          headerTintColor: '#FF69B4',
+        }}
+      />
+
+      <AppStack.Screen 
+        name="InboxScreen" 
+        component={InboxScreen}
+        options={{ 
+          headerShown: true,
+          title: 'Inbox',
           headerTintColor: '#FF69B4',
         }}
       />

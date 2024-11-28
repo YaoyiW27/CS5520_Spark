@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useContext } from 'react';
 import { View, Text, Image, StyleSheet, ScrollView, TouchableOpacity, Alert } from 'react-native';
-import { getUserProfile, updateUserProfile } from '../../Firebase/firebaseHelper';
+import { getUserProfile, updateUserProfile, updateUserLikedBy } from '../../Firebase/firebaseHelper';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { AuthContext } from '../../contexts/AuthContext';
 import { displayProfileScreenStyles as styles } from '../../styles/ProfileStyles';
@@ -40,8 +40,10 @@ const DisplayProfileScreen = ({ route }) => {
             let updatedLikes;
             if (isLiked) {
                 updatedLikes = likes.filter(id => id !== userId);
+                await updateUserLikedBy(userId, user.email, false);
             } else {
                 updatedLikes = [...likes, userId];
+                await updateUserLikedBy(userId, user.email, true);
             }
             
             await updateUserProfile(user.email, { likes: updatedLikes });
