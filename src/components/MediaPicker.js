@@ -29,7 +29,7 @@ const MediaPicker = ({ onMediaSelect }) => {
 
     try {
       const result = await ImagePicker.launchImageLibraryAsync({
-        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        mediaTypes: 'images',  // 修改这里
         allowsEditing: true,
         aspect: [4, 3],
         quality: 0.2,
@@ -57,7 +57,7 @@ const MediaPicker = ({ onMediaSelect }) => {
 
     try {
       const result = await ImagePicker.launchImageLibraryAsync({
-        mediaTypes: ImagePicker.MediaTypeOptions.Videos,
+        mediaTypes: 'videos',  // 修改这里
         allowsEditing: true,
         aspect: [16, 9],
         quality: 0.5,
@@ -139,6 +139,5 @@ const MediaPicker = ({ onMediaSelect }) => {
     </View>
   );
 };
-
 
 export default MediaPicker;

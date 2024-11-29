@@ -35,29 +35,43 @@ export const createPost = async (userId, content, mediaFile = null, onProgress) 
                 const safeUserId = userId.replace(/\./g, '_');
                 const timestamp = Date.now();
                 const randomString = Math.random().toString(36).substring(7);
-                const filename = `posts/${safeUserId}/${timestamp}-${randomString}`;
-                const storageRef = ref(storage, filename);
-
-                console.log('Fetching file from URI...');
+                
+                // 获取文件类型
                 const response = await fetch(mediaFile);
                 const blob = await response.blob();
+                const fileType = blob.type;
+                
+                // 判断是图片还是视频
+                const isVideo = fileType.startsWith('video/');
+                const isImage = fileType.startsWith('image/');
+                
+                // 设置文件大小限制和有效类型
+                const maxSize = isVideo ? 50 * 1024 * 1024 : 5 * 1024 * 1024; // 视频50MB，图片5MB
+                const validTypes = isVideo ? 
+                    ['video/mp4', 'video/quicktime'] : 
+                    ['image/jpeg', 'image/png', 'image/gif'];
+
                 console.log('Blob created:', {
                     size: blob.size,
-                    type: blob.type
+                    type: fileType
                 });
 
-                if (blob.size > 5 * 1024 * 1024) {
-                    throw new Error('File size exceeds 5MB limit');
+                if (blob.size > maxSize) {
+                    throw new Error(`File size exceeds ${isVideo ? '50MB' : '5MB'} limit`);
                 }
 
-                const validTypes = ['image/jpeg', 'image/png', 'image/gif'];
-                if (!validTypes.includes(blob.type)) {
-                    throw new Error('Unsupported file type. Please upload JPG, PNG or GIF images.');
+                if (!validTypes.includes(fileType)) {
+                    throw new Error(`Unsupported file type. Please upload ${isVideo ? 'MP4 or MOV videos' : 'JPG, PNG or GIF images'}.`);
                 }
+
+                // 根据文件类型设置存储路径
+                const filePrefix = isVideo ? 'videos' : 'images';
+                const filename = `posts/${safeUserId}/${filePrefix}/${timestamp}-${randomString}`;
+                const storageRef = ref(storage, filename);
 
                 console.log('Creating upload task...');
                 const uploadTask = uploadBytesResumable(storageRef, blob, {
-                    contentType: blob.type,
+                    contentType: fileType,
                 });
 
                 mediaUrl = await new Promise((resolve, reject) => {
@@ -70,7 +84,7 @@ export const createPost = async (userId, content, mediaFile = null, onProgress) 
                         },
                         (error) => {
                             console.error('Upload failed:', error);
-                            reject(new Error('Failed to upload image. Please try again.'));
+                            reject(new Error('Failed to upload media. Please try again.'));
                         },
                         async () => {
                             try {
@@ -79,7 +93,7 @@ export const createPost = async (userId, content, mediaFile = null, onProgress) 
                                 resolve(downloadUrl);
                             } catch (error) {
                                 console.error('Failed to get download URL:', error);
-                                reject(new Error('Failed to process uploaded image.'));
+                                reject(new Error('Failed to process uploaded media.'));
                             }
                         }
                     );
@@ -87,18 +101,19 @@ export const createPost = async (userId, content, mediaFile = null, onProgress) 
 
             } catch (error) {
                 console.error('File upload error:', error);
-                throw new Error(error.message || 'Failed to upload image');
+                throw new Error(error.message || 'Failed to upload media');
             }
         }
 
         if (!content && !mediaUrl) {
-            throw new Error('Post must contain either text or image');
+            throw new Error('Post must contain either text or media');
         }
 
         const postData = {
             userId: userId.trim(),
             content: content ? content.trim() : '',
             media: mediaUrl ? [mediaUrl] : [],
+            mediaType: mediaUrl ? (mediaUrl.includes('/videos/') ? 'video' : 'image') : null,
             createdAt: serverTimestamp(),
             likesCount: 0,
             likedBy: [],
