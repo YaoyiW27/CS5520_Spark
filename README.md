@@ -12,8 +12,7 @@ Spark is a relationship app designed for meaningful connections beyond swipes. U
 - **Interactive map:** Users can see the map of their matches on the app, and filter matches by location and interests.
 - **Social Post:** Users can share their moments on the app, and engage with others' moments.
 - **Profile:** Users can customize their profile, and see others' profiles.
-- **Notification:** Users can create personalized notifications by setting custom descriptions, dates, and times to remind themselves of important moments or planned interactions.
- 
+- **Plan Date and Reminder:** Users can plan dates with their matches, and set reminders for planned interactions.
 ## Database: Firebase Collections 📊
 ### Firestore Collections
 - **Users:** Stores user profile information, including name, photo, bio, and interests.
@@ -34,6 +33,7 @@ Spark is a relationship app designed for meaningful connections beyond swipes. U
      - `favoriteMusic`: user's favorite music.
      - `aboutMe`: user's introduction.
      - `likes`: Array of user's likes.
+     - `likedBy`: Array of user's ID who liked the user.
    - **CRUD Operations:**
      - **Create**: create a new user.
      - **Read**: read user profile.
@@ -63,19 +63,50 @@ Spark is a relationship app designed for meaningful connections beyond swipes. U
           - `createComment`: create a new comment.
           - `readComment`: read comment information.
 
-- **Reminders:** Stores user notification reminders with customizable descriptions and schedules.
+- **Reminders:** Stores user notification reminders with customizable date plan.
    - **Fields:**
      - `userEmail`: email of the user who created the reminder.
      - `description`: custom reminder message.
      - `date`: scheduled date and time for the reminder.
-     - `status`: current status of the reminder.
+     - `reminderStatus`: current status of the reminder.
      - `createdAt`: timestamp when the reminder was created.
+     - `alertType`: type of the reminder.
+     - `event`: details of the event.
+     - `location`: location of the event.
+     - `matchId`: ID of the match.
+     - `matchName`: name of the match.
    - **CRUD Operations:**
-     - **Create**: create a new reminder.
+     - **Create**: create a new date plan reminder.
      - **Read**: read reminder information.
      - **Update**: update reminder status or details.
      - **Delete**: delete reminder.
 
+- **Matches:** Stores user matches information, including match's ID, name, isRead status.
+   - **Fields:**
+     - `users`: Array of user's ID who are matched.
+     - `user1Name`: name of user 1.
+     - `user2Name`: name of user 2.
+     - `timestamp`: timestamp when the match was created.
+     - `isRead`: mapping, including two boolean values representing whether user 1 and user 2 have read the match.
+   - **CRUD Operations:**
+     - **Create**: create a new match.
+     - **Read**: read match information.
+     - **Update**: update match's isRead status.
+     - **Delete**: delete match when user unmatch.
+
+- **DateInvitations:** Stores user date invitation information, including sender, receiver, date details.
+   - **Fields:**
+     - `senderEmail`: email of the sender.
+     - `receiverEmail`: email of the receiver.
+     - `createdAt`: timestamp when the invitation was created.
+     - `date`: scheduled date and time for the invitation.
+     - `location`: location of the invitation.
+     - `event`: details of the event.
+     - `senderName`: name of the sender.
+   - **CRUD Operations:**
+     - **Create**: create a new date invitation.
+     - **Read**: read invitation information.
+     - **Update**: update invitation read status.
 
 ### Firestore Storage Structure
 - **Posts Folder** Stores user posts information, including photos and videos.
@@ -98,7 +129,7 @@ Spark is a relationship app designed for meaningful connections beyond swipes. U
 - [Yundi Tao](https://github.com/yundii)
 - [Yaoyi Wang](https://github.com/YaoyiW27)
 ### Contribution Statements:
-- Yundi Tao: Set up Firebase, including Firestore database configuration and initial CRUD operation connections. Write profile related functions and pages, including profile page, edit profile page, profile details display page, connect them to the database. write home page, including swipe screen and search screen. Write Reminder related functions and page, connect them to the database.
+- Yundi Tao: Set up Firebase, including Firestore database configuration and initial CRUD operation connections. Write profile related functions and pages, including profile page, edit profile page, profile details display page, connect them to the database. write home page, including swipe screen and search screen. Write Reminder related functions and page, including date plan page, inbox page and date details page, connect them to the database.
 - Yaoyi Wang: Set up the initial project, created the initial project structure. Write sign up, login, and logout functions and pages, connect them to the database. Write Post related functions and pages, including post display page, create post page, connect them to the database. Write map related functions and pages, including map display page, filter function, connect them to the database.
 - To be done: chat pages and functions, styling of all pages, light and dark mode.
 
@@ -201,6 +232,16 @@ service firebase.storage {
 }
 ```
 
+### Firebase Indexes
+The following indexes are configured in Firebase to optimize query performance:
+```plaintext
+- **matches collection:**
+  - Compound index on `users` array (ASC), `timestamp` (DESC), `_name_` (DESC)
+  
+- **reminders collection:**  
+  - Compound index on `userEmail` (ASC), `date` (DESC), `_name_` (DESC)
+```
+
 ## Version Control and Collaboration
 All team members have equal access to the project repository, created branches for different features, and can push their changes to the main branch after review. Each member is responsible for creating separate branches for individual features or bug fixes, following the GitHub Flow workflow. Regular commits and pulls are made to ensure that the main branch stays up-to-date and conflicts are minimized.
 
@@ -219,5 +260,9 @@ If any contributions were not directly recorded in GitHub commits (e.g., discuss
 	  Integrated Lottie animations to enhance the styling and interactivity of the login screen.
   5. Profile Photo Wall Enhancement
 	  Redesigned the photo wall on the profile details page for a better user experience and visual appeal.
-  6. Mutual Like Notification Feature
-	  Added functionality where, upon mutual liking between two users, a notification is pushed suggesting a time and location for a potential meeting.
+  6. Mutual Like Inbox Feature
+	  when two users mutual like each other, a message is added to the inbox of both users. 
+  7. Date Invitation Inbox Feature
+	  when user receive a date invitation, a message is added to the inbox of the user, user can navigate to the date details page.
+  8. Date Plan Reminder Feature
+	  when users plan a date with match, they can set a customizable reminder for the date and time, and the notification will appear at the time which users set.
