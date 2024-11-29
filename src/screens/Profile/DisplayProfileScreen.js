@@ -35,10 +35,10 @@ const DisplayProfileScreen = ({ route }) => {
     const handleLike = async () => {
         try {
             if (isLiked) {
-                // 取消点赞
+                
                 await updateUserLikes(user.email, userId, false);
             } else {
-                // 添加点赞
+                
                 await updateUserLikes(user.email, userId, true);
             }
             setIsLiked(!isLiked);
@@ -109,8 +109,11 @@ const DisplayProfileScreen = ({ route }) => {
 
                 {userProfile?.city && userProfile?.country && (
                     <View style={styles.infoItem}>
-                        <Text style={styles.label}>Location:</Text>
-                        <Text style={styles.value}>{`${userProfile.city}, ${userProfile.country}`}</Text>
+                        <Text style={styles.label}>Location</Text>
+                        <View style={styles.locationContainer}>
+                            <Icon name="map-marker" size={20} style={styles.locationIcon} />
+                            <Text style={styles.value}>{`${userProfile.city}, ${userProfile.country}`}</Text>
+                        </View>
                     </View>
                 )}
 
@@ -123,8 +126,14 @@ const DisplayProfileScreen = ({ route }) => {
 
                 {userProfile?.personalityTags && userProfile.personalityTags.length > 0 && (
                     <View style={styles.infoItem}>
-                        <Text style={styles.label}>Personality Tags:</Text>
-                        <Text style={styles.value}>{userProfile.personalityTags.join(', ')}</Text>
+                        <Text style={styles.label}>Personality Tags</Text>
+                        <View style={styles.tagContainer}>
+                            {userProfile.personalityTags.map((tag, index) => (
+                                <View key={index} style={styles.tag}>
+                                    <Text style={styles.tagText}>{tag}</Text>
+                                </View>
+                            ))}
+                        </View>
                     </View>
                 )}
 
@@ -150,9 +159,9 @@ const DisplayProfileScreen = ({ route }) => {
                 )}
 
                 {userProfile?.aboutMe && (
-                    <View style={styles.infoItem}>
-                        <Text style={styles.label}>About Me:</Text>
-                        <Text style={styles.value}>{userProfile.aboutMe}</Text>
+                    <View style={styles.aboutMeContainer}>
+                        <Text style={styles.label}>About Me</Text>
+                        <Text style={styles.aboutMeText}>{userProfile.aboutMe}</Text>
                     </View>
                 )}
             </View>
