@@ -8,7 +8,6 @@ import {
   Modal,
   TouchableWithoutFeedback,
   Keyboard,
-  Platform,
 } from 'react-native';
 import { Picker } from '@react-native-picker/picker';
 import { Ionicons } from '@expo/vector-icons';
@@ -48,6 +47,7 @@ const DatePlanScreen = ({ route, navigation }) => {
   const { user } = useContext(AuthContext);
   const [showMatchPicker, setShowMatchPicker] = useState(false);
   const [showAlertPicker, setShowAlertPicker] = useState(false);
+  const [event, setEvent] = useState('');
 
   const alertOptions = [
     { label: 'None', value: 'none' },
@@ -84,6 +84,7 @@ const DatePlanScreen = ({ route, navigation }) => {
     setModalVisible(false);
     setSelectedMatch('');
     setLocation('');
+    setEvent('');
     setDate(new Date());
     setAlertType('none');
   };
@@ -129,7 +130,7 @@ const DatePlanScreen = ({ route, navigation }) => {
   };
 
   const saveDatePlan = async () => {
-    if (!selectedMatch || !location.trim()) {
+    if (!selectedMatch || !location.trim() || !event.trim()) {
       alert('Please fill in all fields');
       return;
     }
@@ -145,24 +146,24 @@ const DatePlanScreen = ({ route, navigation }) => {
 
       const userProfile = await getUserProfile(user.email);
       
-      // 保存提醒到本地
       const datePlanData = {
         matchId: selectedMatch,
         matchName: matchInfo.name,
         location: location,
+        event: event,
         date: date.toString(),
         alertType: alertType,
         reminderStatus: 'pending'
       };
       await addReminder(user.email, datePlanData);
       
-      // 发送约会邀请给对方
       await addDateInvitation(
         user.email,
         matchInfo.userId,
         {
           senderName: userProfile.username || user.email,
           location: location,
+          event: event,
           date: date.toString()
         }
       );
@@ -255,7 +256,7 @@ const DatePlanScreen = ({ route, navigation }) => {
 
   useFocusEffect(
     React.useCallback(() => {
-      // 页面获得焦点时刷新数据
+      
       const refreshData = async () => {
         if (user?.email) {
           const userReminders = await getUserReminders(user.email);
@@ -265,7 +266,7 @@ const DatePlanScreen = ({ route, navigation }) => {
 
       refreshData();
       
-      // 设置定时刷新
+     
       const intervalId = setInterval(refreshData, 30000);
 
       return () => clearInterval(intervalId);
@@ -301,6 +302,9 @@ const DatePlanScreen = ({ route, navigation }) => {
               <View style={styles.dateContent}>
                 <Text style={styles.matchName}>
                   Date with {item.matchName}
+                </Text>
+                <Text style={styles.location}>
+                  Event: {item.event}
                 </Text>
                 <Text style={styles.location}>
                   Location: {item.location}
@@ -352,6 +356,16 @@ const DatePlanScreen = ({ route, navigation }) => {
                     {selectedMatch ? matches.find(m => m.id === selectedMatch)?.name : 'Select a match'}
                   </Text>
                 </TouchableOpacity>
+
+                <View style={styles.inputContainer}>
+                  <Text style={styles.inputLabel}>Event</Text>
+                  <TextInput
+                    style={styles.input}
+                    placeholder="Enter event (e.g., Movie, Dinner)"
+                    value={event}
+                    onChangeText={setEvent}
+                  />
+                </View>
 
                 <Text style={styles.inputLabel}>Date Location</Text>
                 <TextInput

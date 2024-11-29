@@ -204,7 +204,7 @@ const InboxScreen = () => {
                             Date Invitation from {item.dateDetails.senderName}
                         </Text>
                         <Text style={styles.messageText}>
-                            {`Date: ${format(new Date(item.dateDetails.date), 'PPpp')}\nLocation: ${item.dateDetails.location}`}
+                            {`Event: ${item.dateDetails.event}\nDate: ${format(new Date(item.dateDetails.date), 'PPpp')}\nLocation: ${item.dateDetails.location}`}
                         </Text>
                     </View>
                     {isUnread && <View style={styles.unreadDot} />}

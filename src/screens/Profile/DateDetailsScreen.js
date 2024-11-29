@@ -26,6 +26,9 @@ const DateDetailsScreen = ({ route }) => {
                         From: {invitation.dateDetails.senderName}
                     </Text>
                     <Text style={styles.location}>
+                        Event: {invitation.dateDetails.event}
+                    </Text>
+                    <Text style={styles.location}>
                         Location: {invitation.dateDetails.location}
                     </Text>
                     <Text style={styles.dateTime}>
