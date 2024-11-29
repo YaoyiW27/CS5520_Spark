@@ -325,7 +325,6 @@ export const addReminder = async (userEmail, reminderData) => {
             location: reminderData.location,
             date: reminderData.date,
             alertType: reminderData.alertType,
-            notificationId: reminderData.notificationId,
             reminderStatus: 'pending',
             createdAt: new Date().toISOString()
         });
@@ -569,10 +568,15 @@ export const addDateInvitation = async (senderEmail, receiverEmail, dateDetails)
     await addDoc(notificationRef, {
       senderEmail,
       receiverEmail,
-      dateDetails,
+      dateDetails: {
+        senderName: dateDetails.senderName,
+        location: dateDetails.location,
+        date: dateDetails.date
+      },
       createdAt: new Date().toISOString(),
-      isRead: false,
-      //status: 'pending' // can be 'pending', 'accepted', 'declined'
+      isRead: {
+        [receiverEmail]: false
+      }
     });
   } catch (error) {
     console.error('Error adding date invitation:', error);

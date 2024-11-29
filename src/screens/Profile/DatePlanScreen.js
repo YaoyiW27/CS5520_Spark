@@ -23,7 +23,8 @@ import {
   deleteReminder as deleteReminderFromDB,
   getMatchNotifications,
   updateReminderStatus,
-  addDateInvitation
+  addDateInvitation,
+  getUserProfile
 } from '../../Firebase/firebaseHelper';
 import { datePlanScreenStyles as styles } from '../../styles/ProfileStyles';
 import { useFocusEffect } from '@react-navigation/native';
@@ -104,7 +105,7 @@ const DatePlanScreen = ({ route, navigation }) => {
     fetchMatches();
   }, [user]);
 
-  const scheduleNotification = async (matchName, location, dateTime, alertTime) => {
+  const scheduleNotification = async (matchName, location, alertTime) => {
     if (!alertTime) return null;
     
     const now = new Date();
@@ -136,33 +137,33 @@ const DatePlanScreen = ({ route, navigation }) => {
     try {
       const matchInfo = matches.find(m => m.id === selectedMatch);
       const alertTime = getAlertTime(date, alertType);
-      const notificationId = await scheduleNotification(
+      await scheduleNotification(
         matchInfo.name,
         location,
-        date,
         alertTime
       );
 
+      const userProfile = await getUserProfile(user.email);
+      
+      // 保存提醒到本地
       const datePlanData = {
         matchId: selectedMatch,
         matchName: matchInfo.name,
         location: location,
-        date: date.toISOString(),
+        date: date.toString(),
         alertType: alertType,
-        notificationId: notificationId,
         reminderStatus: 'pending'
       };
-
       await addReminder(user.email, datePlanData);
       
+      // 发送约会邀请给对方
       await addDateInvitation(
         user.email,
         matchInfo.userId,
         {
-          senderName: user.displayName || user.email,
+          senderName: userProfile.username || user.email,
           location: location,
-          date: date.toISOString(),
-          //alertType: alertType
+          date: date.toString()
         }
       );
 
@@ -182,38 +183,6 @@ const DatePlanScreen = ({ route, navigation }) => {
     }
   }, [route.params?.showModal]);
 
-  useEffect(() => {
-    const loadReminders = async () => {
-      if (user?.email) {
-        try {
-          const userReminders = await getUserReminders(user.email);
-          const now = new Date();
-          
-          userReminders.forEach(reminder => {
-            if (reminder.reminderStatus === 'pending') {
-              if (reminder.alertType === 'none') {
-                const reminderDate = new Date(reminder.date);
-                if (now > reminderDate) {
-                  updateReminderStatus(reminder.id, 'completed');
-                }
-              } else if (reminder.notificationId) {
-                const alertTime = getAlertTime(new Date(reminder.date), reminder.alertType);
-                if (alertTime && now > alertTime) {
-                  updateReminderStatus(reminder.id, 'completed');
-                }
-              }
-            }
-          });
-          
-          setDatePlans(userReminders);
-        } catch (error) {
-          console.error('Error loading reminders:', error);
-        }
-      }
-    };
-    
-    loadReminders();
-  }, [user]);
 
   const handleDeleteReminder = async (reminderId) => {
     try {
@@ -248,14 +217,11 @@ const DatePlanScreen = ({ route, navigation }) => {
     reminders.forEach(reminder => {
       if (reminder.reminderStatus === 'pending') {
         if (reminder.alertType === 'none') {
-          const reminderDate = new Date(reminder.date);
-          if (now > reminderDate) {
             updates.push({
               id: reminder.id,
               status: 'completed'
             });
-          }
-        } else if (reminder.notificationId) {
+        } else  {
           // For reminders with notifications, check if notification time has passed
           const alertTime = getAlertTime(new Date(reminder.date), reminder.alertType);
           if (alertTime && now > alertTime) {
@@ -300,7 +266,7 @@ const DatePlanScreen = ({ route, navigation }) => {
       refreshData();
       
       // 设置定时刷新
-      const intervalId = setInterval(refreshData, 60000);
+      const intervalId = setInterval(refreshData, 30000);
 
       return () => clearInterval(intervalId);
     }, [user])
