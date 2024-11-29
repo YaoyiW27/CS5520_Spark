@@ -22,10 +22,12 @@ Spark is a relationship app designed for meaningful connections beyond swipes. U
      - `email`: user's email.
      - `profilePhoto`: user's profile photo URL.
      - `photowall`: Array of user's photo wall, including multiple photos URL.
+     - `age`: user's age.
      - `pronouns`: user's pronouns.
-     - `birthday`: user's birthday.
+     - `gender`: user's gender.
      - `occupation`: user's occupation.
      - `city`: user's city.
+     - `country`: user's country.
      - `hobbies&interests`: user's hobbies and interests.
      - `personalityTags`: Array of user's personality tags.
      - `favoriteBooks`: user's favorite books.
@@ -43,7 +45,7 @@ Spark is a relationship app designed for meaningful connections beyond swipes. U
    - **Fields:**
      - `userId`: user's ID who posted the post.
      - `postId`: unique identifier for each post.
-     - `content`: post's text.
+     - `comments`: post's text.
      - `media`: Array of post's photo and video URL.
      - `createdAt`: post's creation time.
      - `likesCount`: post's likes count number.
@@ -59,6 +61,8 @@ Spark is a relationship app designed for meaningful connections beyond swipes. U
           - `userId`: user's ID who commented the post.
           - `content`: comment's text.
           - `createdAt`: comment's creation time.
+          - `userAvatar`: user's avatar.
+          - `username`: commented user's name
         - **CRUD Operations:**
           - `createComment`: create a new comment.
           - `readComment`: read comment information.
