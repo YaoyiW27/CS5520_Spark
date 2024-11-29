@@ -323,6 +323,7 @@ export const addReminder = async (userEmail, reminderData) => {
             matchId: reminderData.matchId,
             matchName: reminderData.matchName,
             location: reminderData.location,
+            event: reminderData.event,
             date: reminderData.date,
             alertType: reminderData.alertType,
             reminderStatus: 'pending',
@@ -571,6 +572,7 @@ export const addDateInvitation = async (senderEmail, receiverEmail, dateDetails)
       dateDetails: {
         senderName: dateDetails.senderName,
         location: dateDetails.location,
+        event: dateDetails.event,
         date: dateDetails.date
       },
       createdAt: new Date().toISOString(),

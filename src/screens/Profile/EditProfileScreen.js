@@ -17,6 +17,28 @@ import { updateUserProfile, getUserProfile, updatePhotoWall } from '../../Fireba
 import * as ImagePicker from 'expo-image-picker';
 import { Ionicons } from '@expo/vector-icons';
 import { editProfileScreenStyles as styles } from '../../styles/ProfileStyles';
+import TagSelector from '../../components/TagSelector';
+
+
+const HOBBY_SUGGESTIONS = [
+  'Reading', 'Travel', 'Photography', 'Cooking', 'Gaming',
+  'Music', 'Sports', 'Art', 'Movies', 'Dancing'
+];
+
+const PERSONALITY_SUGGESTIONS = [
+  'Outgoing', 'Creative', 'Adventurous', 'Calm', 'Funny',
+  'Ambitious', 'Caring', 'Optimistic', 'Intellectual', 'Romantic'
+];
+
+const MOVIE_SUGGESTIONS = [
+  'Action', 'Comedy', 'Drama', 'Sci-Fi', 'Romance',
+  'Horror', 'Documentary', 'Animation', 'Thriller', 'Fantasy'
+];
+
+const MUSIC_SUGGESTIONS = [
+  'Pop', 'Rock', 'Jazz', 'Classical', 'Hip Hop',
+  'R&B', 'Country', 'Electronic', 'Folk', 'Metal'
+];
 
 const EditProfileScreen = () => {
   const navigation = useNavigation();
@@ -143,7 +165,7 @@ const EditProfileScreen = () => {
     }
 };
 
-  const handleDeletePhoto = (photoUrl, index) => {
+  const handleDeletePhoto = async (photoUrl, index) => {
     Alert.alert(
       "Delete Photo",
       "Are you sure you want to delete this photo?",
@@ -154,9 +176,23 @@ const EditProfileScreen = () => {
         },
         {
           text: "Delete",
-          onPress: () => {
-            const newPhotoWall = photoWall.filter((_, i) => i !== index);
-            setPhotoWall(newPhotoWall);
+          onPress: async () => {
+            try {
+              // First update local state
+              const newPhotoWall = photoWall.filter((_, i) => i !== index);
+              setPhotoWall(newPhotoWall);
+
+              // Update the user's profile in the database with the new photowall
+              await updateUserProfile(user.email, { photowall: newPhotoWall });
+
+              // The photo deletion from storage is handled inside updateUserProfile
+              // when it detects that a photo has been removed from the photowall array
+            } catch (error) {
+              console.error('Error deleting photo:', error);
+              Alert.alert('Error', 'Failed to delete photo');
+              // Revert local state if database update fails
+              setPhotoWall(photoWall);
+            }
           }
         }
       ]
@@ -196,6 +232,10 @@ const EditProfileScreen = () => {
     }
   };
 
+  // 将字符串转换为数组的辅助函数
+  const stringToArray = (str) => str.split(',').map(item => item.trim()).filter(Boolean);
+  const arrayToString = (arr) => arr.join(', ');
+
   if (loading) {
     return (
       <View style={styles.loadingContainer}>
@@ -218,22 +258,25 @@ const EditProfileScreen = () => {
           </View>
 
           <View style={styles.photoWallContainer}>
-            {photoWall.map((photo, index) => (
-              <View key={index} style={styles.photoWrapper}>
-                <Image
-                  source={{ uri: photo }}
-                  style={styles.photoWallImage}
-                />
-                <TouchableOpacity 
-                  style={styles.deleteButton}
-                  onPress={() => handleDeletePhoto(photo, index)}
-                >
-                  <Text style={styles.deleteButtonText}>×</Text>
-                </TouchableOpacity>
-              </View>
-            ))}
+            <View style={styles.photoRow}>
+              {photoWall.map((photo, index) => (
+                <View key={index} style={styles.photoWrapper}>
+                  <Image
+                    source={{ uri: photo }}
+                    style={styles.photoWallImage}
+                  />
+                  <TouchableOpacity 
+                    style={styles.deleteButton}
+                    onPress={() => handleDeletePhoto(photo, index)}
+                  >
+                    <Text style={styles.deleteButtonText}>×</Text>
+                  </TouchableOpacity>
+                </View>
+              ))}
+            </View>
+            
             {photoWall.length < 3 && (
-              <View style={styles.addButtonsContainer}>
+              <View style={styles.addButtonsRow}>
                 <TouchableOpacity
                   style={[styles.addPhotoButton, styles.cameraButton]}
                   onPress={handleCameraPress}
@@ -313,19 +356,19 @@ const EditProfileScreen = () => {
           />
 
           <Text style={styles.label}>Hobbies & Interests</Text>
-          <TextInput
-            style={styles.input}
-            value={hobbies}
-            onChangeText={setHobbies}
-            placeholder="Enter your hobbies and interests"
+          <TagSelector
+            suggestions={HOBBY_SUGGESTIONS}
+            selectedTags={stringToArray(hobbies)}
+            onTagsChange={(tags) => setHobbies(arrayToString(tags))}
+            placeholder="Add a hobby..."
           />
 
           <Text style={styles.label}>Personality Tags</Text>
-          <TextInput
-            style={styles.input}
-            value={tags}
-            onChangeText={setTags}
-            placeholder="Add personality tags"
+          <TagSelector
+            suggestions={PERSONALITY_SUGGESTIONS}
+            selectedTags={stringToArray(tags)}
+            onTagsChange={(tags) => setTags(arrayToString(tags))}
+            placeholder="Add a personality trait..."
           />
 
           <Text style={styles.label}>Favorite Books</Text>
@@ -336,20 +379,20 @@ const EditProfileScreen = () => {
             placeholder="Enter your favorite books"
           />
 
-          <Text style={styles.label}>Favorite Movies/Actors</Text>
-          <TextInput
-            style={styles.input}
-            value={movies}
-            onChangeText={setMovies}
-            placeholder="Enter your favorite movies or actors"
+          <Text style={styles.label}>Favorite Movies/Genres</Text>
+          <TagSelector
+            suggestions={MOVIE_SUGGESTIONS}
+            selectedTags={stringToArray(movies)}
+            onTagsChange={(tags) => setMovies(arrayToString(tags))}
+            placeholder="Add a movie or genre..."
           />
 
           <Text style={styles.label}>Favorite Music</Text>
-          <TextInput
-            style={styles.input}
-            value={music}
-            onChangeText={setMusic}
-            placeholder="Enter your favorite music"
+          <TagSelector
+            suggestions={MUSIC_SUGGESTIONS}
+            selectedTags={stringToArray(music)}
+            onTagsChange={(tags) => setMusic(arrayToString(tags))}
+            placeholder="Add a music genre..."
           />
 
           <Text style={styles.label}>About Me</Text>
