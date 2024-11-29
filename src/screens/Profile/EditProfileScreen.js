@@ -102,37 +102,46 @@ const EditProfileScreen = () => {
 
   const handlePhotoWallUpload = async () => {
     try {
-      if (photoWall.length >= 3) {
-        Alert.alert('Limit Reached', 'Maximum 3 photos allowed in photo wall');
-        return;
-      }
+        // Check if the local state already has 3 photos
+        if (photoWall.length >= 3) {
+            Alert.alert('Limit Reached', 'Maximum 3 photos allowed in photo wall');
+            return;
+        }
 
-      const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
-      if (status !== 'granted') {
-        Alert.alert('Permission needed', 'Please grant permission to access your photos.');
-        return;
-      }
+        const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+        if (status !== 'granted') {
+            Alert.alert('Permission needed', 'Please grant permission to access your photos.');
+            return;
+        }
 
-      const result = await ImagePicker.launchImageLibraryAsync({
-        // mediaTypes: 'images',
-        allowsEditing: true,
-        aspect: [4, 3],
-        quality: 0.2,
-        compress: 0.5,
-      });
+        const result = await ImagePicker.launchImageLibraryAsync({
+            allowsEditing: true,
+            aspect: [4, 3],
+            quality: 0.2,
+            compress: 0.5,
+        });
 
-      if (!result.canceled && result.assets[0].uri) {
-        setUploading(true);
-        const photoURL = await updatePhotoWall(user.email, result.assets[0].uri);
-        setPhotoWall([...photoWall, photoURL]);
-        setUploading(false);
-      }
+        if (!result.canceled && result.assets[0].uri) {
+            setUploading(true);
+            try {
+                // Upload photo and update the photo wall
+                const photoURL = await updatePhotoWall(user.email, result.assets[0].uri);
+                setPhotoWall([...photoWall, photoURL]);
+            } catch (uploadError) {
+                // Handle errors from `updatePhotoWall`
+                if (uploadError.message.includes('Maximum 3 photos allowed')) {
+                    Alert.alert('Limit Reached', 'You cannot upload more than 3 photos.');
+                } else {
+                    Alert.alert('Error', 'Failed to upload photo. Please try again.');
+                }
+            }
+            setUploading(false);
+        }
     } catch (error) {
-      console.error('Error uploading photo:', error);
-      Alert.alert('Error', 'Failed to upload photo');
-      setUploading(false);
+        Alert.alert('Error', 'Failed to upload photo');
+        setUploading(false);
     }
-  };
+};
 
   const handleDeletePhoto = (photoUrl, index) => {
     Alert.alert(

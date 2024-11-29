@@ -217,6 +217,7 @@ export const updatePhotoWall = async (email, photoUri) => {
         const userData = userDoc.data();
         const currentPhotoWall = userData.photowall || [];
 
+        // Check if the photo limit is exceeded
         if (currentPhotoWall.length >= 3) {
             throw new Error('Maximum 3 photos allowed in photo wall');
         }
@@ -227,8 +228,7 @@ export const updatePhotoWall = async (email, photoUri) => {
 
         return downloadURL;
     } catch (error) {
-        console.error('Error updating photo wall:', error);
-        throw error;
+        throw error; // Keep throwing the error for the caller to handle it
     }
 };
 
@@ -315,7 +315,6 @@ function degreesToRadians(degrees) {
 }
 
 // add reminder
-// add reminder
 export const addReminder = async (userEmail, reminderData) => {
     try {
         const remindersRef = collection(db, 'reminders');
@@ -338,14 +337,13 @@ export const addReminder = async (userEmail, reminderData) => {
 };
 
 // get user reminders
-// get user reminders
 export const getUserReminders = async (userEmail) => {
     try {
         const remindersRef = collection(db, 'reminders');
         const q = query(
             remindersRef, 
             where('userEmail', '==', userEmail),
-            orderBy('date', 'desc')  // 添加排序
+            orderBy('date', 'desc')  // add order by date
         );
         
         const querySnapshot = await getDocs(q);
@@ -366,7 +364,6 @@ export const getUserReminders = async (userEmail) => {
     }
 };
 
-// delete reminder
 // delete reminder
 export const deleteReminder = async (reminderId) => {
     try {
