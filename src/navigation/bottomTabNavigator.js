@@ -15,30 +15,67 @@ import { db } from '../Firebase/firebaseSetup'; // ensure db is imported
 const Tab = createBottomTabNavigator();
 
 function BottomTabNavigator() {
-  const [hasUnreadMessages, setHasUnreadMessages] = useState(false);
+  const [hasUnreadMatches, setHasUnreadMatches] = useState(false);
+  const [hasUnreadInvitations, setHasUnreadInvitations] = useState(false);
   const { user } = useContext(AuthContext);
 
   useEffect(() => {
     if (!user?.email) return;
 
-    // create a realtime listener for the notifications collection
-    const notificationsRef = collection(db, 'matches');
-    const q = query(
-      notificationsRef,
-      where('users', 'array-contains', user.email)
-    );
+    let unsubscribeMatches;
+    let unsubscribeDates;
 
-    const unsubscribe = onSnapshot(q, (snapshot) => {
-      const hasUnread = snapshot.docs.some(doc => {
-        const notification = doc.data();
-        return !notification.isRead || !notification.isRead[user.email];
+    // 监听 match notifications
+    const setupMatchesListener = () => {
+      const matchesRef = collection(db, 'matches');
+      const matchesQuery = query(
+        matchesRef,
+        where('users', 'array-contains', user.email)
+      );
+
+      unsubscribeMatches = onSnapshot(matchesQuery, (snapshot) => {
+        const hasUnread = snapshot.docs.some(doc => {
+          const notification = doc.data();
+          return !notification.isRead || !notification.isRead[user.email];
+        });
+        setHasUnreadMatches(hasUnread);
       });
-      setHasUnreadMessages(hasUnread);
-    });
+    };
 
-    // clean up the listener
-    return () => unsubscribe();
+    // 监听 date invitations
+    const setupDateInvitationsListener = () => {
+      const invitationsRef = collection(db, 'dateInvitations');
+      const invitationsQuery = query(
+        invitationsRef,
+        where('receiverEmail', '==', user.email)
+      );
+
+      unsubscribeDates = onSnapshot(invitationsQuery, (snapshot) => {
+        const hasUnread = snapshot.docs.some(doc => {
+          const invitation = doc.data();
+          return !invitation.isRead || !invitation.isRead[user.email];
+        });
+        setHasUnreadInvitations(hasUnread);
+      });
+    };
+
+    // 设置两个监听器
+    setupMatchesListener();
+    setupDateInvitationsListener();
+
+    // 清理两个监听器
+    return () => {
+      if (unsubscribeMatches) {
+        unsubscribeMatches();
+      }
+      if (unsubscribeDates) {
+        unsubscribeDates();
+      }
+    };
   }, [user]);
+
+  // 计算是否有任何未读消息
+  const hasUnreadMessages = hasUnreadMatches || hasUnreadInvitations;
 
   return (
     <Tab.Navigator

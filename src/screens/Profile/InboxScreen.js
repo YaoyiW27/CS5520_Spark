@@ -120,8 +120,7 @@ const InboxScreen = () => {
                 const invitationsRef = collection(db, 'dateInvitations');
                 const q = query(
                     invitationsRef,
-                    where('receiverEmail', '==', user.email),
-                    where('status', 'in', [null, 'accepted'])
+                    where('receiverEmail', '==', user.email)
                 );
                 
                 unsubscribeFunction = onSnapshot(q, (snapshot) => {
@@ -129,6 +128,7 @@ const InboxScreen = () => {
                         id: doc.id,
                         ...doc.data()
                     }));
+                    console.log('Received date invitations:', invitations);
                     setDateInvitations(invitations);
                 });
             } catch (error) {
@@ -147,45 +147,71 @@ const InboxScreen = () => {
 
     const handleDateInvitationPress = async (invitation) => {
         try {
-            // 导航到约会详情页面，传递完整的invitation对象
+            // 更新数据库中的 isRead 状态
+            const invitationRef = doc(db, 'dateInvitations', invitation.id);
+            const updatedIsRead = {
+                ...invitation.isRead,
+                [user.email]: true
+            };
+            await updateDoc(invitationRef, {
+                isRead: updatedIsRead
+            });
+
+            // 更新本地状态
+            setDateInvitations(prevInvitations => 
+                prevInvitations.map(inv => 
+                    inv.id === invitation.id 
+                        ? { 
+                            ...inv, 
+                            isRead: {
+                                ...inv.isRead,
+                                [user.email]: true
+                            }
+                        }
+                        : inv
+                )
+            );
+
+            // 导航到约会详情页面
             navigation.navigate('DateDetails', {
-                invitation: invitation  // 传递整个invitation对象，而不仅仅是dateDetails
+                invitation: invitation
             });
         } catch (error) {
             console.error('Error handling date invitation:', error);
         }
     };
 
-    const renderDateInvitation = ({ item }) => (
-        <TouchableOpacity 
-            style={[
-                styles.notificationItem, 
-                !item.isRead && styles.unreadItem
-            ]}
-            onPress={() => handleDateInvitationPress(item)}
-        >
-            <View style={styles.notificationContent}>
-                <Ionicons 
-                    name="calendar" 
-                    size={24} 
-                    color="#FF69B4" 
-                    style={styles.icon}
-                />
-                <View style={styles.textContainer}>
-                    <Text style={styles.matchText}>
-                        Date Invitation from {item.dateDetails.senderName}
-                    </Text>
-                    <Text style={styles.messageText}>
-                        {`Date: ${format(new Date(item.dateDetails.date), 'PPpp')}\nLocation: ${item.dateDetails.location}`}
-                    </Text>
-                    {item.status === 'accepted' && (
-                        <Text style={styles.statusText}>Accepted</Text>
-                    )}
+    const renderDateInvitation = ({ item }) => {
+        const isUnread = !(item.isRead && item.isRead[user.email]);
+        
+        return (
+            <TouchableOpacity 
+                style={[
+                    styles.notificationItem, 
+                    isUnread && styles.unreadItem
+                ]}
+                onPress={() => handleDateInvitationPress(item)}
+            >
+                <View style={styles.notificationContent}>
+                    <Ionicons 
+                        name="calendar" 
+                        size={24} 
+                        color="#FF69B4" 
+                        style={styles.icon}
+                    />
+                    <View style={styles.textContainer}>
+                        <Text style={styles.matchText}>
+                            Date Invitation from {item.dateDetails.senderName}
+                        </Text>
+                        <Text style={styles.messageText}>
+                            {`Date: ${format(new Date(item.dateDetails.date), 'PPpp')}\nLocation: ${item.dateDetails.location}`}
+                        </Text>
+                    </View>
+                    {isUnread && <View style={styles.unreadDot} />}
                 </View>
-                {!item.isRead && <View style={styles.unreadDot} />}
-            </View>
-        </TouchableOpacity>
-    );
+            </TouchableOpacity>
+        );
+    };
 
     return (
         <View style={styles.container}>

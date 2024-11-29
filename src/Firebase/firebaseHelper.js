@@ -315,7 +315,6 @@ function degreesToRadians(degrees) {
 }
 
 // add reminder
-// add reminder
 export const addReminder = async (userEmail, reminderData) => {
     try {
         const remindersRef = collection(db, 'reminders');
@@ -326,7 +325,6 @@ export const addReminder = async (userEmail, reminderData) => {
             location: reminderData.location,
             date: reminderData.date,
             alertType: reminderData.alertType,
-            notificationId: reminderData.notificationId,
             reminderStatus: 'pending',
             createdAt: new Date().toISOString()
         });
@@ -337,7 +335,6 @@ export const addReminder = async (userEmail, reminderData) => {
     }
 };
 
-// get user reminders
 // get user reminders
 export const getUserReminders = async (userEmail) => {
     try {
@@ -366,7 +363,6 @@ export const getUserReminders = async (userEmail) => {
     }
 };
 
-// delete reminder
 // delete reminder
 export const deleteReminder = async (reminderId) => {
     try {
@@ -572,10 +568,15 @@ export const addDateInvitation = async (senderEmail, receiverEmail, dateDetails)
     await addDoc(notificationRef, {
       senderEmail,
       receiverEmail,
-      dateDetails,
+      dateDetails: {
+        senderName: dateDetails.senderName,
+        location: dateDetails.location,
+        date: dateDetails.date
+      },
       createdAt: new Date().toISOString(),
-      isRead: false,
-      //status: 'pending' // can be 'pending', 'accepted', 'declined'
+      isRead: {
+        [receiverEmail]: false
+      }
     });
   } catch (error) {
     console.error('Error adding date invitation:', error);
