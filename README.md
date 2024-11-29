@@ -250,19 +250,19 @@ If any contributions were not directly recorded in GitHub commits (e.g., discuss
 
 ### New Functionality Added in This Iteration
 
-  1. External API Integration
+  1. **External API Integration**
     Implemented GeoJS API to fetch the user’s location automatically when the component mounts. This data is displayed and used within the app, shown in profile's city and country. (GeoJS API needs no key here.)
-  2. Mandatory User Profile Form
+  2. **Mandatory User Profile Form**
     After registering a new account, users are required to complete a personal information form to proceed further in the application.
-  3. Forgot Password Flow Improvement
+  3. **Forgot Password Flow Improvement**
 	  Improved the “Forgot Password” feature for better usability, including enhanced UI/UX and secure password reset functionality.
-  4. LottieView Styling for Login Page
+  4. **LottieView Styling for Login Page**
 	  Integrated Lottie animations to enhance the styling and interactivity of the login screen.
-  5. Profile Photo Wall Enhancement
+  5. **Profile Photo Wall Enhancement**
 	  Redesigned the photo wall on the profile details page for a better user experience and visual appeal.
-  6. Mutual Like Inbox Feature
+  6. **Mutual Like Inbox Feature**
 	  when two users mutual like each other, a message is added to the inbox of both users. 
-  7. Date Invitation Inbox Feature
+  7. **Date Invitation Inbox Feature**
 	  when user receive a date invitation, a message is added to the inbox of the user, user can navigate to the date details page.
-  8. Date Plan Reminder Feature
+  8. **Date Plan Reminder Feature**
 	  when users plan a date with match, they can set a customizable reminder for the date and time, and the notification will appear at the time which users set.
