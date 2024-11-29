@@ -101,11 +101,15 @@ const editProfileScreenStyles = StyleSheet.create({
         marginBottom: 8,
     },
     photoWallContainer: {
+        width: '100%',
+        padding: 10,
+    },
+    photoRow: {
         flexDirection: 'row',
-        justifyContent: 'center',
-        alignItems: 'center',
-        marginTop: 10,
+        flexWrap: 'wrap',
+        justifyContent: 'flex-start',
         gap: 10,
+        marginBottom: 10,
     },
     photoWallImage: {
         width: 100,
@@ -115,12 +119,13 @@ const editProfileScreenStyles = StyleSheet.create({
     addPhotoButton: {
         width: 100,
         height: 100,
-        borderRadius: 8,
-        borderWidth: 2,
-        borderColor: '#FF69B4',
+        backgroundColor: '#f0f0f0',
         justifyContent: 'center',
         alignItems: 'center',
-        backgroundColor: '#fff',
+        borderRadius: 8,
+        borderWidth: 1,
+        borderColor: '#ddd',
+        borderStyle: 'dashed',
     },
     addPhotoButtonText: {
         fontSize: 30,
@@ -181,6 +186,10 @@ const editProfileScreenStyles = StyleSheet.create({
         marginBottom: 8,
     },
     photoWrapper: {
+        width: 100,
+        height: 100,
+        marginRight: 10,
+        marginBottom: 10,
         position: 'relative',
     },
     deleteButton: {
@@ -208,6 +217,13 @@ const editProfileScreenStyles = StyleSheet.create({
     cameraButton: {
         justifyContent: 'center',
         alignItems: 'center',
+    },
+    addButtonsRow: {
+        flexDirection: 'row',
+        justifyContent: 'center',
+        gap: 10,
+        marginTop: 10,
+        width: '100%',
     },
 });
 

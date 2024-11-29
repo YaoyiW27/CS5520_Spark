@@ -143,7 +143,7 @@ const EditProfileScreen = () => {
     }
 };
 
-  const handleDeletePhoto = (photoUrl, index) => {
+  const handleDeletePhoto = async (photoUrl, index) => {
     Alert.alert(
       "Delete Photo",
       "Are you sure you want to delete this photo?",
@@ -154,9 +154,23 @@ const EditProfileScreen = () => {
         },
         {
           text: "Delete",
-          onPress: () => {
-            const newPhotoWall = photoWall.filter((_, i) => i !== index);
-            setPhotoWall(newPhotoWall);
+          onPress: async () => {
+            try {
+              // First update local state
+              const newPhotoWall = photoWall.filter((_, i) => i !== index);
+              setPhotoWall(newPhotoWall);
+
+              // Update the user's profile in the database with the new photowall
+              await updateUserProfile(user.email, { photowall: newPhotoWall });
+
+              // The photo deletion from storage is handled inside updateUserProfile
+              // when it detects that a photo has been removed from the photowall array
+            } catch (error) {
+              console.error('Error deleting photo:', error);
+              Alert.alert('Error', 'Failed to delete photo');
+              // Revert local state if database update fails
+              setPhotoWall(photoWall);
+            }
           }
         }
       ]
@@ -218,22 +232,25 @@ const EditProfileScreen = () => {
           </View>
 
           <View style={styles.photoWallContainer}>
-            {photoWall.map((photo, index) => (
-              <View key={index} style={styles.photoWrapper}>
-                <Image
-                  source={{ uri: photo }}
-                  style={styles.photoWallImage}
-                />
-                <TouchableOpacity 
-                  style={styles.deleteButton}
-                  onPress={() => handleDeletePhoto(photo, index)}
-                >
-                  <Text style={styles.deleteButtonText}>×</Text>
-                </TouchableOpacity>
-              </View>
-            ))}
+            <View style={styles.photoRow}>
+              {photoWall.map((photo, index) => (
+                <View key={index} style={styles.photoWrapper}>
+                  <Image
+                    source={{ uri: photo }}
+                    style={styles.photoWallImage}
+                  />
+                  <TouchableOpacity 
+                    style={styles.deleteButton}
+                    onPress={() => handleDeletePhoto(photo, index)}
+                  >
+                    <Text style={styles.deleteButtonText}>×</Text>
+                  </TouchableOpacity>
+                </View>
+              ))}
+            </View>
+            
             {photoWall.length < 3 && (
-              <View style={styles.addButtonsContainer}>
+              <View style={styles.addButtonsRow}>
                 <TouchableOpacity
                   style={[styles.addPhotoButton, styles.cameraButton]}
                   onPress={handleCameraPress}
