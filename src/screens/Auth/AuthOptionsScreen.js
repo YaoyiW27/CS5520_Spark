@@ -30,18 +30,14 @@ const AuthOptionsScreen = ({ navigation }) => {
   const checkPasswordStrength = (pass) => {
     if (pass.length === 0) {
       setPasswordStrength('');
-    } else if (pass.length > 8) {
-      // check if password contains only numbers
-      const hasOnlyNumbers = /^\d+$/.test(pass);
-      // check if password contains both letters and numbers
-      const hasLettersAndNumbers = /^(?=.*[0-9])(?=.*[a-zA-Z])/.test(pass);
+    } else if (pass.length >= 8) {
+      // Check for letters and numbers
+      const hasLettersAndNumbers = /(?=.*[0-9])(?=.*[a-zA-Z])/.test(pass);
       
       if (hasLettersAndNumbers) {
         setPasswordStrength('strong');
-      } else if (hasOnlyNumbers || /^[a-zA-Z]+$/.test(pass)) {
-        setPasswordStrength('medium');
       } else {
-        setPasswordStrength('weak');
+        setPasswordStrength('medium');
       }
     } else {
       setPasswordStrength('weak');
@@ -82,16 +78,9 @@ const AuthOptionsScreen = ({ navigation }) => {
           <Text style={[styles.strengthText, { color: strengthColor }]}>
             Password Strength: {strengthText}
           </Text>
-          {passwordStrength === 'weak' && (
-            <Text style={styles.strengthHint}>
-              Password coule be at least 8 characters
-            </Text>
-          )}
-          {passwordStrength === 'medium' && (
-            <Text style={styles.strengthHint}>
-              Password could contain letters and numbers
-            </Text>
-          )}
+          <Text style={styles.strengthHint}>
+            Password should be at least 8 characters long and include both letters and numbers.
+          </Text>
         </View>
       );
     }
@@ -104,18 +93,29 @@ const AuthOptionsScreen = ({ navigation }) => {
       return;
     }
   
+    // Password validation for signup
+    if (!isLogin) {
+      if (password.length < 8 || !/(?=.*[0-9])(?=.*[a-zA-Z])/.test(password)) {
+        Alert.alert(
+          'Weak Password',
+          'Password must be at least 8 characters long and include both letters and numbers.'
+        );
+        return;
+      }
+    }
+  
     try {
       if (isLogin) {
         // Login logic
         await signInWithEmailAndPassword(auth, email, password);
         setProfileComplete(true);
       } else {
-        // sign up logic
+        // Sign up logic
         try {
           setProfileComplete(false);
-          // create user with email and password
+          // Create user with email and password
           await createUserWithEmailAndPassword(auth, email, password);
-          // after creating user, navigate to complete profile screen
+          // After creating user, navigate to complete profile screen
           navigation.navigate('CompleteProfile');
         } catch (error) {
           if (error.code === 'auth/email-already-in-use') {
@@ -123,14 +123,8 @@ const AuthOptionsScreen = ({ navigation }) => {
               'Account Exists',
               'An account with this email already exists. Would you like to login instead?',
               [
-                {
-                  text: 'Cancel',
-                  style: 'cancel'
-                },
-                {
-                  text: 'Login',
-                  onPress: () => setIsLogin(true)
-                }
+                { text: 'Cancel', style: 'cancel' },
+                { text: 'Login', onPress: () => setIsLogin(true) },
               ]
             );
           } else {
@@ -158,7 +152,7 @@ const AuthOptionsScreen = ({ navigation }) => {
         Alert.alert('Error', 'Authentication failed. Please try again.');
       }
     }
-};
+  };
 
   return (
     <SafeAreaView style={styles.container}>

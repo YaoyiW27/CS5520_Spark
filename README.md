@@ -117,8 +117,7 @@ Spark is a relationship app designed for meaningful connections beyond swipes. U
 <img src="./src/screenshots/EditProfileScreen2.jpg" width="300" />
 <img src="./src/screenshots/ProfileDetailsScreen.jpg" width="300" />
 <img src="./src/screenshots/LikedListScreen.jpg" width="300" />
-<img src="./src/screenshots/NotificationScreen1.jpg" width="300" />
-<img src="./src/screenshots/NotificationScreen2.jpg" width="300" />
+<img src="./src/screenshots/InboxScreen.jpg" width="300" />
 
 ## Firebase Rules
 ### Firestore Rules
@@ -183,7 +182,7 @@ If any contributions were not directly recorded in GitHub commits (e.g., discuss
 ### New Functionality Added in This Iteration
 
   1. External API Integration
-    Implemented GeoJS API to fetch the user’s location automatically when the component mounts. This data is displayed and used within the app, shown in profile's city and country.
+    Implemented GeoJS API to fetch the user’s location automatically when the component mounts. This data is displayed and used within the app, shown in profile's city and country. (GeoJS API needs no key here.)
   2. Mandatory User Profile Form
     After registering a new account, users are required to complete a personal information form to proceed further in the application.
   3. Forgot Password Flow Improvement
