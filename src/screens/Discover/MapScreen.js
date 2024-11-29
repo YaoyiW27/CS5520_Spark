@@ -46,7 +46,6 @@ export default function MapScreen() {
   const [location, setLocation] = useState(null);
   const mapRef = useRef(null);
   const [nearbyUsers, setNearbyUsers] = useState([]);
-  const [filteredUsers, setFilteredUsers] = useState([]);
   const [currentRegion, setCurrentRegion] = useState({
     latitude: 49.2827,
     longitude: -123.1207,
@@ -66,12 +65,29 @@ export default function MapScreen() {
     ageRange: [18, 80],
   });
 
+  // Update filters when route params change
+  useEffect(() => {
+    if (route.params?.filters) {
+      setFilters(route.params.filters);
+    }
+  }, [route.params?.filters]);
+
+  // Reload users when filters or location changes
+  useEffect(() => {
+    if (location) {
+      loadNearbyUsers({
+        latitude: location.latitude,
+        longitude: location.longitude
+      });
+    }
+  }, [filters, location]);
+
+  // Subscribe to user updates
   useEffect(() => {
     const loadAndSubscribe = async () => {
       if (location) {
         try {
-          const unsubscribe = onSnapshot(collection(db, 'Users'), async (snapshot) => {
-            //console.log("Snapshot updated");
+          const unsubscribe = onSnapshot(collection(db, 'Users'), async () => {
             await loadNearbyUsers({
               latitude: location.latitude,
               longitude: location.longitude
@@ -90,20 +106,13 @@ export default function MapScreen() {
     loadAndSubscribe();
   }, [location]);
 
-  useEffect(() => {
-    if (route.params?.filters) {
-      setFilters(route.params.filters);
-    }
-  }, [route.params?.filters]);
-
   const handleFilterPress = () => {
     navigation.navigate("FilterScreen", { filters });
   };
 
   const loadNearbyUsers = async (userLocation) => {
     try {
-      const users = await getNearbyUsers(userLocation);
-      //console.log("Loaded nearby users:", users);
+      const users = await getNearbyUsers(userLocation, filters);
       setNearbyUsers(users.filter(u => u.id !== user.email));
     } catch (error) {
       console.error("Error loading nearby users:", error);
@@ -161,179 +170,155 @@ export default function MapScreen() {
   };
 
   const handleUserPress = (userId) => {
-    //console.log(`User pressed: ${userId}`);
     navigation.navigate("DisplayProfile", { userId });
   };
-
-  useEffect(() => {
-    const filterUsers = () => {
-      const { gender, ageRange, distanceRange } = filters;
-
-      const filtered = nearbyUsers.filter((user) => {
-        const matchesGender = gender === "all" || user.gender === gender;
-        const matchesAge = user.age >= ageRange[0] && user.age <= ageRange[1];
-        const matchesDistance = user.distance >= distanceRange[0] && user.distance <= distanceRange[1];
-        return matchesGender && matchesAge && matchesDistance;
-      });
-
-      setFilteredUsers(filtered);
-    };
-
-    filterUsers();
-  }, [filters, nearbyUsers]);
 
   const handleRegionChangeComplete = (region) => {
     setCurrentRegion(region);
   };
 
-  const displayedUsers = useMemo(() => {
-    return filteredUsers.length > 0 ? filteredUsers : nearbyUsers;
-  }, [filteredUsers, nearbyUsers]);
+  const displayedUsers = useMemo(() => nearbyUsers, [nearbyUsers]);
 
-    const handleMapPress = (event) => {
-      if (isSelectingLocation) {
-        const { coordinate } = event.nativeEvent;
-        setTempLocation(coordinate);
-        setShowConfirmModal(true);
-      }
-    };
-  
-    // confirm location selection
-    const confirmLocationSelection = async () => {
-      if (tempLocation) {
-        setSelectedLocation(tempLocation);
-        setLocation({
-          ...currentRegion,
-          latitude: tempLocation.latitude,
-          longitude: tempLocation.longitude,
-        });
-  
-        // update user location
-        await updateUserLocation(user.email, {
-          latitude: tempLocation.latitude,
-          longitude: tempLocation.longitude,
-          isVirtual: true, // manually set virtual location
-        });
-  
-        // load nearby users
-        await loadNearbyUsers({
-          latitude: tempLocation.latitude,
-          longitude: tempLocation.longitude,
-        });
-  
-        setShowUsers(true);
-        setIsSelectingLocation(false);
-      }
-      setShowConfirmModal(false);
-    };
-  
-    // start location selection
-    const startLocationSelection = () => {
-      setIsSelectingLocation(true);
-      Alert.alert(
-        "Choose Location",
-        "Choose a location on the map to set as your virtual location." 
-      );
-    };
+  const handleMapPress = (event) => {
+    if (isSelectingLocation) {
+      const { coordinate } = event.nativeEvent;
+      setTempLocation(coordinate);
+      setShowConfirmModal(true);
+    }
+  };
 
-    return (
-      <View style={styles.mapContainer}>
-        <View style={styles.mapSubHeader}>
-          <View style={styles.mapPeopleNearbyContainer}>
-            <Text style={styles.mapPeopleNearbyText}>People nearby</Text>
-            <TouchableOpacity onPress={handleFilterPress} style={styles.mapFilterButton}>
-              <Ionicons name="options-outline" size={24} color="#FF69B4" />
-            </TouchableOpacity>
-          </View>
+  const confirmLocationSelection = async () => {
+    if (tempLocation) {
+      setSelectedLocation(tempLocation);
+      setLocation({
+        ...currentRegion,
+        latitude: tempLocation.latitude,
+        longitude: tempLocation.longitude,
+      });
+
+      await updateUserLocation(user.email, {
+        latitude: tempLocation.latitude,
+        longitude: tempLocation.longitude,
+        isVirtual: true,
+      });
+
+      await loadNearbyUsers({
+        latitude: tempLocation.latitude,
+        longitude: tempLocation.longitude,
+      });
+
+      setShowUsers(true);
+      setIsSelectingLocation(false);
+    }
+    setShowConfirmModal(false);
+  };
+
+  const startLocationSelection = () => {
+    setIsSelectingLocation(true);
+    Alert.alert(
+      "Choose Location",
+      "Choose a location on the map to set as your virtual location."
+    );
+  };
+
+  return (
+    <View style={styles.mapContainer}>
+      <View style={styles.mapSubHeader}>
+        <View style={styles.mapPeopleNearbyContainer}>
+          <Text style={styles.mapPeopleNearbyText}>People nearby</Text>
+          <TouchableOpacity onPress={handleFilterPress} style={styles.mapFilterButton}>
+            <Ionicons name="options-outline" size={24} color="#FF69B4" />
+          </TouchableOpacity>
         </View>
-  
-        <MapView
-          ref={mapRef}
-          style={styles.map}
-          initialRegion={currentRegion}
-          onRegionChangeComplete={handleRegionChangeComplete}
-          showsUserLocation={locationPermission && !isSelectingLocation}
-          showsCompass={true}
-          onPress={handleMapPress}
-        >
-          {showUsers && displayedUsers.map((user) => (
-            <Marker
-              key={user.id}
-              coordinate={{
-                latitude: user.location.latitude,
-                longitude: user.location.longitude
-              }}
-              tracksViewChanges={false}
-            >
-              <UserMarkerWithDistance 
-                user={user}
-                onPress={() => handleUserPress(user.id)}
-              />
-            </Marker>
-          ))}
-          {tempLocation && isSelectingLocation && (
-            <Marker
-              coordinate={tempLocation}
-              pinColor="#FF69B4"
+      </View>
+
+      <MapView
+        ref={mapRef}
+        style={styles.map}
+        initialRegion={currentRegion}
+        onRegionChangeComplete={handleRegionChangeComplete}
+        showsUserLocation={locationPermission && !isSelectingLocation}
+        showsCompass={true}
+        onPress={handleMapPress}
+      >
+        {showUsers && displayedUsers.map((user) => (
+          <Marker
+            key={user.id}
+            coordinate={{
+              latitude: user.location.latitude,
+              longitude: user.location.longitude
+            }}
+            tracksViewChanges={false}
+          >
+            <UserMarkerWithDistance 
+              user={user}
+              onPress={() => handleUserPress(user.id)}
             />
-          )}
-          {selectedLocation && !isSelectingLocation && (
-            <Marker
-              coordinate={selectedLocation}
-            >
-              <View style={styles.virtualLocationMarker}>
-                <Ionicons name="location" size={30} color="#FF69B4" />
-              </View>
-            </Marker>
-          )}
-        </MapView>
-  
-        {/* locate me button */}
-        <TouchableOpacity
-          style={styles.MapLocateButton}
-          onPress={verifyAndGetLocation}
-        >
-          <Ionicons name="locate" size={24} color="#FF69B4" />
-        </TouchableOpacity>
-  
-        {/* choose a location button */}
-        <TouchableOpacity
-          style={styles.mapSelectLocationButton}
-          onPress={startLocationSelection}
-        >
-          <Ionicons name="location" size={24} color="#FF69B4" />
-        </TouchableOpacity>
-  
-        {/* location confirmation modal */}
-        <Modal
-          visible={showConfirmModal}
-          transparent={true}
-          animationType="fade"
-        >
-          <View style={styles.mapModalContainer}>
-            <View style={styles.mapModalContent}>
-              <Text style={styles.mapModalTitle}>Confirm location</Text>
-              <Text style={styles.mapModalText}>Do you want to set this as your virtual location?</Text>
-              <View style={styles.mapModalButtons}>
-                <TouchableOpacity
-                  style={[styles.mapModalButton, styles.mapCancelButton]}
-                  onPress={() => {
-                    setShowConfirmModal(false);
-                    setTempLocation(null);
-                  }}
-                >
-                  <Text style={styles.mapButtonText}>Cancel</Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                  style={[styles.mapModalButton, styles.mapConfirmButton]}
-                  onPress={confirmLocationSelection}
-                >
-                  <Text style={styles.buttonText}>Confirm</Text>
-                </TouchableOpacity>
-              </View>
+          </Marker>
+        ))}
+        {tempLocation && isSelectingLocation && (
+          <Marker
+            coordinate={tempLocation}
+            pinColor="#FF69B4"
+          />
+        )}
+        {selectedLocation && !isSelectingLocation && (
+          <Marker
+            coordinate={selectedLocation}
+          >
+            <View style={styles.virtualLocationMarker}>
+              <Ionicons name="location" size={30} color="#FF69B4" />
+            </View>
+          </Marker>
+        )}
+      </MapView>
+
+      {/* Locate me button */}
+      <TouchableOpacity
+        style={styles.MapLocateButton}
+        onPress={verifyAndGetLocation}
+      >
+        <Ionicons name="locate" size={24} color="#FF69B4" />
+      </TouchableOpacity>
+
+      {/* Choose location button */}
+      <TouchableOpacity
+        style={styles.mapSelectLocationButton}
+        onPress={startLocationSelection}
+      >
+        <Ionicons name="location" size={24} color="#FF69B4" />
+      </TouchableOpacity>
+
+      {/* Location confirmation modal */}
+      <Modal
+        visible={showConfirmModal}
+        transparent={true}
+        animationType="fade"
+      >
+        <View style={styles.mapModalContainer}>
+          <View style={styles.mapModalContent}>
+            <Text style={styles.mapModalTitle}>Confirm location</Text>
+            <Text style={styles.mapModalText}>Do you want to set this as your virtual location?</Text>
+            <View style={styles.mapModalButtons}>
+              <TouchableOpacity
+                style={[styles.mapModalButton, styles.mapCancelButton]}
+                onPress={() => {
+                  setShowConfirmModal(false);
+                  setTempLocation(null);
+                }}
+              >
+                <Text style={styles.mapButtonText}>Cancel</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.mapModalButton, styles.mapConfirmButton]}
+                onPress={confirmLocationSelection}
+              >
+                <Text style={styles.buttonText}>Confirm</Text>
+              </TouchableOpacity>
             </View>
           </View>
-        </Modal>
-      </View>
-    );
-  }
+        </View>
+      </Modal>
+    </View>
+  );
+}

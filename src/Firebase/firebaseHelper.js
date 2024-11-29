@@ -253,7 +253,7 @@ export const updateUserLocation = async (email, locationData) => {
 };
 
 // get nearby users
-export const getNearbyUsers = async (currentLocation, maxDistance = 10) => {
+export const getNearbyUsers = async (currentLocation, filters, maxDistance = 75) => {
     try {
         const usersRef = collection(db, 'Users');
         const querySnapshot = await getDocs(usersRef);
@@ -269,9 +269,15 @@ export const getNearbyUsers = async (currentLocation, maxDistance = 10) => {
                     userData.location.longitude
                 );
 
-                if (distance <= maxDistance) {
+                // Apply all filters here
+                const passesGenderFilter = filters.gender === "all" || 
+                          (userData.gender && userData.gender.toLowerCase() === filters.gender.toLowerCase());
+                const passesAgeFilter = userData.age >= filters.ageRange[0] && userData.age <= filters.ageRange[1];
+                const passesDistanceFilter = distance >= filters.distanceRange[0] && distance <= filters.distanceRange[1];
+
+                // Only add user if they pass all filters
+                if (passesGenderFilter && passesAgeFilter && passesDistanceFilter) {
                     const profileImage = userData.profilePhoto || 'https://via.placeholder.com/150';
-                    console.log(`Fetched user: ${doc.id}, profileImage: ${profileImage}`);
                     nearbyUsers.push({
                         id: doc.id,
                         userName: userData.username || 'Unknown User',
@@ -289,7 +295,7 @@ export const getNearbyUsers = async (currentLocation, maxDistance = 10) => {
             }
         });
 
-        // sort nearby users by distance
+        // Sort nearby users by distance
         return nearbyUsers.sort((a, b) => a.distance - b.distance);
     } catch (error) {
         console.error('Error getting nearby users:', error);

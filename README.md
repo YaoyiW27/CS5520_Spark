@@ -104,7 +104,8 @@ Spark is a relationship app designed for meaningful connections beyond swipes. U
 
 ## Screenshots
 <img src="./src/screenshots/StartScreen.jpg" width="300" />
-<img src="./src/screenshots/LoginScreen.jpg" width="300" />
+<img src="./src/screenshots/ForgotpasswordScreen.jpg" width="300" />
+<img src="./src/screenshots/SignupScreen.jpg" width="300" />
 <img src="./src/screenshots/CompleteProfileScreen.jpg" width="300" />
 <img src="./src/screenshots/SwipeScreen.jpg" width="300" />
 <img src="./src/screenshots/SearchScreen.jpg" width="300" />
@@ -115,9 +116,13 @@ Spark is a relationship app designed for meaningful connections beyond swipes. U
 <img src="./src/screenshots/ProfileScreen.jpg" width="300" />
 <img src="./src/screenshots/EditProfileScreen1.jpg" width="300" />
 <img src="./src/screenshots/EditProfileScreen2.jpg" width="300" />
+<img src="./src/screenshots/EditProfileScreen3.jpg" width="300" />
 <img src="./src/screenshots/ProfileDetailsScreen.jpg" width="300" />
 <img src="./src/screenshots/LikedListScreen.jpg" width="300" />
 <img src="./src/screenshots/InboxScreen.jpg" width="300" />
+<img src="./src/screenshots/DateplanScreen.jpg" width="300" />
+<img src="./src/screenshots/PlandateCard.jpg" width="300" />
+<img src="./src/screenshots/DatereminderScreen.jpg" width="300" />
 
 ## Firebase Rules
 ### Firestore Rules
@@ -126,23 +131,46 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
     match /Posts/{postId} {
-      allow read: if true;  
-      allow write: if request.auth != null;  
+      allow read: if true;
+      allow write: if request.auth != null;
     }
     
     match /Users/{userId} {
-      allow read: if true;  
-      allow write: if request.auth != null 
-                  && request.auth.token.email == userId; 
+      
+      allow read: if true;
+      
+      
+      allow update: if request.auth != null && (
+        request.resource.data.diff(resource.data).affectedKeys().hasOnly(['likes']) ||
+        request.resource.data.diff(resource.data).affectedKeys().hasOnly(['likedBy'])
+      );
+      
+      
+      allow write: if request.auth != null && request.auth.token.email == userId;
     }
+
+    match /matches/{matchId} {
+      allow read, write: if request.auth != null;
+    }
+    
     match /reminders/{reminder} {
-      allow read: if request.auth != null 
-                 && request.auth.token.email == resource.data.userEmail;
-      allow create: if request.auth != null 
-                   && request.auth.token.email == request.resource.data.userEmail;
-      allow update, delete: if request.auth != null 
-                          && request.auth.token.email == resource.data.userEmail;
-    }
+    allow read, write: if request.auth != null;
+ }
+  
+  match /dateInvitations/{invitation} {
+    allow read: if request.auth != null && (
+        resource.data.senderEmail == request.auth.token.email ||
+        resource.data.receiverEmail == request.auth.token.email
+    );
+    
+    allow create: if request.auth != null && 
+        request.resource.data.senderEmail == request.auth.token.email;
+        
+    allow update: if request.auth != null && (
+        resource.data.senderEmail == request.auth.token.email ||
+        resource.data.receiverEmail == request.auth.token.email
+    );
+ }
   }
 }
 ```
