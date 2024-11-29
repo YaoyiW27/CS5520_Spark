@@ -102,10 +102,10 @@ Spark is a relationship app designed for meaningful connections beyond swipes. U
 - Yaoyi Wang: Set up the initial project, created the initial project structure. Write sign up, login, and logout functions and pages, connect them to the database. Write Post related functions and pages, including post display page, create post page, connect them to the database. Write map related functions and pages, including map display page, filter function, connect them to the database.
 - To be done: chat pages and functions, styling of all pages, light and dark mode.
 
-## Screenshots 
+## Screenshots
 <img src="./src/screenshots/StartScreen.jpg" width="300" />
 <img src="./src/screenshots/LoginScreen.jpg" width="300" />
-<img src="./src/screenshots/SignUpScreen.jpg" width="300" />
+<img src="./src/screenshots/CompleteProfileScreen.jpg" width="300" />
 <img src="./src/screenshots/SwipeScreen.jpg" width="300" />
 <img src="./src/screenshots/SearchScreen.jpg" width="300" />
 <img src="./src/screenshots/MapScreen.jpg" width="300" />
