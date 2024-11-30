@@ -63,23 +63,24 @@ const PostScreen = () => {
 
   const handleLike = async (postId) => {
     try {
-      const isLiked = await toggleLike(postId, user.email);
-      setPosts(posts.map(post => {
-        if (post.id === postId) {
-          const currentLikes = post.likes || 0; 
-          return {
-            ...post,
-            isLiked,
-            likes: isLiked ? currentLikes + 1 : currentLikes - 1
-          };
-        }
-        return post;
-      }));
+        const isLiked = await toggleLike(postId, user.email);
+        
+        setPosts(posts.map(post => {
+            if (post.id === postId) {
+                const currentLikes = post.likes || 0;
+                return {
+                    ...post,
+                    isLiked,
+                    likes: isLiked ? currentLikes + 1 : Math.max(currentLikes - 1, 0)
+                };
+            }
+            return post;
+        }));
     } catch (error) {
-      console.error('Error toggling like:', error);
-      Alert.alert('Error', 'Failed to update like');
+        console.error('Error toggling like:', error);
+        Alert.alert('Error', 'Failed to update like');
     }
-  };
+};
 
   const handleComment = async (postId, commentText) => {
     try {
