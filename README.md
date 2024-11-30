@@ -4,7 +4,7 @@
 Spark is a relationship app designed for meaningful connections beyond swipes. Using an interactive map and interest-based matching, it helps users discover people nearby and find connections aligned with their values. Share moments on your social feed and engage authentically with privacy and control.
 
 ## Demo 🎬
-[Demo Video](https://drive.google.com/file/d/1AtvKjJZJovsXuzcping3yJnHHN4KyRDf/view?usp=sharing)
+[Demo Video](https://drive.google.com/file/d/17KZfLtHs3AjkDLzYYLUEQeNLemdE361D/view?usp=drive_link)
 
 
 ## App Functionality ✨
@@ -134,7 +134,7 @@ Spark is a relationship app designed for meaningful connections beyond swipes. U
 - [Yaoyi Wang](https://github.com/YaoyiW27)
 ### Contribution Statements:
 - Yundi Tao: Set up Firebase, including Firestore database configuration and initial CRUD operation connections. Write profile related functions and pages, including profile page, edit profile page, profile details display page, connect them to the database. write home page, including swipe screen and search screen. Write Reminder related functions and page, including date plan page, inbox page and date details page, connect them to the database.
-- Yaoyi Wang: Set up the initial project, created the initial project structure. Write sign up, login, and logout functions and pages, connect them to the database. Write Post related functions and pages, including post display page, create post page, connect them to the database. Write map related functions and pages, including map display page, filter function, connect them to the database.
+- Yaoyi Wang: Set up the initial project, created the initial project structure. Write sign up, login, and logout functions and complete profile pages, connect them to the database. Write Post related functions and pages, including post display page, create post page, connect them to the database. Write map related functions and pages, including map display page, filter function, connect them to the database.
 - To be done: chat pages and functions, styling of all pages, light and dark mode.
 
 ## Screenshots
@@ -152,12 +152,13 @@ Spark is a relationship app designed for meaningful connections beyond swipes. U
 <img src="./src/screenshots/EditProfileScreen1.jpg" width="300" />
 <img src="./src/screenshots/EditProfileScreen2.jpg" width="300" />
 <img src="./src/screenshots/EditProfileScreen3.jpg" width="300" />
-<img src="./src/screenshots/ProfileDetailsScreen.jpg" width="300" />
+<img src="./src/screenshots/ProfileDetailsScreen1.jpg" width="300" />
+<img src="./src/screenshots/ProfileDetailsScreen2.jpg" width="300" />
 <img src="./src/screenshots/LikedListScreen.jpg" width="300" />
 <img src="./src/screenshots/InboxScreen.jpg" width="300" />
-<img src="./src/screenshots/DateplanScreen.jpg" width="300" />
 <img src="./src/screenshots/PlandateCard.jpg" width="300" />
 <img src="./src/screenshots/DatereminderScreen.jpg" width="300" />
+<img src="./src/screenshots/DateplanScreen.jpg" width="300" />
 
 ## Firebase Rules
 ### Firestore Rules

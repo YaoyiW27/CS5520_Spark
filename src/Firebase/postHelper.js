@@ -132,33 +132,32 @@ export const createPost = async (userId, content, mediaFile = null, onProgress) 
 };
 
 // Toggle like
+// Firebase/toggleLike
 export const toggleLike = async (postId, userId) => {
     try {
         const postRef = doc(db, 'Posts', postId);
         const postSnap = await getDoc(postRef);
-        
+
         if (!postSnap.exists()) {
             throw new Error('Post not found');
         }
 
         const post = postSnap.data();
         const isLiked = post.likedBy?.includes(userId);
+        const currentCount = post.likesCount || 0;
 
-        if (isLiked) {
-            // Remove like
-            await updateDoc(postRef, {
-                likesCount: (post.likesCount || 1) - 1,
-                likedBy: arrayRemove(userId)
-            });
-            return false;
-        } else {
-            // Add like
-            await updateDoc(postRef, {
-                likesCount: (post.likesCount || 0) + 1,
-                likedBy: arrayUnion(userId)
-            });
-            return true;
-        }
+        const updatedData = isLiked
+            ? {
+                  likesCount: Math.max(currentCount - 1, 0),
+                  likedBy: arrayRemove(userId),
+              }
+            : {
+                  likesCount: currentCount + 1,
+                  likedBy: arrayUnion(userId),
+              };
+
+        await updateDoc(postRef, updatedData);
+        return !isLiked;
     } catch (error) {
         console.error('Error toggling like:', error);
         throw error;
@@ -263,7 +262,6 @@ export const getLikedAndOwnPosts = async (currentUserEmail) => {
             try {
                 const post = docSnapshot.data();
                 
-                // Include post if it's from a liked user or the current user
                 if (likedUsers.includes(post.userId) || post.userId === currentUserEmail) {
                     const postUserRef = doc(db, 'Users', post.userId);
                     const postUserSnap = await getDoc(postUserRef);
@@ -272,6 +270,8 @@ export const getLikedAndOwnPosts = async (currentUserEmail) => {
                     posts.push({
                         id: docSnapshot.id,
                         ...post,
+                        likes: post.likesCount || 0, // 正确映射 likesCount 到 likes
+                        isLiked: post.likedBy?.includes(currentUserEmail) || false,
                         username: postUserData.username || 'Unknown User',
                         userAvatar: postUserData.profilePhoto || null,
                         isOwnPost: post.userId === currentUserEmail
