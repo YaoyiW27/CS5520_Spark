@@ -1,5 +1,17 @@
 # CS 5520 Final Project: Spark 💫
 
+[![forthebadge](https://forthebadge.com/images/badges/made-with-javascript.svg)](https://forthebadge.com) &nbsp;
+[![forthebadge](https://forthebadge.com/images/badges/built-with-love.svg)](https://forthebadge.com) &nbsp;
+
+## Tech Stack
+![react native](https://img.shields.io/badge/ReactNative-222222?style=for-the-badge&logo=React&logoColor=)
+![expo](https://img.shields.io/badge/Expo-000020?style=for-the-badge&logo=expo&logoColor=white)
+![javascript](https://img.shields.io/badge/javascript-black?style=for-the-badge&logo=javascript)
+![Firebase](https://img.shields.io/badge/firebase-ffca28?style=for-the-badge&logo=firebase&logoColor=black)
+![redux](https://img.shields.io/badge/redux-764ABC?style=for-the-badge&logo=redux&logoColor=white)
+![xcode](https://img.shields.io/badge/Xcode-007ACC?style=for-the-badge&logo=Xcode&logoColor=white)
+
+
 ## Project Description 
 Spark is a relationship app designed for meaningful connections beyond swipes. Using an interactive map and interest-based matching, it helps users discover people nearby and find connections aligned with their values. Share moments on your social feed and engage authentically with privacy and control.
 
