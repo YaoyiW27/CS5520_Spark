@@ -93,6 +93,13 @@ const DisplayProfileScreen = ({ route }) => {
                     </View>
                 )}
 
+                {userProfile?.age && (
+                    <View style={styles.infoItem}>
+                        <Text style={styles.label}>age:</Text>
+                        <Text style={styles.value}>{userProfile.age}</Text>
+                    </View>
+                )}
+
                 {userProfile?.pronouns && (
                     <View style={styles.infoItem}>
                         <Text style={styles.label}>Pronouns:</Text>
