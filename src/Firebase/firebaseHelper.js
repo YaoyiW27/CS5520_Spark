@@ -43,7 +43,7 @@ export const createUserProfile = async (email, userData) => {
             // Include location field (optional)
             location: userData.location || null,
             gender: userData.gender || '',  // Added gender field
-            name: userData.name || '',      // Added name field
+            //name: userData.name || '',      // Added name field
             likedBy: userData.likedBy || [],
         });
         return true;
@@ -81,7 +81,7 @@ export const getUserProfile = async (userId) => {
                 likes: userData.likes || [],
                 location: userData.location || null,  // Include location field
                 gender: userData.gender || '',        // Include gender field
-                name: userData.name || '',            // Include name field
+                //name: userData.name || '',            // Include name field
             };
         } else {
             console.log('No such document!');
