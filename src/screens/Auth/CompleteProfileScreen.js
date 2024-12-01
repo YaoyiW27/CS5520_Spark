@@ -98,7 +98,7 @@ const CompleteProfileScreen = () => {
         <View style={styles.inputWrapper}>
           <Text style={styles.label}>Name</Text>
           <TextInput
-            style={styles.input}
+            style={[styles.input, {zIndex: 1}]}
             placeholder="Enter your name"
             value={name}
             onChangeText={setName}
