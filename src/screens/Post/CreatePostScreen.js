@@ -13,7 +13,7 @@ import {
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
-import { Video } from 'expo-video';
+import { Video } from 'expo-av';
 import { createPost } from '../../Firebase/postHelper';
 import { useAuth } from '../../contexts/AuthContext';
 import MediaPicker from '../../components/MediaPicker';
@@ -53,9 +53,9 @@ const CreatePostScreen = () => {
         content, 
         media,
         (progress) => {
-          setUploadProgress(progress);
+            setUploadProgress(progress);
         }
-      );
+    );
       navigation.goBack();
     } catch (error) {
       console.error('Post creation error:', error);

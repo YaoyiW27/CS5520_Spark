@@ -16,7 +16,7 @@ import {
 } from 'firebase/firestore';
 import { ref, uploadBytesResumable, getDownloadURL, deleteObject } from 'firebase/storage';
 
-export const createPost = async (userEmail, content, mediaFile = null, onProgress) => {
+export const createPost = async (userEmail, username, userAvatar, content, mediaFile = null, onProgress) => {
     if (!userEmail) {
         throw new Error('User ID (email) is required');
     }
@@ -114,6 +114,8 @@ export const createPost = async (userEmail, content, mediaFile = null, onProgres
 
         const postData = {
             userId: userEmail.trim(),
+            username: username || 'Anonymous',
+            userAvatar: userAvatar || null,
             content: content ? content.trim() : '',
             media: mediaUrl ? [mediaUrl] : [],
             mediaType: isVideo ? 'video' : isImage ? 'image' : null,
