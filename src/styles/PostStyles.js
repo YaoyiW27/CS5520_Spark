@@ -95,13 +95,17 @@ const postScreenStyles = StyleSheet.create({
         lineHeight: 20,
     },
     postMediaContainer: {
-        width: '100%',
-        height: 300,
-        backgroundColor: '#f0f0f0',
+        marginTop: 10,
+        borderRadius: 10,
+        overflow: 'hidden',
     },
     postMediaImage: {
         width: '100%',
-        height: '100%',
+        height: 300,
+    },
+    postMediaVideo: {
+        width: '100%',
+        height: 300,
     },
     postFooter: {
         padding: 15,
@@ -189,53 +193,67 @@ const postScreenStyles = StyleSheet.create({
     });
 
 // Styles for CreatePostScreen
+
 const createPostScreenStyles = StyleSheet.create({
     createPostContainer: {
-      flex: 1,
-      backgroundColor: '#fff',
+        flex: 1,
+        backgroundColor: '#fff',
     },
     createPostContent: {
-      flex: 1,
-      padding: 15,
-      marginBottom: 70, 
+        flex: 1,
+        padding: 15,
+        marginBottom: 70,
     },
     createPostInput: {
-      fontSize: 16,
-      color: '#333',
-      minHeight: 100,
+        fontSize: 16,
+        color: '#333',
+        minHeight: 100,
+        borderColor: '#ccc',
+        borderWidth: 1,
+        borderRadius: 8,
+        padding: 10,
     },
-    createImagePreviewContainer: {
-      marginTop: 15,
-      position: 'relative',
+    mediaPreviewContainer: {
+        marginTop: 15,
+        position: 'relative',
     },
-    createImagePreview: {
-      width: '100%',
-      height: 300,
-      borderRadius: 10,
+    mediaPreview: {
+        width: '100%',
+        height: 300,
+        borderRadius: 10,
+        backgroundColor: '#000',
+    },
+    removeMediaButton: {
+        position: 'absolute',
+        top: 10,
+        right: 10,
+        backgroundColor: 'rgba(0, 0, 0, 0.5)',
+        borderRadius: 12,
+        padding: 2,
     },
     createPostFooter: {
-      flexDirection: 'row',
-      justifyContent: 'space-around', 
-      alignItems: 'center',
-      paddingVertical: 10,
-      borderTopWidth: 1,
-      borderTopColor: '#f0f0f0',
-      backgroundColor: '#fff',
+        flexDirection: 'row',
+        justifyContent: 'space-around',
+        alignItems: 'center',
+        paddingVertical: 10,
+        borderTopWidth: 1,
+        borderTopColor: '#f0f0f0',
+        backgroundColor: '#fff',
     },
     createPostMediaButton: {
-      flexDirection: 'column',
-      alignItems: 'center',
-      justifyContent: 'center',
-      paddingVertical: 8,
-      width: 60,
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        paddingVertical: 8,
+        width: 60,
     },
     createPostMediaButtonText: {
-      marginTop: 4,
-      color: '#FF69B4',
-      fontSize: 12,
-      fontWeight: '500',
-      textAlign: 'center',
+        marginTop: 4,
+        color: '#FF69B4',
+        fontSize: 12,
+        fontWeight: '500',
+        textAlign: 'center',
     },
-  });
+});
 
 export { createPostScreenStyles, postScreenStyles };

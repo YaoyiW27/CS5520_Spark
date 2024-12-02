@@ -1,10 +1,11 @@
 import React from 'react';
 import { 
   View, 
-  Text, 
   TouchableOpacity, 
-  Image
+  Text, 
+  Image 
 } from 'react-native';
+import { Video } from 'expo-av';
 import { Ionicons } from '@expo/vector-icons';
 import PostComments from './PostComments';
 import { formatTime } from '../utils/timeFormatter';
@@ -19,6 +20,7 @@ const PostCard = ({
 }) => {
   const [showComments, setShowComments] = React.useState(false);
   const [showCommentInput, setShowCommentInput] = React.useState(false);
+  const isOwnPost = post.userId === currentUserId;
 
   return (
     <View style={styles.postCard}>
@@ -36,7 +38,7 @@ const PostCard = ({
           <View style={styles.postUserTextInfo}>
             <View style={styles.postUsernameContainer}>
               <Text style={styles.postUsername}>{post.username}</Text>
-              {post.isOwnPost && (
+              {isOwnPost && (
                 <View style={styles.postOwnPostBadge}>
                   <Text style={styles.postOwnPostText}>Me</Text>
                 </View>
@@ -45,7 +47,7 @@ const PostCard = ({
             <Text style={styles.postTime}>{formatTime(post.createdAt)}</Text>
           </View>
         </View>
-        {post.isOwnPost && (
+        {isOwnPost && (
           <TouchableOpacity 
             style={styles.postDeleteButton} 
             onPress={() => onDelete(post.id)}
@@ -59,11 +61,21 @@ const PostCard = ({
       
       {post.media && post.media.length > 0 && (
         <View style={styles.postMediaContainer}>
-          <Image 
-            source={{ uri: post.media[0] }}  
-            style={styles.postMediaImage}
-            resizeMode="cover"
-          />
+          {post.mediaType === 'video' ? (
+            <Video
+              source={{ uri: post.media[0] }}
+              style={styles.postMediaVideo}
+              resizeMode="contain"
+              useNativeControls
+              isLooping
+            />
+          ) : (
+            <Image 
+              source={{ uri: post.media[0] }}
+              style={styles.postMediaImage}
+              resizeMode="cover"
+            />
+          )}
         </View>
       )}
       
@@ -78,7 +90,7 @@ const PostCard = ({
               size={24} 
               color={post.isLiked ? "#FF69B4" : "#666"} 
             />
-            <Text style={styles.postActionText}>{post.likes || 0}</Text>
+            <Text style={styles.postActionText}>{post.likesCount || 0}</Text>
           </TouchableOpacity>
           
           <TouchableOpacity 
