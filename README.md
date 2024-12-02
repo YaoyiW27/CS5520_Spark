@@ -227,8 +227,8 @@ service cloud.firestore {
 rules_version = '2';
 service firebase.storage {
   match /b/{bucket}/o {
-  	// Photo wall rules
-  	match /photo_wall/{userEmail}/{fileName} {
+   // Photo wall rules
+   match /photo_wall/{userEmail}/{fileName} {
       allow read: if true;
       allow write: if request.auth != null 
                   && request.auth.token.email == userEmail;
@@ -241,9 +241,14 @@ service firebase.storage {
     }
     
     // Posts rules
-    match /posts/{userId}/{fileName} {
+    match /posts/{userEmail}/images/{fileName} {
       allow read: if true;
-      allow write: if request.auth != null;
+      allow write: if request.auth != null && request.auth.token.email == userEmail;
+    }
+
+    match /posts/{userEmail}/videos/{fileName} {
+      allow read: if true;
+      allow write: if request.auth != null && request.auth.token.email == userEmail;
     }
   }
 }

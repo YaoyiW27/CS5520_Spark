@@ -16,44 +16,50 @@ import {
 } from 'firebase/firestore';
 import { ref, uploadBytesResumable, getDownloadURL, deleteObject } from 'firebase/storage';
 
-export const createPost = async (userId, content, mediaFile = null, onProgress) => {
-    if (!userId) {
-        throw new Error('User ID is required');
+export const createPost = async (userEmail, content, mediaFile = null, onProgress) => {
+    if (!userEmail) {
+        throw new Error('User ID (email) is required');
     }
+
+    console.log('Received UID (email):', userEmail);
 
     try {
         let mediaUrl = null;
+        let isVideo = false;
+        let isImage = false;
 
         if (mediaFile) {
             try {
                 console.log('Starting file upload process...');
-                
+
                 if (!mediaFile || typeof mediaFile !== 'string') {
                     throw new Error('Invalid media file');
                 }
 
-                const safeUserId = userId.replace(/\./g, '_');
+                const safeUserId = userEmail;
                 const timestamp = Date.now();
                 const randomString = Math.random().toString(36).substring(7);
-                
-                // 获取文件类型
+
                 const response = await fetch(mediaFile);
                 const blob = await response.blob();
                 const fileType = blob.type;
-                
-                // 判断是图片还是视频
-                const isVideo = fileType.startsWith('video/');
-                const isImage = fileType.startsWith('image/');
-                
-                // 设置文件大小限制和有效类型
-                const maxSize = isVideo ? 50 * 1024 * 1024 : 5 * 1024 * 1024; // 视频50MB，图片5MB
+
+                // 初始化 isVideo 和 isImage
+                isVideo = fileType.startsWith('video/');
+                isImage = fileType.startsWith('image/');
+
+                const maxSize = isVideo ? 50 * 1024 * 1024 : 5 * 1024 * 1024;
                 const validTypes = isVideo ? 
                     ['video/mp4', 'video/quicktime'] : 
                     ['image/jpeg', 'image/png', 'image/gif'];
 
+                const filename = `posts/${safeUserId}/${isVideo ? 'videos' : 'images'}/${timestamp}-${randomString}`;
+                console.log('Uploading to:', filename);
+
                 console.log('Blob created:', {
                     size: blob.size,
-                    type: fileType
+                    type: fileType,
+                    path: filename
                 });
 
                 if (blob.size > maxSize) {
@@ -64,9 +70,6 @@ export const createPost = async (userId, content, mediaFile = null, onProgress) 
                     throw new Error(`Unsupported file type. Please upload ${isVideo ? 'MP4 or MOV videos' : 'JPG, PNG or GIF images'}.`);
                 }
 
-                // 根据文件类型设置存储路径
-                const filePrefix = isVideo ? 'videos' : 'images';
-                const filename = `posts/${safeUserId}/${filePrefix}/${timestamp}-${randomString}`;
                 const storageRef = ref(storage, filename);
 
                 console.log('Creating upload task...');
@@ -101,7 +104,7 @@ export const createPost = async (userId, content, mediaFile = null, onProgress) 
 
             } catch (error) {
                 console.error('File upload error:', error);
-                throw new Error(error.message || 'Failed to upload media');
+                throw error;
             }
         }
 
@@ -110,10 +113,10 @@ export const createPost = async (userId, content, mediaFile = null, onProgress) 
         }
 
         const postData = {
-            userId: userId.trim(),
+            userId: userEmail.trim(),
             content: content ? content.trim() : '',
             media: mediaUrl ? [mediaUrl] : [],
-            mediaType: mediaUrl ? (mediaUrl.includes('/videos/') ? 'video' : 'image') : null,
+            mediaType: isVideo ? 'video' : isImage ? 'image' : null,
             createdAt: serverTimestamp(),
             likesCount: 0,
             likedBy: [],
@@ -131,8 +134,7 @@ export const createPost = async (userId, content, mediaFile = null, onProgress) 
     }
 };
 
-// Toggle like
-// Firebase/toggleLike
+// Toggle like on a post
 export const toggleLike = async (postId, userId) => {
     try {
         const postRef = doc(db, 'Posts', postId);
@@ -164,12 +166,12 @@ export const toggleLike = async (postId, userId) => {
     }
 };
 
-// Add comment
+// Add comment to a post
 export const addComment = async (postId, userId, commentContent) => {
     try {
         const postRef = doc(db, 'Posts', postId);
         
-        // Get user info
+        // Get commenter's user info
         const userRef = doc(db, 'Users', userId);
         const userSnap = await getDoc(userRef);
         const userData = userSnap.exists() ? userSnap.data() : {};
@@ -193,7 +195,7 @@ export const addComment = async (postId, userId, commentContent) => {
     }
 };
 
-// Delete post
+// Delete a post and its media
 export const deletePost = async (postId, userId) => {
     try {
         const postRef = doc(db, 'Posts', postId);
@@ -205,16 +207,15 @@ export const deletePost = async (postId, userId) => {
 
         const post = postSnap.data();
         
-        // Check if user is authorized to delete
+        // Verify user ownership
         if (post.userId !== userId) {
             throw new Error('Not authorized to delete this post');
         }
 
-        // Delete media if exists
+        // Delete associated media files
         if (post.media && post.media.length > 0) {
             for (const mediaUrl of post.media) {
                 try {
-                    // Convert HTTP URL to storage path
                     const storageRef = ref(storage, mediaUrl);
                     await deleteObject(storageRef);
                     console.log('Media deleted successfully:', mediaUrl);
@@ -234,10 +235,10 @@ export const deletePost = async (postId, userId) => {
     }
 };
 
-// Get both liked users' posts and current user's posts
+// Get posts from liked users and own posts
 export const getLikedAndOwnPosts = async (currentUserEmail) => {
     try {
-        // 1. Get current user's profile to get liked users
+        // Get current user's profile and liked users
         const userRef = doc(db, 'Users', currentUserEmail);
         const userSnap = await getDoc(userRef);
         
@@ -248,7 +249,7 @@ export const getLikedAndOwnPosts = async (currentUserEmail) => {
         const userData = userSnap.data();
         const likedUsers = userData.likes || [];
 
-        // 2. Create query to get all posts sorted by creation time
+        // Query posts sorted by creation time
         const postsQuery = query(
             collection(db, 'Posts'),
             orderBy('createdAt', 'desc')
@@ -257,7 +258,7 @@ export const getLikedAndOwnPosts = async (currentUserEmail) => {
         const querySnapshot = await getDocs(postsQuery);
         const posts = [];
         
-        // 3. Filter and process posts
+        // Process and filter posts
         for (const docSnapshot of querySnapshot.docs) {
             try {
                 const post = docSnapshot.data();
@@ -270,7 +271,7 @@ export const getLikedAndOwnPosts = async (currentUserEmail) => {
                     posts.push({
                         id: docSnapshot.id,
                         ...post,
-                        likes: post.likesCount || 0, // 正确映射 likesCount 到 likes
+                        likes: post.likesCount || 0,
                         isLiked: post.likedBy?.includes(currentUserEmail) || false,
                         username: postUserData.username || 'Unknown User',
                         userAvatar: postUserData.profilePhoto || null,

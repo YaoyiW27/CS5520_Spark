@@ -29,55 +29,54 @@ const MediaPicker = ({ onMediaSelect }) => {
 
     try {
       const result = await ImagePicker.launchImageLibraryAsync({
-        mediaTypes: 'images',  // 修改这里
+        mediaTypes: 'images',
         allowsEditing: true,
         aspect: [4, 3],
-        quality: 0.2,
-        compress: 0.5,
+        quality: 0.8,
       });
 
-      if (!result.canceled && result.assets[0].uri) {
+      if (!result.canceled && result.assets && result.assets.length > 0) {
         const fileInfo = await FileSystem.getInfoAsync(result.assets[0].uri);
-        
+
         if (fileInfo.size > 5 * 1024 * 1024) {
           Alert.alert('File too large', 'Please choose an image under 5MB');
           return;
         }
 
-        onMediaSelect(result.assets[0].uri);
+        onMediaSelect(result.assets[0].uri, 'image/jpeg');
       }
     } catch (error) {
       console.error('Error picking image:', error);
       Alert.alert('Error', 'Failed to pick image');
     }
-  };
+};
 
   const handleVideoPick = async () => {
-    if (!await requestPermission()) return;
+      if (!await requestPermission()) return;
 
-    try {
-      const result = await ImagePicker.launchImageLibraryAsync({
-        mediaTypes: 'videos',  // 修改这里
-        allowsEditing: true,
-        aspect: [16, 9],
-        quality: 0.5,
-        videoMaxDuration: 60,
-      });
+      try {
+        const result = await ImagePicker.launchImageLibraryAsync({
+          mediaTypes: 'videos',
+          allowsEditing: true,
+          aspect: [16, 9],
+          quality: 0.5,
+          videoMaxDuration: 60,
+        });
 
-      if (!result.canceled && result.assets[0].uri) {
-        const fileInfo = await FileSystem.getInfoAsync(result.assets[0].uri);
+        if (!result.canceled && result.assets && result.assets.length > 0) {
+          const fileInfo = await FileSystem.getInfoAsync(result.assets[0].uri);
 
-        if (fileInfo.size > 50 * 1024 * 1024) {
-          Alert.alert('File too large', 'Please choose a video under 50MB');
-          return;
+          if (fileInfo.size > 50 * 1024 * 1024) {
+            Alert.alert('File too large', 'Please choose a video under 50MB');
+            return;
+          }
+
+          onMediaSelect(result.assets[0].uri, 'video/mp4');
         }
-
-        onMediaSelect(result.assets[0].uri);
+      } catch (error) {
+        console.error('Error picking video:', error);
+        Alert.alert('Error', 'Failed to pick video');
       }
-    } catch (error) {
-      console.error('Error picking video:', error);
-      Alert.alert('Error', 'Failed to pick video');
-    }
   };
 
   const handleCameraLaunch = async () => {
@@ -91,11 +90,10 @@ const MediaPicker = ({ onMediaSelect }) => {
       const result = await ImagePicker.launchCameraAsync({
         allowsEditing: true,
         aspect: [4, 3],
-        quality: 0.2,
-        compress: 0.5,
+        quality: 0.8,
       });
 
-      if (!result.canceled && result.assets[0].uri) {
+      if (!result.canceled && result.assets && result.assets.length > 0) {
         const fileInfo = await FileSystem.getInfoAsync(result.assets[0].uri);
 
         if (fileInfo.size > 5 * 1024 * 1024) {
@@ -103,7 +101,7 @@ const MediaPicker = ({ onMediaSelect }) => {
           return;
         }
 
-        onMediaSelect(result.assets[0].uri);
+        onMediaSelect(result.assets[0].uri, 'image/jpeg');
       }
     } catch (error) {
       console.error('Error taking photo:', error);
